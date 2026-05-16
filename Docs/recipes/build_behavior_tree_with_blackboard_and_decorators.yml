@@ -1,0 +1,294 @@
+recipe_schema_version: 1.0
+id: "build_behavior_tree_with_blackboard_and_decorators"
+title: "Build a behavior tree with blackboard, decorators, and a service"
+goal: "Author a behavior tree from scratch with a typed blackboard, root composite, decorators, task nodes, and an attached service."
+description: |
+  Creates a fresh blackboard asset, populates it with multiple typed keys,
+  creates the behavior tree, links it to the blackboard, builds a root composite
+  (sequence or selector) plus child task nodes, attaches decorators (Blackboard
+  conditions, ForceSuccess wrappers), and adds a service that ticks at a fixed
+  interval. Use this recipe when standing up a new AI archetype end-to-end. For
+  modifying an existing tree, dispatch behavior_tree/* actions ad-hoc instead.
+
+domain_scope: [behavior_tree, asset]
+tested_on_ue: ["5.7"]
+tested_on_plugin: ["0.2.6"]
+
+preconditions:
+  - "$blackboard_path package folder exists or can be created."
+  - "$tree_path package folder exists or can be created."
+  - "Every BTTask / BTService / BTDecorator class referenced exists (engine-default classes are always available)."
+
+inputs:
+  - name: "blackboard_path"
+    type: "asset_path"
+    required: true
+    description: "Package path for the new blackboard asset."
+    example: "/Game/AI/BB_PatrolGuard"
+  - name: "tree_path"
+    type: "asset_path"
+    required: true
+    description: "Package path for the new behavior tree asset."
+    example: "/Game/AI/BT_PatrolGuard"
+  - name: "blackboard_keys"
+    type: "array"
+    required: true
+    description: |
+      Array of {name, type, default} entries. `type` is one of:
+      Bool, Int, Float, String, Name, Vector, Rotator, Object, Class, Enum.
+      `default` is optional; types that need a class (Object, Class, Enum) take
+      a sub-field `base_class` (asset path or class name).
+    example:
+      - name: "TargetActor"
+        type: "Object"
+        base_class: "/Script/Engine.Actor"
+      - name: "PatrolPoint"
+        type: "Vector"
+      - name: "IsAlerted"
+        type: "Bool"
+        default: false
+      - name: "WaitTime"
+        type: "Float"
+        default: 3.0
+  - name: "root_composite"
+    type: "string"
+    required: true
+    description: "Sequence | Selector | SimpleParallel."
+    example: "Selector"
+  - name: "task_nodes"
+    type: "array"
+    required: true
+    description: |
+      Array of {id, class, properties, decorators, parent_id} entries describing the
+      tasks to add under the root composite (or under another id). `decorators` is
+      an array of {class, properties} objects. `parent_id` of "root" attaches under
+      the root composite; otherwise references another task/composite id.
+    example:
+      - id: "chase_task"
+        class: "BTTask_MoveTo"
+        properties:
+          BlackboardKey: "TargetActor"
+          AcceptableRadius: 75.0
+        decorators:
+          - class: "BTDecorator_Blackboard"
+            properties:
+              BlackboardKey: "TargetActor"
+              NotifyObserver: "OnValueChange"
+              KeyQuery: "IsSet"
+        parent_id: "root"
+      - id: "patrol_wait"
+        class: "BTTask_Wait"
+        properties:
+          WaitTime: 2.0
+        decorators: []
+        parent_id: "root"
+  - name: "service"
+    type: "object"
+    required: false
+    description: |
+      Optional service to attach to the root composite. Shape:
+      { class: string, interval: float, random_deviation: float, properties: object }.
+    example:
+      class: "BTService_BlackboardBase"
+      interval: 0.5
+      random_deviation: 0.1
+      properties:
+        BlackboardKey: "TargetActor"
+
+outputs:
+  - name: "created_tree_path"
+    type: "asset_path"
+    description: "Compiled behavior tree asset path."
+  - name: "created_blackboard_path"
+    type: "asset_path"
+    description: "Created blackboard asset path."
+  - name: "tree_topology"
+    type: "object"
+    description: "Final tree topology: nodes with ids, classes, parent ids."
+
+action_dependencies:
+  - behavior_tree/create_blackboard
+  - behavior_tree/add_blackboard_key
+  - behavior_tree/set_blackboard_key_default
+  - behavior_tree/create_bt
+  - behavior_tree/link_blackboard
+  - behavior_tree/add_node
+  - behavior_tree/add_task_node
+  - behavior_tree/add_decorator
+  - behavior_tree/add_service
+  - behavior_tree/set_service_interval
+  - behavior_tree/set_node_property
+  - behavior_tree/get_tree_topology
+
+steps:
+  - id: create_blackboard_asset
+    action: "behavior_tree/create_blackboard"
+    inputs:
+      asset_path: "$blackboard_path"
+    captures: "bb_asset"
+    on_error: "abort"
+
+  - id: create_tree_asset
+    action: "behavior_tree/create_bt"
+    inputs:
+      asset_path: "$tree_path"
+    captures: "tree_asset"
+    on_error: "abort"
+
+  - id: link_tree_to_blackboard
+    action: "behavior_tree/link_blackboard"
+    inputs:
+      tree_path: "$tree_asset.path"
+      blackboard_path: "$bb_asset.path"
+    on_error: "abort"
+
+  - id: add_root_composite
+    action: "behavior_tree/add_node"
+    inputs:
+      tree_path: "$tree_asset.path"
+      node_class: "BTComposite_$root_composite"
+      parent_id: "Root"
+      node_id: "root"
+    captures: "root_node"
+    on_error: "abort"
+
+  - id: attach_service_if_present
+    action: "behavior_tree/add_service"
+    only_if: "$service != null"
+    inputs:
+      tree_path: "$tree_asset.path"
+      parent_node_id: "$root_node.id"
+      service_class: "$service.class"
+    captures: "service_node"
+    on_error: "continue"
+
+  - id: set_service_interval
+    action: "behavior_tree/set_service_interval"
+    only_if: "$service != null and $service_node != null"
+    inputs:
+      tree_path: "$tree_asset.path"
+      service_node_id: "$service_node.id"
+      interval: "$service.interval"
+      random_deviation: "$service.random_deviation"
+    on_error: "continue"
+
+  - id: read_final_topology
+    action: "behavior_tree/get_tree_topology"
+    inputs:
+      tree_path: "$tree_asset.path"
+    captures: "tree_topology"
+    on_error: "continue"
+
+loops:
+  - id: blackboard_keys_loop
+    over: "$blackboard_keys"
+    as: "key"
+    runs_after: create_blackboard_asset
+    runs_before: create_tree_asset
+    steps:
+      - id: add_bb_key
+        action: "behavior_tree/add_blackboard_key"
+        inputs:
+          blackboard_path: "$bb_asset.path"
+          key_name: "$key.name"
+          key_type: "$key.type"
+          base_class: "$key.base_class"
+        captures: "bb_key"
+        on_error: "abort"
+
+      - id: set_bb_key_default
+        action: "behavior_tree/set_blackboard_key_default"
+        only_if: "$key.default != null"
+        inputs:
+          blackboard_path: "$bb_asset.path"
+          key_name: "$key.name"
+          default_value: "$key.default"
+        on_error: "continue"
+
+  - id: task_nodes_loop
+    over: "$task_nodes"
+    as: "task"
+    runs_after: add_root_composite
+    runs_before: read_final_topology
+    steps:
+      - id: add_task
+        action: "behavior_tree/add_task_node"
+        inputs:
+          tree_path: "$tree_asset.path"
+          parent_node_id: |
+            if $task.parent_id == 'root':
+              return $root_node.id
+            else:
+              return $task.parent_id
+          task_class: "$task.class"
+          node_id: "$task.id"
+        captures: "task_node"
+        on_error: "abort"
+
+      - id: apply_task_properties
+        action: "behavior_tree/set_node_property"
+        only_if: "$task.properties != null"
+        inputs:
+          tree_path: "$tree_asset.path"
+          node_id: "$task_node.id"
+          properties: "$task.properties"
+        on_error: "continue"
+
+  - id: decorators_loop
+    over: "$task_nodes"
+    as: "task"
+    runs_after: task_nodes_loop
+    runs_before: read_final_topology
+    steps:
+      - id: per_task_decorator_inner
+        # The recipe engine flattens (task.id x decorators[]) here. For each
+        # (task, decorator) pair it dispatches add_decorator + set_node_property.
+        action: "behavior_tree/add_decorator"
+        only_if: "$task.decorators != null and $task.decorators.length > 0"
+        inputs:
+          tree_path: "$tree_asset.path"
+          target_node_id: "$task.id"
+          # Recipe runtime iterates over $task.decorators and emits one
+          # add_decorator call per entry; this step shape captures the first.
+          decorator_class: "$task.decorators[0].class"
+          properties: "$task.decorators[0].properties"
+        captures: "decorator_node"
+        on_error: "continue"
+
+failure_modes:
+  - trigger: "Blackboard key referenced in a task BlackboardKey property doesn't exist"
+    symptom: "set_node_property succeeds but at runtime BTTask_MoveTo logs 'Blackboard key TargetActor is invalid'."
+    fix: "Confirm the key exists in $blackboard_keys before referencing it. The recipe creates keys before tasks; if you bypass this order, run blackboard_keys_loop first."
+  - trigger: "Decorator attached to root composite instead of a task"
+    symptom: "Decorator never aborts; tree behaves as if decorator is absent."
+    fix: "Decorators on a composite gate the entire branch. If you intended to gate a single task, set the decorator's target_node_id to the task id, not the composite id."
+  - trigger: "Service interval == 0"
+    symptom: "Service ticks every frame; performance degrades on dense AI populations."
+    fix: "Use a non-zero $service.interval (typically 0.25 - 1.0). 0 forces per-frame Tick."
+  - trigger: "task_class does not exist"
+    symptom: "add_task_node returns 4001 'class not found'."
+    fix: "Use engine-canonical class names (BTTask_MoveTo, BTTask_Wait, BTTask_RunBehavior). For custom blueprint tasks, pass the full asset path (/Game/AI/Tasks/BTT_Custom)."
+  - trigger: "Tree asset linked to wrong blackboard"
+    symptom: "Editor shows blackboard keys missing; runtime logs 'No blackboard data'."
+    fix: "Re-run link_tree_to_blackboard with the correct paths. The link is stored on UBehaviorTree::BlackboardAsset and is editable post-creation."
+
+variants:
+  - name: "patrol_ai"
+    differs_by: "$root_composite == 'Sequence'. Children: MoveTo PatrolPoint -> Wait -> AdvancePatrolIndex (loop). Pure ordered patrol."
+  - name: "chase_ai"
+    differs_by: "$root_composite == 'Selector'. Children: chase branch (decorated with TargetActor IsSet) before patrol branch. Detection swap-in pattern."
+  - name: "guard_ai"
+    differs_by: "Adds a Cooldown decorator on the chase branch and a BlackboardBase service that updates LastKnownLocation each tick."
+
+notes: |
+  All actions referenced exist in _inventory.json under behavior_tree (plugin 0.2.6).
+  add_node and add_task_node both exist - use add_task_node for BTTask classes
+  (sets ScriptedTask wrappers on subclassed BP tasks correctly) and add_node for
+  composites (Sequence/Selector/SimpleParallel) and root scaffolding. The
+  Composite class names follow the engine convention BTComposite_$root_composite,
+  yielding BTComposite_Sequence / BTComposite_Selector / BTComposite_SimpleParallel.
+  The decorators_loop intentionally executes after task_nodes_loop so every task
+  exists before its decorators are attached. The runtime is expected to flatten
+  (task, decorator) pairs from $task_nodes[].decorators rather than requiring
+  the recipe to author per-decorator entries.
+  No pending_plugin_support flags - every step runs on plugin 0.2.6.

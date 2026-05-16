@@ -1,0 +1,324 @@
+recipe_schema_version: 1.0
+id: "pcg_foliage_scatter_from_landscape"
+title: "PCG foliage scatter sampled from landscape"
+goal: "Build a PCG graph that samples a landscape, filters by slope and altitude, and spawns a static mesh as scattered foliage."
+description: |
+  Authors a PCG graph end-to-end. Adds a Landscape Sampler bound to the level's
+  landscape, applies a Density Filter driven by altitude and slope thresholds,
+  optionally adds an Attribute Filter to mask by landscape layer, then plumbs
+  the filtered points into a Static Mesh Spawner whose mesh entry references
+  the user-supplied static mesh. Use this recipe for grass / undergrowth /
+  rock-cluster scatter on existing landscapes. For mesh-bounded scatter
+  (interior props inside a building), prefer a Surface Sampler from a custom
+  shape rather than the LandscapeSampler.
+
+domain_scope: [pcg_graph, pcg, landscape]
+tested_on_ue: ["5.7"]
+tested_on_plugin: ["0.2.6"]
+
+preconditions:
+  - "$graph_path package folder exists or can be created."
+  - "At least one landscape actor exists in the level the PCG component will run against."
+  - "$mesh_path resolves to a valid UStaticMesh asset (and ideally has CPU access for sampling-aware materials)."
+  - "$density_curve, $slope_max_degrees, $altitude_range are internally consistent (slope_max in [0, 90], altitude_range[0] <= altitude_range[1])."
+
+inputs:
+  - name: "graph_path"
+    type: "asset_path"
+    required: true
+    description: "Package path for the new UPCGGraph asset."
+    example: "/Game/PCG/Graphs/PCG_GrassScatter"
+  - name: "mesh_path"
+    type: "asset_path"
+    required: true
+    description: "Static mesh to spawn at each surviving point."
+    example: "/Game/Environment/Foliage/SM_Grass_Tall"
+  - name: "density_curve"
+    type: "array"
+    required: true
+    description: "[[t, density], ...] curve in t=[0..1] mapped to altitude_range. Density in [0..1]; 0 = full reject, 1 = pass."
+    example: [[0.0, 0.0], [0.2, 0.8], [0.7, 1.0], [1.0, 0.2]]
+  - name: "slope_max_degrees"
+    type: "float"
+    required: true
+    description: "Reject any point whose terrain normal makes a larger angle with world up than this. Typical: 25 for grass, 35 for trees."
+    example: 25.0
+  - name: "altitude_range"
+    type: "array"
+    required: true
+    description: "[min_z_world, max_z_world] world-space altitude band for scatter."
+    example: [50.0, 800.0]
+  - name: "base_density"
+    type: "float"
+    required: true
+    description: "Points per square meter at the densest part of the curve."
+    example: 0.8
+  - name: "scale_jitter"
+    type: "array"
+    required: false
+    description: "[scale_min, scale_max] uniform scale randomized per point. Defaults to [0.9, 1.1]."
+    example: [0.85, 1.2]
+  - name: "rotation_jitter_yaw"
+    type: "bool"
+    required: false
+    description: "If true, randomizes Yaw [0..360]. Defaults to true."
+    example: true
+  - name: "landscape_layer_filter"
+    type: "string"
+    required: false
+    description: "Optional landscape layer name. If set, points whose dominant layer does not match are rejected."
+    example: "GrassLayer"
+
+outputs:
+  - name: "created_graph_path"
+    type: "asset_path"
+    description: "Compiled PCG graph asset path."
+  - name: "graph_topology"
+    type: "object"
+    description: "Final topology returned by pcg_graph/get_topology (nodes, connections)."
+
+action_dependencies:
+  - pcg_graph/create_pcg_graph
+  - pcg_graph/add_pcg_node
+  - pcg_graph/connect_pcg_pins
+  - pcg_graph/set_pcg_node_settings
+  - pcg_graph/set_node_property
+  - pcg_graph/set_mesh_entry
+  - pcg_graph/get_topology
+  - pcg/execute_graph
+  - landscape/get_landscape_info
+
+steps:
+  - id: validate_landscape_present
+    action: "landscape/get_landscape_info"
+    inputs: {}
+    captures: "landscape_info"
+    on_error: "abort"
+
+  - id: create_graph_asset
+    action: "pcg_graph/create_pcg_graph"
+    inputs:
+      asset_path: "$graph_path"
+    captures: "graph_asset"
+    on_error: "abort"
+
+  - id: add_landscape_sampler
+    action: "pcg_graph/add_pcg_node"
+    inputs:
+      graph_path: "$graph_asset.path"
+      node_class: "PCGLandscapeSamplerSettings"
+      node_id: "landscape_sampler"
+    captures: "sampler_node"
+    on_error: "abort"
+
+  - id: configure_landscape_sampler
+    action: "pcg_graph/set_pcg_node_settings"
+    inputs:
+      graph_path: "$graph_asset.path"
+      node_id: "$sampler_node.id"
+      settings:
+        bUnbounded: false
+        bExtractLandscapeLayers: true
+        PointsPerSquaredMeter: "$base_density"
+    on_error: "abort"
+
+  - id: add_altitude_density_filter
+    action: "pcg_graph/add_pcg_node"
+    inputs:
+      graph_path: "$graph_asset.path"
+      node_class: "PCGDensityFilterSettings"
+      node_id: "altitude_filter"
+    captures: "altitude_filter_node"
+    on_error: "abort"
+
+  - id: configure_altitude_filter
+    action: "pcg_graph/set_pcg_node_settings"
+    inputs:
+      graph_path: "$graph_asset.path"
+      node_id: "$altitude_filter_node.id"
+      settings:
+        DensityThreshold: 0.0
+        bInvertFilter: false
+        # Recipe runtime resolves $density_curve into the node's curve points.
+        DensityCurve: "$density_curve"
+        # Engine reads density from the point's Density attribute; the
+        # PCGAttributeRemap pre-step (added below) maps Z into [0,1] across
+        # the altitude_range so this filter can drive density curve.
+    on_error: "abort"
+
+  - id: add_attribute_remap_z
+    action: "pcg_graph/add_pcg_node"
+    inputs:
+      graph_path: "$graph_asset.path"
+      node_class: "PCGAttributeRemapSettings"
+      node_id: "altitude_remap"
+    captures: "remap_node"
+    on_error: "abort"
+
+  - id: configure_altitude_remap
+    action: "pcg_graph/set_pcg_node_settings"
+    inputs:
+      graph_path: "$graph_asset.path"
+      node_id: "$remap_node.id"
+      settings:
+        InputSource: "$Position.Z"
+        OutputTarget: "$Density"
+        InputMin: "$altitude_range[0]"
+        InputMax: "$altitude_range[1]"
+        OutputMin: 0.0
+        OutputMax: 1.0
+    on_error: "abort"
+
+  - id: add_slope_filter
+    action: "pcg_graph/add_pcg_node"
+    inputs:
+      graph_path: "$graph_asset.path"
+      node_class: "PCGAttributeFilterSettings"
+      node_id: "slope_filter"
+    captures: "slope_filter_node"
+    on_error: "abort"
+
+  - id: configure_slope_filter
+    action: "pcg_graph/set_pcg_node_settings"
+    inputs:
+      graph_path: "$graph_asset.path"
+      node_id: "$slope_filter_node.id"
+      settings:
+        # Slope = degrees(acos(Normal.Z)). Recipe runtime evaluates this against
+        # the configured threshold; per-point Normal is set by the LandscapeSampler.
+        TargetAttribute: "$Normal.Z"
+        Operator: "GreaterThanEqual"
+        # cos(slope_max_degrees in radians) = threshold for Normal.Z.
+        FilterValue: "cos($slope_max_degrees * PI / 180.0)"
+    on_error: "abort"
+
+  - id: add_layer_filter
+    action: "pcg_graph/add_pcg_node"
+    only_if: "$landscape_layer_filter != null"
+    inputs:
+      graph_path: "$graph_asset.path"
+      node_class: "PCGAttributeFilterSettings"
+      node_id: "layer_filter"
+    captures: "layer_filter_node"
+    on_error: "continue"
+
+  - id: configure_layer_filter
+    action: "pcg_graph/set_pcg_node_settings"
+    only_if: "$landscape_layer_filter != null and $layer_filter_node != null"
+    inputs:
+      graph_path: "$graph_asset.path"
+      node_id: "$layer_filter_node.id"
+      settings:
+        TargetAttribute: "$DominantLayer"
+        Operator: "Equal"
+        FilterStringValue: "$landscape_layer_filter"
+    on_error: "continue"
+
+  - id: add_mesh_spawner
+    action: "pcg_graph/add_pcg_node"
+    inputs:
+      graph_path: "$graph_asset.path"
+      node_class: "PCGStaticMeshSpawnerSettings"
+      node_id: "mesh_spawner"
+    captures: "spawner_node"
+    on_error: "abort"
+
+  - id: configure_mesh_entry
+    action: "pcg_graph/set_mesh_entry"
+    inputs:
+      graph_path: "$graph_asset.path"
+      node_id: "$spawner_node.id"
+      mesh_path: "$mesh_path"
+      weight: 1.0
+      collision_profile: "NoCollision"
+      cast_shadows: true
+    on_error: "abort"
+
+  - id: configure_spawner_jitter
+    action: "pcg_graph/set_node_property"
+    inputs:
+      graph_path: "$graph_asset.path"
+      node_id: "$spawner_node.id"
+      properties:
+        bRandomYaw: "$rotation_jitter_yaw"
+        ScaleMin: "$scale_jitter[0]"
+        ScaleMax: "$scale_jitter[1]"
+    on_error: "continue"
+
+  - id: read_topology
+    action: "pcg_graph/get_topology"
+    inputs:
+      graph_path: "$graph_asset.path"
+    captures: "graph_topology"
+    on_error: "continue"
+
+loops:
+  - id: edge_connections_loop
+    # Wires the filter chain in order:
+    # landscape_sampler -> altitude_remap -> altitude_filter -> slope_filter
+    # -> [layer_filter ->] mesh_spawner.
+    over: "edge_list"
+    as: "edge"
+    runs_after: configure_spawner_jitter
+    runs_before: read_topology
+    steps:
+      - id: connect_edge
+        action: "pcg_graph/connect_pcg_pins"
+        inputs:
+          graph_path: "$graph_asset.path"
+          from_node: "$edge.from"
+          from_pin: "Out"
+          to_node: "$edge.to"
+          to_pin: "In"
+        on_error: "abort"
+    # Runtime constructs edge_list from the chain:
+    #   [{from: landscape_sampler, to: altitude_remap},
+    #    {from: altitude_remap,    to: altitude_filter},
+    #    {from: altitude_filter,   to: slope_filter},
+    #    if layer_filter present:
+    #       {from: slope_filter,    to: layer_filter},
+    #       {from: layer_filter,    to: mesh_spawner},
+    #    else:
+    #       {from: slope_filter,    to: mesh_spawner}]
+
+failure_modes:
+  - trigger: "No landscape in the level"
+    symptom: "validate_landscape_present aborts with empty result; the graph still authors but execute_graph yields zero points."
+    fix: "Add a landscape (landscape/create_landscape) before running this recipe, or switch the source node to PCGSurfaceSamplerSettings with a custom shape."
+  - trigger: "slope_max_degrees outside [0, 90]"
+    symptom: "Slope filter accepts everything (>=90) or rejects everything (<=0)."
+    fix: "Clamp $slope_max_degrees in [5, 60] for sensible results. Below 5 lets only flat ground through; above 60 effectively disables the filter."
+  - trigger: "Mesh entry not configured before execute_graph"
+    symptom: "PCG runs but spawns invisible 'placeholder' actors; editor log shows 'PCGStaticMeshSpawner has no mesh entries'."
+    fix: "configure_mesh_entry must run after the spawner node is added. The recipe orders this correctly; bypass at your own risk."
+  - trigger: "Density filter rejects every point"
+    symptom: "execute_graph reports 0 points after altitude_filter."
+    fix: "Inspect $density_curve. If all curve points are < 0.5 the filter strips most points. Ensure the curve has at least one entry >= 0.5 within $altitude_range."
+  - trigger: "Normal.Z negative on overhanging cliffs"
+    symptom: "Slope filter rejects ceilings even with high slope_max_degrees."
+    fix: "PCGLandscapeSamplerSettings.bExtractLandscapeLayers + the heightfield only generates upward-facing normals, so this is mostly moot. For arbitrary surfaces, swap to PCGSurfaceSamplerSettings."
+
+variants:
+  - name: "grass_density"
+    differs_by: "$base_density >= 1.0, slope_max_degrees=25, altitude_range mid-band, density_curve peaks central. Dense grass on flat midland."
+  - name: "tree_sparse"
+    differs_by: "$base_density ~ 0.05, slope_max_degrees=35, altitude_range broad, density_curve flat. Sparse hero trees across most of the map."
+  - name: "rock_cluster"
+    differs_by: "$base_density ~ 0.2, slope_max_degrees=60, density_curve peaks at high altitudes. Boulder fields on slopes and ridges."
+
+notes: |
+  All actions referenced exist in _inventory.json under pcg_graph and pcg
+  (plugin 0.2.6). The pcg_graph domain has both prefixed (pcg_graph/add_pcg_node)
+  and short-form (pcg_graph/add_node) action names exposed; the recipe uses the
+  prefixed forms (add_pcg_node, connect_pcg_pins, set_pcg_node_settings) for
+  unambiguous dispatch.
+  PCG node class names match the engine's UPCG*Settings convention - e.g.
+  PCGLandscapeSamplerSettings, PCGDensityFilterSettings, PCGAttributeRemapSettings,
+  PCGAttributeFilterSettings, PCGStaticMeshSpawnerSettings.
+  set_mesh_entry is a first-class action that sets mesh + collision + shadow
+  bits in one call; equivalent to running 3 set_node_property calls but
+  preferred because the engine validates the mesh entry as a unit.
+  The edge_connections_loop intentionally runs after configure_spawner_jitter
+  so all nodes exist before any wiring is attempted. The runtime is expected
+  to construct edge_list from the chain definition in the loop comment.
+  No pending_plugin_support flags - every step runs end-to-end on plugin 0.2.6.

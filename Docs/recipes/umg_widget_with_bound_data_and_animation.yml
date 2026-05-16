@@ -1,0 +1,317 @@
+recipe_schema_version: 1.0
+id: "umg_widget_with_bound_data_and_animation"
+title: "UMG widget with data binding and fade-in animation"
+goal: "Create a UMG widget blueprint, populate it with anchored TextBlock + Image children, bind their values to a data context, add a fade-in animation, then compile."
+description: |
+  Authors a UserWidget end-to-end. Creates the widget blueprint, builds a
+  CanvasPanel root, adds an anchored TextBlock and Image, sets anchors and
+  alignment, configures a property binding that drives the TextBlock's Text
+  from a callable function (or property) on the widget, declares an animation
+  parameter on the Image (Render Opacity), creates a fade-in animation that
+  ramps that parameter from 0 to 1 over a configurable duration, then compiles
+  the blueprint. Use this recipe to scaffold any data-driven HUD popup, list
+  item, or floating world-space label. For complex multi-state widgets, prefer
+  authoring a master widget blueprint and using this recipe per child variant.
+
+domain_scope: [umg, animation, blueprint]
+tested_on_ue: ["5.7"]
+tested_on_plugin: ["0.2.6"]
+
+preconditions:
+  - "$widget_path package folder exists or can be created."
+  - "$icon_texture_path resolves to a UTexture2D, or is null (then the Image has a default brush)."
+  - "$bound_function_name names a function that exists or will be added on the widget blueprint, or is null (then the TextBlock binds to a property)."
+
+inputs:
+  - name: "widget_path"
+    type: "asset_path"
+    required: true
+    description: "Package path for the new UserWidget blueprint."
+    example: "/Game/UI/HUD/WBP_TooltipPopup"
+  - name: "title_text_default"
+    type: "string"
+    required: false
+    description: "Default text for the TextBlock before the binding fires."
+    example: "Loading..."
+  - name: "icon_texture_path"
+    type: "asset_path"
+    required: false
+    description: "Texture used for the Image's brush. If null, the Image stays at the default white brush."
+    example: "/Game/UI/Icons/T_Heart_64"
+  - name: "bound_property_name"
+    type: "string"
+    required: false
+    description: "Widget blueprint variable to bind the TextBlock's Text to (string variable)."
+    example: "DisplayTitle"
+  - name: "bound_function_name"
+    type: "string"
+    required: false
+    description: "Widget blueprint function to bind the TextBlock's Text to. Returns text. Takes precedence over bound_property_name."
+    example: "GetCurrentTitle"
+  - name: "anchors_preset"
+    type: "string"
+    required: true
+    description: "TopLeft | TopCenter | TopRight | Center | BottomLeft | BottomCenter | BottomRight | Fill."
+    example: "Center"
+  - name: "size"
+    type: "array"
+    required: true
+    description: "[width, height] in pixels."
+    example: [400, 120]
+  - name: "fade_in_duration"
+    type: "float"
+    required: true
+    description: "Fade-in duration in seconds."
+    example: 0.4
+  - name: "animation_name"
+    type: "string"
+    required: false
+    description: "Animation asset name. Defaults to 'FadeIn'."
+    example: "FadeIn"
+
+outputs:
+  - name: "created_widget_path"
+    type: "asset_path"
+    description: "Compiled widget blueprint asset path."
+  - name: "created_animation_name"
+    type: "string"
+    description: "Name of the created animation."
+  - name: "widget_tree"
+    type: "object"
+    description: "Final tree returned by umg/get_widget_tree."
+
+action_dependencies:
+  - umg/create_widget_blueprint
+  - umg/add_widget
+  - umg/set_widget_property
+  - umg/set_widget_properties
+  - umg/set_anchors
+  - umg/set_binding
+  - umg/save_asset
+  - umg/get_widget_tree
+  - animation/set_widget_scope
+  - animation/set_property_keys
+  - blueprint/compile_blueprint
+  - blueprint/add_variable
+
+steps:
+  - id: create_widget_bp
+    action: "umg/create_widget_blueprint"
+    inputs:
+      asset_path: "$widget_path"
+      parent_class: "UserWidget"
+      root_widget_class: "CanvasPanel"
+    captures: "widget_asset"
+    on_error: "abort"
+
+  - id: ensure_bound_property
+    # If the recipe binds to a property, the variable must exist on the widget BP.
+    action: "blueprint/add_variable"
+    only_if: "$bound_property_name != null and $bound_function_name == null"
+    inputs:
+      asset_path: "$widget_asset.path"
+      variable_name: "$bound_property_name"
+      variable_type: "Text"
+      default_value: "$title_text_default"
+      replicated: false
+    on_error: "continue"
+
+  - id: add_title_textblock
+    action: "umg/add_widget"
+    inputs:
+      widget_path: "$widget_asset.path"
+      parent_id: "Root"
+      widget_class: "TextBlock"
+      widget_name: "Title_Text"
+    captures: "title_widget"
+    on_error: "abort"
+
+  - id: set_textblock_default
+    action: "umg/set_widget_property"
+    inputs:
+      widget_path: "$widget_asset.path"
+      widget_id: "$title_widget.id"
+      property_name: "Text"
+      value: "$title_text_default"
+    on_error: "continue"
+
+  - id: anchor_textblock
+    action: "umg/set_anchors"
+    inputs:
+      widget_path: "$widget_asset.path"
+      widget_id: "$title_widget.id"
+      anchors_preset: "$anchors_preset"
+      alignment: [0.5, 0.0]
+      offsets: [0, 0, "$size[0]", 32]
+    on_error: "abort"
+
+  - id: add_icon_image
+    action: "umg/add_widget"
+    inputs:
+      widget_path: "$widget_asset.path"
+      parent_id: "Root"
+      widget_class: "Image"
+      widget_name: "Icon_Image"
+    captures: "icon_widget"
+    on_error: "abort"
+
+  - id: set_icon_brush
+    action: "umg/set_widget_property"
+    only_if: "$icon_texture_path != null"
+    inputs:
+      widget_path: "$widget_asset.path"
+      widget_id: "$icon_widget.id"
+      property_name: "Brush.ResourceObject"
+      value: "$icon_texture_path"
+    on_error: "continue"
+
+  - id: anchor_icon
+    action: "umg/set_anchors"
+    inputs:
+      widget_path: "$widget_asset.path"
+      widget_id: "$icon_widget.id"
+      anchors_preset: "$anchors_preset"
+      alignment: [0.5, 1.0]
+      # Icon below title; runtime extracts a 64x64 box from the bottom of $size.
+      offsets: [0, 32, 64, 64]
+    on_error: "abort"
+
+  - id: set_icon_initial_opacity
+    # Drive the fade-in: animation will ramp this from 0 -> 1.
+    action: "umg/set_widget_property"
+    inputs:
+      widget_path: "$widget_asset.path"
+      widget_id: "$icon_widget.id"
+      property_name: "RenderOpacity"
+      value: 0.0
+    on_error: "continue"
+
+  - id: bind_title_text
+    action: "umg/set_binding"
+    inputs:
+      widget_path: "$widget_asset.path"
+      widget_id: "$title_widget.id"
+      property_name: "Text"
+      binding_kind: |
+        if $bound_function_name != null:
+          return 'Function'
+        else:
+          return 'Property'
+      binding_target: |
+        if $bound_function_name != null:
+          return $bound_function_name
+        else:
+          return $bound_property_name
+    on_error: "abort"
+
+  - id: scope_animation_to_widget
+    action: "animation/set_widget_scope"
+    inputs:
+      widget_path: "$widget_asset.path"
+      animation_name: "$animation_name"
+      create_if_missing: true
+      duration_seconds: "$fade_in_duration"
+    captures: "animation_scope"
+    on_error: "abort"
+
+  - id: key_icon_opacity
+    action: "animation/set_property_keys"
+    inputs:
+      widget_path: "$widget_asset.path"
+      animation_name: "$animation_name"
+      target_widget_id: "$icon_widget.id"
+      property_path: "RenderOpacity"
+      keyframes:
+        - time: 0.0
+          value: 0.0
+          interp: "Cubic"
+        - time: "$fade_in_duration"
+          value: 1.0
+          interp: "Cubic"
+    on_error: "abort"
+
+  - id: key_title_opacity
+    action: "animation/set_property_keys"
+    inputs:
+      widget_path: "$widget_asset.path"
+      animation_name: "$animation_name"
+      target_widget_id: "$title_widget.id"
+      property_path: "RenderOpacity"
+      keyframes:
+        - time: 0.0
+          value: 0.0
+          interp: "Cubic"
+        - time: "$fade_in_duration"
+          value: 1.0
+          interp: "Cubic"
+    on_error: "continue"
+
+  - id: save_widget
+    action: "umg/save_asset"
+    inputs:
+      widget_path: "$widget_asset.path"
+    on_error: "abort"
+
+  - id: compile_widget
+    action: "blueprint/compile_blueprint"
+    inputs:
+      asset_path: "$widget_asset.path"
+    on_error: "abort"
+
+  - id: read_final_tree
+    action: "umg/get_widget_tree"
+    inputs:
+      widget_path: "$widget_asset.path"
+    captures: "widget_tree"
+    on_error: "continue"
+
+decision_points:
+  - at: bind_title_text
+    condition: "$bound_function_name == null and $bound_property_name == null"
+    if_true:
+      behavior: "Skip bind_title_text. The TextBlock keeps its default literal text and never updates at runtime."
+      goto: scope_animation_to_widget
+    if_false:
+      behavior: "Bind via Function (preferred) or Property and continue to animation."
+
+failure_modes:
+  - trigger: "Binding source not specified"
+    symptom: "TextBlock displays $title_text_default forever; no Tick-driven update."
+    fix: "Pass either $bound_function_name or $bound_property_name. The recipe prefers the function form because it survives variable renames."
+  - trigger: "Animation has no end key"
+    symptom: "Animation duration > 0 but Render Opacity stays at the start value at runtime."
+    fix: "Confirm key_icon_opacity ran successfully. animation/set_property_keys rejects single-keyframe arrays - both time=0 and time=$fade_in_duration must be supplied."
+  - trigger: "Anchors preset 'Center' with a non-square size and no alignment offset"
+    symptom: "Widget appears off-screen on aspect ratios different from the editor's."
+    fix: "Use anchors_preset 'Center' with alignment [0.5, 0.5] (recipe defaults to [0.5, 0]). Override $alignment in a future revision input."
+  - trigger: "Image brush ResourceObject set to a non-Texture2D asset"
+    symptom: "Image renders as solid white or default checker; editor logs 'Brush.ResourceObject expects UTexture2D'."
+    fix: "Verify $icon_texture_path resolves to UTexture2D. For material brushes, set Brush.ResourceObject to the material asset and Brush.DrawAs to 'Image'."
+  - trigger: "Bound property type is FString instead of FText"
+    symptom: "set_binding rejects with 'binding type mismatch: expected Text, got String'."
+    fix: "Recipe creates the variable as Text. If you bypass and reuse an existing FString variable, convert with FText::FromString in a function binding instead."
+
+variants:
+  - name: "hud_overlay"
+    differs_by: "$anchors_preset == 'TopRight'. Title above, icon below; permanent fixture in HUD layer."
+  - name: "popup_dialog"
+    differs_by: "$anchors_preset == 'Center', icon optional, $fade_in_duration ~ 0.6. Dismisses on a separate FadeOut animation."
+  - name: "list_item_template"
+    differs_by: "$anchors_preset == 'Fill', no animation (set $fade_in_duration to a small value like 0.05 if the runtime requires non-zero). Reused as a child of a ListView's EntryWidgetClass."
+
+notes: |
+  All actions referenced exist in _inventory.json under domains umg, animation,
+  blueprint (plugin 0.2.6).
+  umg/set_binding handles both function and property bindings; the recipe
+  picks Function when $bound_function_name is provided (more robust to
+  variable renames). For pure-property binding, the variable is added by
+  blueprint/add_variable in the ensure_bound_property step.
+  animation/set_widget_scope creates the UWidgetAnimation if missing and
+  initializes its duration; subsequent animation/set_property_keys calls
+  populate the per-property tracks (RenderOpacity, RenderTransform, Visibility).
+  Cubic interp is the umg-native default; switching to Linear yields a
+  flatter ramp.
+  The recipe sets RenderOpacity = 0 on both Title_Text and Icon_Image at
+  authoring time so the widget is invisible until the fade-in animation
+  plays, avoiding a one-frame pop-in.
+  No pending_plugin_support flags - every step runs end-to-end on plugin 0.2.6.

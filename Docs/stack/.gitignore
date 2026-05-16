@@ -1,0 +1,8 @@
+# Python venv (installed on demand via pip)
+.venv/
+
+# Build caches - regenerable from source
+.cache/
+
+# Phase 2 artifact dir
+.vectors/

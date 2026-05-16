@@ -1,0 +1,322 @@
+recipe_schema_version: 1.0
+id: "niagara_emitter_from_static_mesh"
+title: "Niagara emitter spawning from a static mesh"
+goal: "Create a Niagara system + emitter that spawns particles sampled from a static mesh, with mesh sampling, a renderer, and GPU sim."
+description: |
+  Creates a UNiagaraSystem, adds a CPU- or GPU-simulated emitter, attaches a
+  Mesh Sampling module bound to a target static mesh, configures the renderer
+  (sprite or mesh), sets sim target (CPU vs GPU), and binds the mesh asset to a
+  user parameter for runtime swapping. Use this recipe to author dust /
+  embers / arcane particles that follow a complex source surface (statue,
+  destructible, hero shoulders). For simple location emitters, prefer a
+  pre-built template via niagara/create_niagara_system + add_emitter without
+  the mesh-sampling module chain.
+
+domain_scope: [niagara, asset, static_mesh]
+tested_on_ue: ["5.7"]
+tested_on_plugin: ["0.2.6"]
+
+preconditions:
+  - "$mesh_path resolves to a valid UStaticMesh asset."
+  - "$target_system_path package folder exists or can be created."
+  - "If $sim_target == 'GPU', the target platform supports GPU compute (PC/Console). Mobile may fall back to CPU."
+
+inputs:
+  - name: "target_system_path"
+    type: "asset_path"
+    required: true
+    description: "Package path for the new Niagara system asset."
+    example: "/Game/VFX/Particles/NS_StatueMotes"
+  - name: "emitter_name"
+    type: "string"
+    required: true
+    description: "Display name for the emitter inside the system."
+    example: "MoteEmitter"
+  - name: "mesh_path"
+    type: "asset_path"
+    required: true
+    description: "Static mesh to sample. Must have CPU access enabled for CPU sim, or GPU access for GPU sim."
+    example: "/Game/Environment/Meshes/SM_HeroStatue"
+  - name: "sim_target"
+    type: "string"
+    required: true
+    description: "CPU | GPU. GPU emitters are required for >5k particles or compute-heavy modules."
+    example: "GPU"
+  - name: "spawn_rate"
+    type: "float"
+    required: true
+    description: "Particles per second."
+    example: 250.0
+  - name: "particle_lifetime"
+    type: "float"
+    required: true
+    description: "Lifetime in seconds."
+    example: 2.5
+  - name: "renderer_type"
+    type: "string"
+    required: true
+    description: "Sprite | Mesh. Sprite uses a billboarded quad; Mesh uses a static mesh per particle."
+    example: "Sprite"
+  - name: "renderer_mesh_path"
+    type: "asset_path"
+    required: false
+    description: "Required if renderer_type == 'Mesh'. Static mesh used for the renderer."
+    example: "/Game/VFX/Meshes/SM_Mote_Quad"
+  - name: "renderer_material_path"
+    type: "asset_path"
+    required: false
+    description: "Material to apply to the renderer. Defaults to the renderer mesh's first slot or a default sprite shader."
+    example: "/Game/VFX/Materials/M_Mote_Additive"
+  - name: "user_param_name"
+    type: "string"
+    required: false
+    description: "Name of the user parameter that exposes the source mesh for runtime swapping. Defaults to 'User.SourceMesh'."
+    example: "User.SourceMesh"
+
+outputs:
+  - name: "created_system_path"
+    type: "asset_path"
+    description: "Compiled Niagara system asset path."
+  - name: "emitter_id"
+    type: "string"
+    description: "Stable id of the added emitter inside the system."
+
+action_dependencies:
+  - niagara/create_niagara_system
+  - niagara/add_emitter
+  - niagara/add_module
+  - niagara/set_module_property
+  - niagara/add_renderer
+  - niagara/set_renderer_property
+  - niagara/set_gpu_sim
+  - niagara/bind_parameter
+  - niagara/set_user_parameter
+  - niagara/compile_niagara_system
+  - niagara/list_emitters
+
+steps:
+  - id: create_system
+    action: "niagara/create_niagara_system"
+    inputs:
+      asset_path: "$target_system_path"
+    captures: "system_asset"
+    on_error: "abort"
+
+  - id: add_target_emitter
+    action: "niagara/add_emitter"
+    inputs:
+      system_path: "$system_asset.path"
+      emitter_name: "$emitter_name"
+      template: "Empty"
+    captures: "emitter"
+    on_error: "abort"
+
+  - id: configure_sim_target
+    action: "niagara/set_gpu_sim"
+    inputs:
+      system_path: "$system_asset.path"
+      emitter_id: "$emitter.id"
+      use_gpu: "$sim_target == 'GPU'"
+      fixed_bounds:
+        min: [-500, -500, -500]
+        max: [500, 500, 500]
+    on_error: "abort"
+
+  - id: add_spawn_rate_module
+    action: "niagara/add_module"
+    inputs:
+      system_path: "$system_asset.path"
+      emitter_id: "$emitter.id"
+      stage: "EmitterUpdate"
+      module_class: "SpawnRate"
+    captures: "spawn_rate_module"
+    on_error: "abort"
+    status: "pending_plugin_support"
+
+  - id: set_spawn_rate_value
+    action: "niagara/set_module_property"
+    inputs:
+      system_path: "$system_asset.path"
+      emitter_id: "$emitter.id"
+      module_id: "$spawn_rate_module.id"
+      property_name: "SpawnRate"
+      value: "$spawn_rate"
+    on_error: "abort"
+    status: "pending_plugin_support"
+
+  - id: add_lifetime_module
+    action: "niagara/add_module"
+    inputs:
+      system_path: "$system_asset.path"
+      emitter_id: "$emitter.id"
+      stage: "ParticleSpawn"
+      module_class: "InitializeParticle"
+    captures: "init_module"
+    on_error: "abort"
+    status: "pending_plugin_support"
+
+  - id: set_particle_lifetime
+    action: "niagara/set_module_property"
+    inputs:
+      system_path: "$system_asset.path"
+      emitter_id: "$emitter.id"
+      module_id: "$init_module.id"
+      property_name: "Lifetime"
+      value: "$particle_lifetime"
+    on_error: "abort"
+    status: "pending_plugin_support"
+
+  - id: add_mesh_sampling_module
+    action: "niagara/add_module"
+    inputs:
+      system_path: "$system_asset.path"
+      emitter_id: "$emitter.id"
+      stage: "ParticleSpawn"
+      module_class: "SampleStaticMesh"
+    captures: "mesh_sampling_module"
+    on_error: "abort"
+    status: "pending_plugin_support"
+
+  - id: bind_sample_mesh_path
+    action: "niagara/set_module_property"
+    inputs:
+      system_path: "$system_asset.path"
+      emitter_id: "$emitter.id"
+      module_id: "$mesh_sampling_module.id"
+      property_name: "PreviewMesh"
+      value: "$mesh_path"
+    on_error: "abort"
+    status: "pending_plugin_support"
+
+  - id: add_particle_renderer
+    action: "niagara/add_renderer"
+    inputs:
+      system_path: "$system_asset.path"
+      emitter_id: "$emitter.id"
+      renderer_class: |
+        if $renderer_type == 'Mesh':
+          return 'NiagaraMeshRendererProperties'
+        else:
+          return 'NiagaraSpriteRendererProperties'
+    captures: "renderer"
+    on_error: "abort"
+    status: "pending_plugin_support"
+
+  - id: set_renderer_mesh
+    action: "niagara/set_renderer_property"
+    only_if: "$renderer_type == 'Mesh'"
+    inputs:
+      system_path: "$system_asset.path"
+      emitter_id: "$emitter.id"
+      renderer_id: "$renderer.id"
+      property_name: "ParticleMesh"
+      value: "$renderer_mesh_path"
+    on_error: "abort"
+    status: "pending_plugin_support"
+
+  - id: set_renderer_material
+    action: "niagara/set_renderer_property"
+    only_if: "$renderer_material_path != null"
+    inputs:
+      system_path: "$system_asset.path"
+      emitter_id: "$emitter.id"
+      renderer_id: "$renderer.id"
+      property_name: "Material"
+      value: "$renderer_material_path"
+    on_error: "abort"
+    status: "pending_plugin_support"
+
+  - id: bind_user_parameter_for_mesh
+    action: "niagara/bind_parameter"
+    inputs:
+      system_path: "$system_asset.path"
+      parameter_name: "$user_param_name"
+      parameter_type: "Object"
+      base_class: "/Script/Engine.StaticMesh"
+    captures: "user_param"
+    on_error: "continue"
+
+  - id: seed_user_parameter_default
+    action: "niagara/set_user_parameter"
+    inputs:
+      system_path: "$system_asset.path"
+      parameter_name: "$user_param_name"
+      value: "$mesh_path"
+    on_error: "continue"
+
+  - id: compile_system
+    action: "niagara/compile_niagara_system"
+    inputs:
+      system_path: "$system_asset.path"
+    on_error: "abort"
+
+  - id: read_emitter_list
+    action: "niagara/list_emitters"
+    inputs:
+      system_path: "$system_asset.path"
+    captures: "final_emitters"
+    on_error: "continue"
+
+failure_modes:
+  - trigger: "Static mesh missing CPU access for CPU sim target"
+    symptom: "Compile succeeds but no particles spawn; emitter log shows 'CPUAccess required'."
+    fix: "Open the static mesh asset, enable Allow CPU Access, save, then recompile the system. For GPU sim path the requirement is GPU access (default on)."
+  - trigger: "Renderer type Mesh without renderer_mesh_path"
+    symptom: "set_renderer_mesh skipped; renderer remains invalid; particles render as gray boxes or not at all."
+    fix: "Always pass $renderer_mesh_path when $renderer_type == 'Mesh'. The recipe declares it required-conditional but does not enforce."
+  - trigger: "GPU sim with unbounded fixed_bounds"
+    symptom: "Particles cull when camera moves; emitter LOD pops in and out."
+    fix: "Set $configure_sim_target.fixed_bounds large enough to enclose the source mesh + max particle drift. Default [-500,-500,-500]..[500,500,500] is conservative."
+  - trigger: "compile_niagara_system reports 'unresolved module input'"
+    symptom: "Compile fails listing a module property as unset (e.g. Lifetime)."
+    fix: "Confirm set_module_property succeeded for every required module input. If a module's property panel needs a binding (not a literal), use niagara/bind_parameter instead of set_module_property."
+  - trigger: "Stub action returns 3003 not implemented"
+    symptom: "add_module / set_module_property / add_renderer / set_renderer_property returns error_code 3003."
+    fix: |
+      Three of these are BLOCKED at the engine boundary (not just deferred):
+        - add_module / set_module_property: module-stack editing in UE 5.7 lives in
+          NiagaraEditor/Internal/ and NiagaraEditor/Private/ headers (UNiagaraStackModuleItem,
+          FNiagaraStackGraphUtilities). Epic changes this surface every minor engine version
+          and does not expose it through public NiagaraEditor headers, so a stable C++ wiring
+          is not available.
+        - add_renderer: FVersionedNiagaraEmitterData::RendererProperties is private with no
+          public mutator in UE 5.7. There is no supported way to append a renderer through
+          the public API.
+      One is DEFERRED (will ship in a future plugin release):
+        - set_renderer_property: once a renderer exists, individual UPROPERTYs on
+          UNiagaraRendererProperties are reachable via reflection (the same pattern
+          set_particle_lights already uses successfully). Just not wired generically yet.
+      Workaround for all four: dispatch a python_agent snippet that drives the equivalent
+      via the unreal Python API. The Python path can reach editor internals the C++ surface
+      cannot.
+
+variants:
+  - name: "cpu_sprite_emitter"
+    differs_by: "$sim_target == 'CPU', $renderer_type == 'Sprite'. Cheap 200-500 particles, suitable for ambient world dust."
+  - name: "gpu_mesh_swarm"
+    differs_by: "$sim_target == 'GPU', $renderer_type == 'Mesh', $spawn_rate >= 5000. Insect swarm / arcane shard storm."
+  - name: "cpu_mesh_lowcount"
+    differs_by: "$sim_target == 'CPU', $renderer_type == 'Mesh', $spawn_rate <= 60. Hero accessory bits (shield embers, crown sparks)."
+
+notes: |
+  All action names referenced (create_niagara_system, add_emitter, add_module,
+  set_module_property, add_renderer, set_renderer_property, set_gpu_sim,
+  bind_parameter, set_user_parameter, compile_niagara_system, list_emitters)
+  exist in _inventory.json under domain niagara as of plugin 0.2.6.
+
+  Stub status (split into two honest categories):
+    BLOCKED at the engine boundary - NOT planned to ship as direct C++ handlers:
+      - add_module, set_module_property: NiagaraEditor stack-graph editing lives in
+        Internal/Private headers Epic does not expose publicly.
+      - add_renderer: FVersionedNiagaraEmitterData::RendererProperties is a private
+        field in UE 5.7 with no public mutator.
+      Use the python_agent fallback (unreal.NiagaraEditor snippet) for these.
+
+    DEFERRED - wireable, planned for a future plugin release:
+      - set_renderer_property: a generic reflection-based setter following the same
+        pattern as the working set_particle_lights handler. Roughly hours of work.
+
+  Outer-loop steps (create_niagara_system, add_emitter, set_gpu_sim, bind_parameter,
+  set_user_parameter, compile_niagara_system, list_emitters) are fully implemented
+  today, so the recipe still produces a real (empty) emitter even when the BLOCKED /
+  DEFERRED steps return 3003 and a python_agent fallback fills in the gap.

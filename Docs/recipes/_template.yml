@@ -1,0 +1,113 @@
+# Recipe schema v1.0
+# Canonical template for ForgeEditorBridge cognitive-stack recipes.
+# Copy this file, rename to match your recipe's `id`, and fill in all fields.
+# All action references must correspond to real entries in Docs/_inventory.json.
+# YAML rules: 2-space indent, no tabs, no trailing whitespace.
+
+recipe_schema_version: 1.0
+
+# Unique recipe key. MUST match filename (minus `.yml`). snake_case.
+id: "snake_case_id_matching_filename"
+
+# Short human-readable title (sentence case, no trailing period).
+title: "Human-readable title"
+
+# One-sentence intent. What does this recipe accomplish?
+goal: "One-sentence intent"
+
+# Multi-line prose block. Use `|` for literal newlines.
+# Cover: when to use this recipe, its preconditions, and what success looks like.
+description: |
+  Multi-line prose explaining when to use this recipe, what the preconditions are,
+  and what the successful outcome looks like. Include guidance on when NOT to use
+  this recipe (i.e. when a simpler or different recipe is the right choice).
+
+# Plugin domains touched. Lowercase, matches the `domain` field in _inventory.json.
+domain_scope: [list, of, plugin, domains, touched]
+
+# UE engine versions the recipe has been verified against.
+tested_on_ue: ["5.7"]
+
+# ForgeEditorBridge plugin versions the recipe has been verified against.
+# Matches the `plugin_version` field in _inventory.json.
+tested_on_plugin: ["0.2.6"]
+
+# Preconditions the runtime (or caller) must satisfy before dispatching this recipe.
+preconditions:
+  - "Bullet of things that must be true before running"
+
+# User-provided parameters. Each input is declared once at the top of the recipe
+# and then referenced in steps as `$input_name`.
+inputs:
+  - name: "param_name"
+    type: "string | int | float | bool | asset_path | array | object"
+    required: true
+    description: "What this is"
+    example: "/Game/Environment/Textures/T_Rock_D"
+
+# Values the recipe emits on success. Consumers read these via their capture ids.
+outputs:
+  - name: "created_asset_path"
+    type: "asset_path"
+    description: "Final material path"
+
+# All plugin actions actually referenced in `steps`/`loops`/`variants`.
+# This list is the authoritative dependency manifest and MUST be kept in sync
+# with the action references below. Used by validation tooling.
+action_dependencies:
+  - texture/import_texture
+  - asset/create_material
+  - material/material_compile_asset
+
+# Ordered action calls. Each step has a stable `id` that other steps, branches,
+# and loops can target. `inputs` values may be literals or `$references`.
+# `captures` names the output variable; later steps can read `$variable.field`.
+# `on_error` is one of: abort (stop recipe), continue (log and proceed),
+# retry (re-dispatch up to a runtime-defined count).
+steps:
+  - id: step_1
+    action: "domain/action_name"
+    inputs:
+      key: "$input_param or literal"
+    captures: "variable_name"
+    on_error: "abort"
+
+# Branching logic. `condition` is an expression over captured variables / inputs.
+# `goto` values reference step ids (or loop ids).
+decision_points:
+  - at: step_N
+    condition: "expression"
+    if_true: { goto: step_M }
+    if_false: { goto: step_P }
+
+# Loops iterate over an array input or capture. `as` names the loop variable;
+# steps inside the loop may reference `$as` and `$as_index`.
+loops:
+  - over: "$input_array"
+    as: "item"
+    steps:
+      - id: inner_step
+        action: "domain/action_name"
+        inputs:
+          key: "$item.field"
+
+# Known gotchas and recovery paths. Tight, specific, testable.
+failure_modes:
+  - trigger: "condition"
+    symptom: "what you will observe"
+    fix: "how to recover"
+
+# Parameterized variations of this recipe. Each variant references the same
+# `steps` block but overrides specific inputs or swaps specific steps.
+variants:
+  - name: "variant_name"
+    differs_by: "description of what this variant changes"
+
+# Free-form notes. Design context, alternatives considered, future work.
+notes: |
+  Free-form notes.
+
+# Optional per-step status flag. Set `status: "pending_plugin_support"` on any
+# step whose action does NOT yet exist in _inventory.json. The recipe will not
+# run end-to-end until the action ships; document the gap in `failure_modes`
+# or `notes` so the Map can prioritize plugin work.

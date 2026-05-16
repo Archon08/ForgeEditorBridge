@@ -1,0 +1,202 @@
+recipe_schema_version: 1.0
+id: "mass_spawn_with_collision_avoidance"
+title: "Mass-spawn actors with collision avoidance"
+goal: "Spawn N actors from a proposed transform list, skipping or offsetting any that would overlap existing geometry."
+description: |
+  Given an actor/blueprint asset and an array of proposed world transforms, the
+  recipe validates the asset, iterates the transforms, runs an overlap query at
+  each proposed location, and either spawns (clear), offsets and retries, or
+  skips (blocked). Produces a manifest of spawned actors and a reject list with
+  reasons. Use this for set-dressing, patrol-point placement, and bulk prop
+  instancing. For tightly packed foliage, prefer the foliage domain (`foliage/*`).
+
+domain_scope: [asset, scene_query, actor]
+tested_on_ue: ["5.7"]
+tested_on_plugin: ["0.2.6"]
+
+preconditions:
+  - "$asset_path exists and refers to a spawnable actor or actor blueprint."
+  - "Caller has computed approximate collision extents for the asset (or accepts the default probe)."
+  - "The current level is writable (not a read-only sublevel)."
+
+inputs:
+  - name: "asset_path"
+    type: "asset_path"
+    required: true
+    description: "Actor or actor blueprint asset to spawn."
+    example: "/Game/Props/BP_Barrel"
+  - name: "transforms"
+    type: "array"
+    required: true
+    description: "Array of {location: [x,y,z], rotation: [pitch,yaw,roll], scale: [sx,sy,sz]} proposed spawn transforms."
+    example:
+      - location: [0, 0, 100]
+        rotation: [0, 0, 0]
+        scale: [1, 1, 1]
+      - location: [300, 0, 100]
+        rotation: [0, 90, 0]
+        scale: [1, 1, 1]
+  - name: "probe_extents"
+    type: "array"
+    required: false
+    description: "[x, y, z] half-extents for the overlap query. Defaults to [50, 50, 50]."
+    example: [50, 50, 50]
+  - name: "collision_strategy"
+    type: "string"
+    required: true
+    description: "skip | offset | retry. skip = drop blocked transforms. offset = try one shifted position then spawn anyway. retry = try $max_retries random offsets before giving up."
+    example: "retry"
+  - name: "max_retries"
+    type: "int"
+    required: false
+    description: "Used when collision_strategy == retry. Defaults to 3."
+    example: 3
+  - name: "retry_offset_range"
+    type: "array"
+    required: false
+    description: "[min, max] distance (UU) sampled uniformly for each retry offset. Defaults to [50, 200]."
+    example: [50, 200]
+  - name: "label_prefix"
+    type: "string"
+    required: false
+    description: "Prefix for spawned actor labels. Sequenced as prefix_000, prefix_001, ..."
+    example: "Barrel"
+
+outputs:
+  - name: "spawned_actors"
+    type: "array"
+    description: "Array of {label, location, source_transform_index} for every successful spawn."
+  - name: "skipped_transforms"
+    type: "array"
+    description: "Array of {source_transform_index, reason, last_probe_hit} for every transform that was not spawned."
+
+action_dependencies:
+  - asset/get_asset_info
+  - scene_query/overlap_query
+  - actor/spawn_actor
+  - actor/spawn_blueprint_actor
+  - actor/spawn_with_retry
+  - actor/set_actor_label
+
+steps:
+  - id: validate_asset
+    action: "asset/get_asset_info"
+    inputs:
+      asset_path: "$asset_path"
+    captures: "asset_info"
+    on_error: "abort"
+
+  - id: decide_spawn_action
+    # Pseudo-step: the loop below selects spawn_actor vs spawn_blueprint_actor
+    # based on $asset_info.class. Blueprint-derived classes go through
+    # actor/spawn_blueprint_actor; engine-native classes go through actor/spawn_actor.
+    action: "noop"
+    on_error: "continue"
+
+loops:
+  - id: main_spawn_loop
+    over: "$transforms"
+    as: "xform"
+    steps:
+      # Atomic spawn-with-retry. Plugin action runs the probe and the retry loop
+      # in a single call; no recipe-side inner loop needed unless $collision_strategy == 'skip'.
+      - id: spawn_with_retry_atomic
+        action: "actor/spawn_with_retry"
+        only_if: "$collision_strategy == 'retry' or $collision_strategy == 'offset'"
+        inputs:
+          asset_path: "$asset_path"
+          location: "$xform.location"
+          rotation: "$xform.rotation"
+          retry_offset_range: "$retry_offset_range[1]"
+          max_retries: "$max_retries"
+          collision_box_extent:
+            x: "$probe_extents[0]"
+            y: "$probe_extents[1]"
+            z: "$probe_extents[2]"
+        captures: "spawned"
+        on_error: "continue"
+
+      # Skip strategy: probe once, only spawn if clear, never retry.
+      - id: probe_location_skip
+        action: "scene_query/overlap_query"
+        only_if: "$collision_strategy == 'skip'"
+        inputs:
+          location: "$xform.location"
+          extents: "$probe_extents"
+          rotation: "$xform.rotation"
+          channels: ["WorldStatic", "WorldDynamic"]
+        captures: "probe_result"
+        on_error: "abort"
+
+      - id: spawn_if_clear_bp
+        action: "actor/spawn_blueprint_actor"
+        only_if: "$collision_strategy == 'skip' and $probe_result.hit == false and $asset_info.is_blueprint == true"
+        inputs:
+          blueprint_path: "$asset_path"
+          location: "$xform.location"
+          rotation: "$xform.rotation"
+          scale: "$xform.scale"
+        captures: "spawned"
+        on_error: "continue"
+
+      - id: spawn_if_clear_native
+        action: "actor/spawn_actor"
+        only_if: "$collision_strategy == 'skip' and $probe_result.hit == false and $asset_info.is_blueprint == false"
+        inputs:
+          class_path: "$asset_path"
+          location: "$xform.location"
+          rotation: "$xform.rotation"
+          scale: "$xform.scale"
+        captures: "spawned"
+        on_error: "continue"
+
+      - id: label_spawned
+        action: "actor/set_actor_label"
+        only_if: "$spawned != null"
+        inputs:
+          actor_id: "$spawned.spawned_actor_label"
+          label: "$label_prefix + '_' + pad_left($xform_index, 3, '0')"
+        on_error: "continue"
+
+      - id: record_skip
+        # Called by the runtime whenever no spawn landed for this $xform.
+        action: "noop"
+        only_if: "$spawned == null"
+        on_error: "continue"
+
+decision_points:
+  - at: main_spawn_loop
+    condition: "$collision_strategy == 'skip'"
+    if_true: { behavior: "On any probe hit, jump straight to record_skip; never retry." }
+    if_false: { behavior: "Enter retry_with_offset branch; respect $max_retries and $retry_offset_range." }
+
+failure_modes:
+  - trigger: "$asset_path does not resolve to a spawnable class"
+    symptom: "validate_asset succeeds but spawn step fails with 'class not spawnable' or similar."
+    fix: "Confirm the asset is an Actor, ActorComponent-hosting blueprint, or has a non-abstract generated class. Verify via asset/get_asset_info.class_flags."
+  - trigger: "All transforms return probe hits"
+    symptom: "skipped_transforms.length == transforms.length; no actors spawned."
+    fix: "Widen $retry_offset_range, shrink $probe_extents, or relocate the source transform set. For dense scenes, pre-filter transforms with scene_query/get_actors_in_radius."
+  - trigger: "overlap_query hits a distant streamed actor"
+    symptom: "Spawns are rejected in regions that appear visually empty."
+    fix: "Ensure $probe_extents is tight to the asset's actual bounds. Overly large extents catch neighbors."
+  - trigger: "spawn_with_retry returns 3000 all attempts blocked"
+    symptom: "actor/spawn_with_retry returns error_code 3000 'all N attempts blocked by overlap'."
+    fix: "Increase $retry_offset_range, shrink $probe_extents (collision_box_extent), or relocate the source transforms. Switch $collision_strategy to 'skip' to drop blocked transforms silently."
+
+variants:
+  - name: "skip_only"
+    differs_by: "Forces $collision_strategy == 'skip'. Simplest and safest for tightly curated transform lists."
+  - name: "offset_once"
+    differs_by: "Forces $collision_strategy == 'offset' and $max_retries == 1. Single random offset, then spawn regardless (risk of overlap if retry probe also hits)."
+  - name: "retry_aggressive"
+    differs_by: "max_retries=10, retry_offset_range=[25, 400]. Higher cost, higher fill rate."
+
+notes: |
+  All actions referenced exist in _inventory.json as of plugin 0.2.6 (spawn_with_retry added).
+  Retry / offset strategies dispatch through actor/spawn_with_retry — a single atomic plugin
+  call that runs the OverlapBlockingTest probe and the jittered-retry loop engine-side.
+  The 'skip' strategy path still uses scene_query/overlap_query + actor/spawn_actor because
+  it must not retry on a probe hit.
+  The noop record_skip entry is a runtime-internal marker step; it does not dispatch to the
+  plugin. The recipe engine is expected to honor it as control flow.

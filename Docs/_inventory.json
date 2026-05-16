@@ -1,0 +1,4030 @@
+{
+  "generated_at": "2026-04-24T19:32:48.275604Z",
+  "plugin_version": "0.2.6",
+  "counts": {
+    "handlers": 69,
+    "actions_distinct": 677,
+    "actions_with_aliases": 700
+  },
+  "subsystems": [
+    "Attention",
+    "Blueprint",
+    "Capture",
+    "Handlers",
+    "IO",
+    "Server"
+  ],
+  "build_cs_modules": {
+    "PublicDependencyModuleNames": [
+      "Core"
+    ],
+    "PrivateDependencyModuleNames": [
+      "CoreUObject",
+      "Engine",
+      "UnrealEd",
+      "EditorSubsystem",
+      "DeveloperSettings",
+      "HTTP",
+      "HTTPServer",
+      "Json",
+      "JsonUtilities",
+      "UMG",
+      "UMGEditor",
+      "SlateCore",
+      "BlueprintGraph",
+      "Kismet",
+      "KismetCompiler",
+      "BlueprintEditorLibrary",
+      "AssetTools",
+      "AssetRegistry",
+      "Networking",
+      "Sockets",
+      "MovieScene",
+      "MovieSceneTracks",
+      "MaterialEditor",
+      "EditorScriptingUtilities",
+      "LiveCoding",
+      "HotReload",
+      "MessageLog",
+      "GameplayAbilities",
+      "GameplayTags",
+      "GameplayTasks",
+      "PCG",
+      "PCGEditor",
+      "AnimationBlueprintEditor",
+      "AnimGraph",
+      "Niagara",
+      "NiagaraEditor",
+      "DataTableEditor",
+      "PhysicsCore",
+      "SkeletalMeshEditor",
+      "ClothingSystemRuntimeInterface",
+      "IKRig",
+      "IKRigEditor",
+      "ControlRig",
+      "ControlRigDeveloper",
+      "ControlRigEditor",
+      "RigVM",
+      "RigVMDeveloper",
+      "Landscape",
+      "LandscapeEditor",
+      "Foliage",
+      "CinematicCamera",
+      "AIModule",
+      "BehaviorTreeEditor",
+      "NavigationSystem",
+      "EnhancedInput",
+      "InputCore",
+      "AudioEditor",
+      "MetasoundFrontend",
+      "MetasoundEditor",
+      "MetasoundEngine",
+      "LevelSequence",
+      "LevelSequenceEditor",
+      "Chaos",
+      "GeometryCollectionEngine",
+      "GeometryCollectionEditor",
+      "ChaosSolverEngine",
+      "FieldSystemEngine",
+      "DataValidation",
+      "Blutility",
+      "LevelEditor",
+      "SourceControl",
+      "Projects",
+      "MassEntity",
+      "MassSpawner",
+      "StateTreeModule",
+      "StateTreeEditorModule",
+      "SmartObjectsModule",
+      "Water",
+      "MediaAssets",
+      "TargetPlatform",
+      "ImageCore",
+      "ImageWrapper",
+      "WorldPartitionEditor",
+      "DataLayerEditor",
+      "RHI",
+      "RenderCore"
+    ]
+  },
+  "domains": [
+    {
+      "domain": "actor",
+      "handler_file": "ActorHandler.cpp",
+      "purpose": "Spawn, query, transform, and destroy level actors; resolves UClasses from names and asset paths",
+      "actions": [
+        {
+          "name": "spawn_actor",
+          "dispatch_line": 195,
+          "aliases": []
+        },
+        {
+          "name": "set_actor_transform",
+          "dispatch_line": 306,
+          "aliases": []
+        },
+        {
+          "name": "find_actors_by_name",
+          "dispatch_line": 386,
+          "aliases": []
+        },
+        {
+          "name": "get_actors_in_level",
+          "dispatch_line": 421,
+          "aliases": []
+        },
+        {
+          "name": "add_component_to_blueprint",
+          "dispatch_line": 448,
+          "aliases": []
+        },
+        {
+          "name": "spawn_blueprint_actor",
+          "dispatch_line": 500,
+          "aliases": []
+        },
+        {
+          "name": "get_actor_transform",
+          "dispatch_line": 560,
+          "aliases": []
+        },
+        {
+          "name": "get_actor_properties",
+          "dispatch_line": 608,
+          "aliases": []
+        },
+        {
+          "name": "set_actor_property",
+          "dispatch_line": 657,
+          "aliases": []
+        },
+        {
+          "name": "attach_to",
+          "dispatch_line": 735,
+          "aliases": []
+        },
+        {
+          "name": "detach",
+          "dispatch_line": 776,
+          "aliases": []
+        },
+        {
+          "name": "set_mobility",
+          "dispatch_line": 806,
+          "aliases": []
+        },
+        {
+          "name": "set_tag",
+          "dispatch_line": 846,
+          "aliases": []
+        },
+        {
+          "name": "get_selected_actors",
+          "dispatch_line": 878,
+          "aliases": []
+        },
+        {
+          "name": "select_actors",
+          "dispatch_line": 917,
+          "aliases": []
+        },
+        {
+          "name": "focus_actor",
+          "dispatch_line": 962,
+          "aliases": []
+        },
+        {
+          "name": "set_lod_settings",
+          "dispatch_line": 995,
+          "aliases": []
+        },
+        {
+          "name": "find_actors_of_class",
+          "dispatch_line": 1048,
+          "aliases": []
+        },
+        {
+          "name": "set_actor_label",
+          "dispatch_line": 1094,
+          "aliases": []
+        },
+        {
+          "name": "duplicate",
+          "dispatch_line": 1124,
+          "aliases": []
+        },
+        {
+          "name": "replace_class",
+          "dispatch_line": 1193,
+          "aliases": []
+        },
+        {
+          "name": "set_replication_settings",
+          "dispatch_line": 1207,
+          "aliases": []
+        },
+        {
+          "name": "spawn_with_retry",
+          "dispatch_line": 1256,
+          "aliases": []
+        }
+      ]
+    },
+    {
+      "domain": "animation",
+      "handler_file": "AnimationHandler.cpp",
+      "purpose": "Animation sequence, montage, and movie-scene animation-track operations",
+      "actions": [
+        {
+          "name": "set_animation_scope",
+          "dispatch_line": 99,
+          "aliases": []
+        },
+        {
+          "name": "set_widget_scope",
+          "dispatch_line": 118,
+          "aliases": []
+        },
+        {
+          "name": "get_all_animations",
+          "dispatch_line": 138,
+          "aliases": []
+        },
+        {
+          "name": "get_animated_widgets",
+          "dispatch_line": 158,
+          "aliases": []
+        },
+        {
+          "name": "get_animation_keyframes",
+          "dispatch_line": 184,
+          "aliases": []
+        },
+        {
+          "name": "delete_animation",
+          "dispatch_line": 288,
+          "aliases": []
+        },
+        {
+          "name": "set_property_keys",
+          "dispatch_line": 310,
+          "aliases": []
+        },
+        {
+          "name": "remove_property_track",
+          "dispatch_line": 497,
+          "aliases": []
+        },
+        {
+          "name": "read_animation_capture",
+          "dispatch_line": 541,
+          "aliases": []
+        },
+        {
+          "name": "set_motion_matching_db",
+          "dispatch_line": 559,
+          "aliases": []
+        },
+        {
+          "name": "set_control_rig_link",
+          "dispatch_line": 560,
+          "aliases": []
+        },
+        {
+          "name": "create_selection_set",
+          "dispatch_line": 561,
+          "aliases": []
+        },
+        {
+          "name": "set_retarget_lod",
+          "dispatch_line": 562,
+          "aliases": []
+        }
+      ]
+    },
+    {
+      "domain": "animation_asset",
+      "handler_file": "AnimationAssetHandler.cpp",
+      "purpose": "Animation asset creation and inspection (sequences, montages, blend spaces)",
+      "actions": [
+        {
+          "name": "create_montage",
+          "dispatch_line": 35,
+          "aliases": []
+        },
+        {
+          "name": "add_notify",
+          "dispatch_line": 36,
+          "aliases": []
+        },
+        {
+          "name": "create_blendspace",
+          "dispatch_line": 37,
+          "aliases": []
+        },
+        {
+          "name": "add_blendspace_sample",
+          "dispatch_line": 38,
+          "aliases": []
+        },
+        {
+          "name": "get_sequence_info",
+          "dispatch_line": 39,
+          "aliases": []
+        },
+        {
+          "name": "get_montage_sections",
+          "dispatch_line": 40,
+          "aliases": []
+        }
+      ]
+    },
+    {
+      "domain": "animbp",
+      "handler_file": "AnimBlueprintHandler.cpp",
+      "purpose": "Animation Blueprint graph and state-machine edits via AnimGraph editor module",
+      "actions": [
+        {
+          "name": "create_animbp",
+          "dispatch_line": 63,
+          "aliases": []
+        },
+        {
+          "name": "add_state_machine",
+          "dispatch_line": 64,
+          "aliases": []
+        },
+        {
+          "name": "add_state",
+          "dispatch_line": 65,
+          "aliases": []
+        },
+        {
+          "name": "set_state_animation",
+          "dispatch_line": 66,
+          "aliases": []
+        },
+        {
+          "name": "add_transition",
+          "dispatch_line": 67,
+          "aliases": []
+        },
+        {
+          "name": "set_entry_state",
+          "dispatch_line": 68,
+          "aliases": []
+        },
+        {
+          "name": "compile_animbp",
+          "dispatch_line": 69,
+          "aliases": []
+        },
+        {
+          "name": "get_graph_topology",
+          "dispatch_line": 70,
+          "aliases": []
+        },
+        {
+          "name": "list_states",
+          "dispatch_line": 71,
+          "aliases": []
+        },
+        {
+          "name": "get_transitions",
+          "dispatch_line": 72,
+          "aliases": []
+        }
+      ]
+    },
+    {
+      "domain": "asset",
+      "handler_file": "AssetHandler.cpp",
+      "purpose": "Generic asset registry queries, save/load, rename, duplicate, and reference scans",
+      "actions": [
+        {
+          "name": "create_data_asset",
+          "dispatch_line": 40,
+          "aliases": []
+        },
+        {
+          "name": "create_material",
+          "dispatch_line": 41,
+          "aliases": []
+        },
+        {
+          "name": "duplicate_asset",
+          "dispatch_line": 42,
+          "aliases": []
+        },
+        {
+          "name": "set_metadata",
+          "dispatch_line": 43,
+          "aliases": []
+        },
+        {
+          "name": "get_metadata",
+          "dispatch_line": 44,
+          "aliases": []
+        },
+        {
+          "name": "rename_asset",
+          "dispatch_line": 45,
+          "aliases": []
+        },
+        {
+          "name": "move_asset",
+          "dispatch_line": 46,
+          "aliases": []
+        },
+        {
+          "name": "search_assets",
+          "dispatch_line": 47,
+          "aliases": []
+        },
+        {
+          "name": "import_asset",
+          "dispatch_line": 48,
+          "aliases": []
+        },
+        {
+          "name": "import_folder",
+          "dispatch_line": 49,
+          "aliases": []
+        },
+        {
+          "name": "save_asset",
+          "dispatch_line": 50,
+          "aliases": []
+        },
+        {
+          "name": "validate_asset",
+          "dispatch_line": 51,
+          "aliases": []
+        },
+        {
+          "name": "get_asset_info",
+          "dispatch_line": 52,
+          "aliases": []
+        }
+      ]
+    },
+    {
+      "domain": "asset_graph",
+      "handler_file": "AssetGraphHandler.cpp",
+      "purpose": "Asset Registry graph queries: referencers, dependencies (recursive), validation, package size",
+      "actions": [
+        {
+          "name": "get_references",
+          "dispatch_line": 41,
+          "aliases": []
+        },
+        {
+          "name": "get_dependencies",
+          "dispatch_line": 42,
+          "aliases": []
+        },
+        {
+          "name": "validate_references",
+          "dispatch_line": 43,
+          "aliases": []
+        },
+        {
+          "name": "get_package_size",
+          "dispatch_line": 44,
+          "aliases": []
+        }
+      ]
+    },
+    {
+      "domain": "audio",
+      "handler_file": "AudioHandler.cpp",
+      "purpose": "SoundCue, SoundWave, and MetaSound document operations",
+      "actions": [
+        {
+          "name": "create_cue",
+          "dispatch_line": 81,
+          "aliases": [
+            "create_sound_cue"
+          ]
+        },
+        {
+          "name": "add_ms_node",
+          "dispatch_line": 82,
+          "aliases": []
+        },
+        {
+          "name": "connect_ms",
+          "dispatch_line": 83,
+          "aliases": []
+        },
+        {
+          "name": "set_attenuation",
+          "dispatch_line": 84,
+          "aliases": []
+        },
+        {
+          "name": "create_sound_class",
+          "dispatch_line": 85,
+          "aliases": []
+        },
+        {
+          "name": "create_sound_mix",
+          "dispatch_line": 86,
+          "aliases": []
+        },
+        {
+          "name": "place_audio_volume",
+          "dispatch_line": 87,
+          "aliases": []
+        },
+        {
+          "name": "set_concurrency",
+          "dispatch_line": 88,
+          "aliases": []
+        },
+        {
+          "name": "create_dialogue_wave",
+          "dispatch_line": 89,
+          "aliases": []
+        },
+        {
+          "name": "list_sound_cues",
+          "dispatch_line": 90,
+          "aliases": []
+        },
+        {
+          "name": "get_cue_info",
+          "dispatch_line": 91,
+          "aliases": []
+        },
+        {
+          "name": "create_sound_cue",
+          "dispatch_line": 93,
+          "aliases": []
+        },
+        {
+          "name": "create_attenuation",
+          "dispatch_line": 94,
+          "aliases": []
+        },
+        {
+          "name": "set_reverb",
+          "dispatch_line": 95,
+          "aliases": []
+        },
+        {
+          "name": "set_mix_class",
+          "dispatch_line": 96,
+          "aliases": []
+        },
+        {
+          "name": "create_metasound",
+          "dispatch_line": 97,
+          "aliases": []
+        },
+        {
+          "name": "set_metasound_param",
+          "dispatch_line": 98,
+          "aliases": []
+        },
+        {
+          "name": "add_metasound_input",
+          "dispatch_line": 99,
+          "aliases": []
+        }
+      ]
+    },
+    {
+      "domain": "behavior_tree",
+      "handler_file": "BehaviorTreeHandler.cpp",
+      "purpose": "Behavior Tree asset authoring, task/service/decorator wiring, blackboard hookup",
+      "actions": [
+        {
+          "name": "create_bt",
+          "dispatch_line": 70,
+          "aliases": []
+        },
+        {
+          "name": "add_node",
+          "dispatch_line": 71,
+          "aliases": []
+        },
+        {
+          "name": "add_decorator",
+          "dispatch_line": 72,
+          "aliases": []
+        },
+        {
+          "name": "create_bb",
+          "dispatch_line": 73,
+          "aliases": [
+            "create_blackboard"
+          ]
+        },
+        {
+          "name": "create_blackboard",
+          "dispatch_line": 74,
+          "aliases": []
+        },
+        {
+          "name": "add_key",
+          "dispatch_line": 75,
+          "aliases": [
+            "add_blackboard_key"
+          ]
+        },
+        {
+          "name": "add_blackboard_key",
+          "dispatch_line": 76,
+          "aliases": []
+        },
+        {
+          "name": "add_service",
+          "dispatch_line": 77,
+          "aliases": []
+        },
+        {
+          "name": "set_node_property",
+          "dispatch_line": 78,
+          "aliases": []
+        },
+        {
+          "name": "link_blackboard",
+          "dispatch_line": 79,
+          "aliases": []
+        },
+        {
+          "name": "get_tree_topology",
+          "dispatch_line": 80,
+          "aliases": []
+        },
+        {
+          "name": "add_task_node",
+          "dispatch_line": 81,
+          "aliases": []
+        },
+        {
+          "name": "set_blackboard_key_default",
+          "dispatch_line": 82,
+          "aliases": []
+        },
+        {
+          "name": "set_service_interval",
+          "dispatch_line": 83,
+          "aliases": []
+        }
+      ]
+    },
+    {
+      "domain": "blueprint",
+      "handler_file": "BlueprintHandler.cpp",
+      "purpose": "Blueprint creation, node graphs, variables, functions, components, compilation - the heavy hitter",
+      "actions": [
+        {
+          "name": "create_blueprint",
+          "dispatch_line": 228,
+          "aliases": []
+        },
+        {
+          "name": "add_node",
+          "dispatch_line": 229,
+          "aliases": []
+        },
+        {
+          "name": "connect_nodes",
+          "dispatch_line": 230,
+          "aliases": []
+        },
+        {
+          "name": "compile",
+          "dispatch_line": 231,
+          "aliases": [
+            "compile_blueprint"
+          ]
+        },
+        {
+          "name": "add_step",
+          "dispatch_line": 232,
+          "aliases": []
+        },
+        {
+          "name": "prepare_value",
+          "dispatch_line": 233,
+          "aliases": []
+        },
+        {
+          "name": "connect_data_to_pin",
+          "dispatch_line": 234,
+          "aliases": []
+        },
+        {
+          "name": "get_function_nodes",
+          "dispatch_line": 235,
+          "aliases": []
+        },
+        {
+          "name": "add_variable",
+          "dispatch_line": 236,
+          "aliases": []
+        },
+        {
+          "name": "get_variables",
+          "dispatch_line": 237,
+          "aliases": []
+        },
+        {
+          "name": "search_function_library",
+          "dispatch_line": 238,
+          "aliases": []
+        },
+        {
+          "name": "delete_node",
+          "dispatch_line": 239,
+          "aliases": []
+        },
+        {
+          "name": "add_component",
+          "dispatch_line": 240,
+          "aliases": []
+        },
+        {
+          "name": "remove_component",
+          "dispatch_line": 241,
+          "aliases": []
+        },
+        {
+          "name": "get_components",
+          "dispatch_line": 242,
+          "aliases": []
+        },
+        {
+          "name": "add_function_graph",
+          "dispatch_line": 243,
+          "aliases": []
+        },
+        {
+          "name": "add_custom_event",
+          "dispatch_line": 244,
+          "aliases": []
+        },
+        {
+          "name": "add_interface",
+          "dispatch_line": 245,
+          "aliases": []
+        },
+        {
+          "name": "list_nodes",
+          "dispatch_line": 246,
+          "aliases": []
+        },
+        {
+          "name": "list_pins",
+          "dispatch_line": 247,
+          "aliases": []
+        },
+        {
+          "name": "set_variable_default",
+          "dispatch_line": 248,
+          "aliases": []
+        },
+        {
+          "name": "reparent",
+          "dispatch_line": 249,
+          "aliases": []
+        },
+        {
+          "name": "read_blueprint_capture",
+          "dispatch_line": 250,
+          "aliases": []
+        },
+        {
+          "name": "add_event_dispatcher",
+          "dispatch_line": 251,
+          "aliases": []
+        },
+        {
+          "name": "get_event_dispatchers",
+          "dispatch_line": 252,
+          "aliases": []
+        },
+        {
+          "name": "bind_event",
+          "dispatch_line": 253,
+          "aliases": []
+        },
+        {
+          "name": "set_variable_replication",
+          "dispatch_line": 254,
+          "aliases": []
+        },
+        {
+          "name": "set_component_property",
+          "dispatch_line": 255,
+          "aliases": []
+        },
+        {
+          "name": "compile_all_dirty",
+          "dispatch_line": 258,
+          "aliases": []
+        },
+        {
+          "name": "save",
+          "dispatch_line": 259,
+          "aliases": []
+        },
+        {
+          "name": "save_all",
+          "dispatch_line": 260,
+          "aliases": []
+        },
+        {
+          "name": "remove_variable",
+          "dispatch_line": 261,
+          "aliases": []
+        },
+        {
+          "name": "rename_variable",
+          "dispatch_line": 262,
+          "aliases": []
+        },
+        {
+          "name": "add_function",
+          "dispatch_line": 263,
+          "aliases": []
+        },
+        {
+          "name": "add_macro",
+          "dispatch_line": 264,
+          "aliases": []
+        },
+        {
+          "name": "override_function",
+          "dispatch_line": 265,
+          "aliases": []
+        },
+        {
+          "name": "get_graph_names",
+          "dispatch_line": 266,
+          "aliases": []
+        },
+        {
+          "name": "remove_interface",
+          "dispatch_line": 267,
+          "aliases": []
+        },
+        {
+          "name": "add_local_variable",
+          "dispatch_line": 268,
+          "aliases": []
+        },
+        {
+          "name": "connect_pins",
+          "dispatch_line": 269,
+          "aliases": []
+        },
+        {
+          "name": "set_pin_default",
+          "dispatch_line": 270,
+          "aliases": []
+        },
+        {
+          "name": "remove_event_dispatcher",
+          "dispatch_line": 271,
+          "aliases": []
+        },
+        {
+          "name": "call_event_dispatcher",
+          "dispatch_line": 272,
+          "aliases": []
+        },
+        {
+          "name": "get_replicated_variables",
+          "dispatch_line": 273,
+          "aliases": []
+        },
+        {
+          "name": "set_replication_condition",
+          "dispatch_line": 274,
+          "aliases": []
+        },
+        {
+          "name": "enable_push_model",
+          "dispatch_line": 275,
+          "aliases": []
+        },
+        {
+          "name": "list_components",
+          "dispatch_line": 276,
+          "aliases": []
+        },
+        {
+          "name": "set_node_position",
+          "dispatch_line": 279,
+          "aliases": []
+        },
+        {
+          "name": "disconnect_pins",
+          "dispatch_line": 280,
+          "aliases": []
+        },
+        {
+          "name": "compile_blueprint",
+          "dispatch_line": 281,
+          "aliases": []
+        },
+        {
+          "name": "list_interfaces",
+          "dispatch_line": 282,
+          "aliases": []
+        },
+        {
+          "name": "add_rpc_function",
+          "dispatch_line": 285,
+          "aliases": []
+        },
+        {
+          "name": "get_construction_script",
+          "dispatch_line": 288,
+          "aliases": []
+        },
+        {
+          "name": "add_ucs_node",
+          "dispatch_line": 289,
+          "aliases": []
+        },
+        {
+          "name": "connect_ucs_pins",
+          "dispatch_line": 290,
+          "aliases": []
+        },
+        {
+          "name": "set_ucs_pin_default",
+          "dispatch_line": 291,
+          "aliases": []
+        },
+        {
+          "name": "clear_construction_script",
+          "dispatch_line": 292,
+          "aliases": []
+        },
+        {
+          "name": "build_blueprint_graph",
+          "dispatch_line": 295,
+          "aliases": []
+        },
+        {
+          "name": "layout_graph",
+          "dispatch_line": 296,
+          "aliases": []
+        }
+      ]
+    },
+    {
+      "domain": "camera",
+      "handler_file": "CameraHandler.cpp",
+      "purpose": "Editor viewport camera placement, cinematic cameras, bookmarks",
+      "actions": [
+        {
+          "name": "create_cinecam",
+          "dispatch_line": 47,
+          "aliases": []
+        },
+        {
+          "name": "set_filmback",
+          "dispatch_line": 48,
+          "aliases": []
+        },
+        {
+          "name": "set_focus",
+          "dispatch_line": 49,
+          "aliases": []
+        },
+        {
+          "name": "set_look_at",
+          "dispatch_line": 50,
+          "aliases": []
+        },
+        {
+          "name": "create_camera_rig",
+          "dispatch_line": 51,
+          "aliases": []
+        },
+        {
+          "name": "get_camera_info",
+          "dispatch_line": 52,
+          "aliases": []
+        },
+        {
+          "name": "list_cameras",
+          "dispatch_line": 53,
+          "aliases": []
+        },
+        {
+          "name": "create_camera_shake",
+          "dispatch_line": 54,
+          "aliases": []
+        },
+        {
+          "name": "preview_shake",
+          "dispatch_line": 55,
+          "aliases": [],
+          "stub": true
+        }
+      ]
+    },
+    {
+      "domain": "chaos",
+      "handler_file": "ChaosHandler.cpp",
+      "purpose": "Chaos destruction, geometry collections, and fracture operations",
+      "actions": [
+        {
+          "name": "fracture",
+          "dispatch_line": 57,
+          "aliases": []
+        },
+        {
+          "name": "spawn_field",
+          "dispatch_line": 58,
+          "aliases": []
+        },
+        {
+          "name": "list_geometry_collections",
+          "dispatch_line": 59,
+          "aliases": []
+        },
+        {
+          "name": "get_fracture_info",
+          "dispatch_line": 60,
+          "aliases": []
+        },
+        {
+          "name": "set_physics_field",
+          "dispatch_line": 61,
+          "aliases": []
+        },
+        {
+          "name": "set_geometry_collection_settings",
+          "dispatch_line": 62,
+          "aliases": []
+        },
+        {
+          "name": "set_material_damage",
+          "dispatch_line": 63,
+          "aliases": []
+        }
+      ]
+    },
+    {
+      "domain": "cloth_lod",
+      "handler_file": "ClothLODHandler.cpp",
+      "purpose": "Cloth asset LOD configuration on skeletal meshes",
+      "actions": [
+        {
+          "name": "bind_cloth",
+          "dispatch_line": 39,
+          "aliases": []
+        },
+        {
+          "name": "set_cloth_config",
+          "dispatch_line": 40,
+          "aliases": []
+        },
+        {
+          "name": "set_lod_screen_size",
+          "dispatch_line": 41,
+          "aliases": []
+        }
+      ]
+    },
+    {
+      "domain": "collision",
+      "handler_file": "CollisionHandler.cpp",
+      "purpose": "Collision profiles, responses, trace channels, and primitive collision setup",
+      "actions": [
+        {
+          "name": "list_collision_channels",
+          "dispatch_line": 69,
+          "aliases": []
+        },
+        {
+          "name": "add_collision_channel",
+          "dispatch_line": 70,
+          "aliases": []
+        },
+        {
+          "name": "list_collision_profiles",
+          "dispatch_line": 71,
+          "aliases": []
+        },
+        {
+          "name": "create_collision_profile",
+          "dispatch_line": 72,
+          "aliases": []
+        },
+        {
+          "name": "set_collision_response",
+          "dispatch_line": 73,
+          "aliases": []
+        },
+        {
+          "name": "set_actor_collision",
+          "dispatch_line": 74,
+          "aliases": []
+        },
+        {
+          "name": "get_actor_collision",
+          "dispatch_line": 75,
+          "aliases": []
+        }
+      ]
+    },
+    {
+      "domain": "console",
+      "handler_file": "ConsoleHandler.cpp",
+      "purpose": "Execute and read UE console commands and cvars",
+      "actions": [
+        {
+          "name": "execute_command",
+          "dispatch_line": 42,
+          "aliases": []
+        },
+        {
+          "name": "set_cvar",
+          "dispatch_line": 43,
+          "aliases": []
+        },
+        {
+          "name": "get_cvar",
+          "dispatch_line": 44,
+          "aliases": []
+        },
+        {
+          "name": "list_cvars",
+          "dispatch_line": 45,
+          "aliases": []
+        },
+        {
+          "name": "list_registered_commands",
+          "dispatch_line": 46,
+          "aliases": []
+        },
+        {
+          "name": "execute_command_with_capture",
+          "dispatch_line": 47,
+          "aliases": []
+        }
+      ]
+    },
+    {
+      "domain": "context",
+      "handler_file": "ContextHandler.cpp",
+      "purpose": "Plugin self-description: capabilities, schema, health, version introspection",
+      "actions": [
+        {
+          "name": "set_target_umg_asset",
+          "dispatch_line": 27,
+          "aliases": []
+        },
+        {
+          "name": "get_target_umg_asset",
+          "dispatch_line": 46,
+          "aliases": []
+        },
+        {
+          "name": "get_last_edited_umg_asset",
+          "dispatch_line": 56,
+          "aliases": []
+        },
+        {
+          "name": "get_recently_edited_umg_assets",
+          "dispatch_line": 65,
+          "aliases": []
+        },
+        {
+          "name": "set_target_graph",
+          "dispatch_line": 90,
+          "aliases": []
+        },
+        {
+          "name": "set_cursor_node",
+          "dispatch_line": 106,
+          "aliases": []
+        },
+        {
+          "name": "get_cursor_node",
+          "dispatch_line": 117,
+          "aliases": []
+        },
+        {
+          "name": "set_active_widget",
+          "dispatch_line": 126,
+          "aliases": []
+        },
+        {
+          "name": "get_active_widget",
+          "dispatch_line": 142,
+          "aliases": []
+        },
+        {
+          "name": "set_animation_scope",
+          "dispatch_line": 150,
+          "aliases": []
+        },
+        {
+          "name": "get_animation_scope",
+          "dispatch_line": 166,
+          "aliases": []
+        }
+      ]
+    },
+    {
+      "domain": "control_rig",
+      "handler_file": "ControlRigHandler.cpp",
+      "purpose": "Control Rig Blueprint authoring via ControlRigDeveloper module",
+      "actions": [
+        {
+          "name": "create_rig",
+          "dispatch_line": 58,
+          "aliases": []
+        },
+        {
+          "name": "add_control",
+          "dispatch_line": 59,
+          "aliases": []
+        },
+        {
+          "name": "add_node",
+          "dispatch_line": 60,
+          "aliases": []
+        },
+        {
+          "name": "connect_pins",
+          "dispatch_line": 61,
+          "aliases": []
+        },
+        {
+          "name": "add_bone_chain",
+          "dispatch_line": 62,
+          "aliases": []
+        },
+        {
+          "name": "set_ik_goal",
+          "dispatch_line": 63,
+          "aliases": []
+        },
+        {
+          "name": "add_constraint",
+          "dispatch_line": 64,
+          "aliases": []
+        },
+        {
+          "name": "get_rig_topology",
+          "dispatch_line": 65,
+          "aliases": []
+        },
+        {
+          "name": "add_forward_solve_node",
+          "dispatch_line": 66,
+          "aliases": []
+        },
+        {
+          "name": "compile",
+          "dispatch_line": 67,
+          "aliases": []
+        }
+      ]
+    },
+    {
+      "domain": "cpp",
+      "handler_file": "CppHandler.cpp",
+      "purpose": "C++ source/header read and write, template generation, Live Coding trigger, build log tail",
+      "actions": [
+        {
+          "name": "write_source_file",
+          "dispatch_line": 37,
+          "aliases": []
+        },
+        {
+          "name": "write_header_file",
+          "dispatch_line": 38,
+          "aliases": []
+        },
+        {
+          "name": "trigger_live_coding",
+          "dispatch_line": 39,
+          "aliases": []
+        },
+        {
+          "name": "get_live_coding_status",
+          "dispatch_line": 40,
+          "aliases": []
+        },
+        {
+          "name": "read_source_file",
+          "dispatch_line": 41,
+          "aliases": []
+        },
+        {
+          "name": "get_last_build_result",
+          "dispatch_line": 42,
+          "aliases": []
+        },
+        {
+          "name": "generate_file",
+          "dispatch_line": 43,
+          "aliases": []
+        },
+        {
+          "name": "get_compile_errors",
+          "dispatch_line": 44,
+          "aliases": []
+        }
+      ]
+    },
+    {
+      "domain": "data_table",
+      "handler_file": "DataTableHandler.cpp",
+      "purpose": "Data Table row CRUD, CSV/JSON import-export, struct binding",
+      "actions": [
+        {
+          "name": "create_data_table",
+          "dispatch_line": 50,
+          "aliases": []
+        },
+        {
+          "name": "add_row",
+          "dispatch_line": 51,
+          "aliases": []
+        },
+        {
+          "name": "edit_row",
+          "dispatch_line": 52,
+          "aliases": [
+            "update_row"
+          ]
+        },
+        {
+          "name": "update_row",
+          "dispatch_line": 53,
+          "aliases": []
+        },
+        {
+          "name": "get_row",
+          "dispatch_line": 54,
+          "aliases": []
+        },
+        {
+          "name": "list_rows",
+          "dispatch_line": 55,
+          "aliases": []
+        },
+        {
+          "name": "delete_row",
+          "dispatch_line": 56,
+          "aliases": [
+            "remove_row"
+          ]
+        },
+        {
+          "name": "remove_row",
+          "dispatch_line": 57,
+          "aliases": []
+        },
+        {
+          "name": "read_datatable_capture",
+          "dispatch_line": 58,
+          "aliases": []
+        },
+        {
+          "name": "trigger_import_poll",
+          "dispatch_line": 59,
+          "aliases": []
+        },
+        {
+          "name": "rename_row",
+          "dispatch_line": 60,
+          "aliases": []
+        },
+        {
+          "name": "import_csv",
+          "dispatch_line": 61,
+          "aliases": []
+        },
+        {
+          "name": "export_csv",
+          "dispatch_line": 62,
+          "aliases": []
+        },
+        {
+          "name": "export_json",
+          "dispatch_line": 63,
+          "aliases": []
+        }
+      ]
+    },
+    {
+      "domain": "debug",
+      "handler_file": "DebugHandler.cpp",
+      "purpose": "Draw-debug primitives, on-screen messages, and debug visualization toggles",
+      "actions": [
+        {
+          "name": "draw_line",
+          "dispatch_line": 96,
+          "aliases": []
+        },
+        {
+          "name": "draw_sphere",
+          "dispatch_line": 97,
+          "aliases": []
+        },
+        {
+          "name": "draw_box",
+          "dispatch_line": 98,
+          "aliases": []
+        },
+        {
+          "name": "draw_text",
+          "dispatch_line": 99,
+          "aliases": []
+        },
+        {
+          "name": "draw_arrow",
+          "dispatch_line": 100,
+          "aliases": []
+        },
+        {
+          "name": "clear",
+          "dispatch_line": 101,
+          "aliases": []
+        },
+        {
+          "name": "get_blueprint_errors",
+          "dispatch_line": 102,
+          "aliases": []
+        },
+        {
+          "name": "run_asset_validation",
+          "dispatch_line": 103,
+          "aliases": []
+        },
+        {
+          "name": "get_memory_report",
+          "dispatch_line": 104,
+          "aliases": []
+        }
+      ]
+    },
+    {
+      "domain": "editor_prefs",
+      "handler_file": "EditorPrefsHandler.cpp",
+      "purpose": "Editor preferences and per-user settings read/write",
+      "actions": [
+        {
+          "name": "get_ini_value",
+          "dispatch_line": 45,
+          "aliases": []
+        },
+        {
+          "name": "set_ini_value",
+          "dispatch_line": 46,
+          "aliases": []
+        },
+        {
+          "name": "list_ini_sections",
+          "dispatch_line": 47,
+          "aliases": []
+        },
+        {
+          "name": "set_editor_preference",
+          "dispatch_line": 48,
+          "aliases": []
+        },
+        {
+          "name": "get_editor_preference",
+          "dispatch_line": 49,
+          "aliases": []
+        },
+        {
+          "name": "set_viewport_setting",
+          "dispatch_line": 50,
+          "aliases": []
+        }
+      ]
+    },
+    {
+      "domain": "editor_utility",
+      "handler_file": "EditorUtilityHandler.cpp",
+      "purpose": "Editor Utility Widget/Blueprint execution and discovery",
+      "actions": [
+        {
+          "name": "run_euw",
+          "dispatch_line": 25,
+          "aliases": []
+        },
+        {
+          "name": "run_eub",
+          "dispatch_line": 56,
+          "aliases": []
+        },
+        {
+          "name": "call_function",
+          "dispatch_line": 84,
+          "aliases": []
+        },
+        {
+          "name": "list_utilities",
+          "dispatch_line": 154,
+          "aliases": []
+        }
+      ]
+    },
+    {
+      "domain": "environment",
+      "handler_file": "EnvironmentHandler.cpp",
+      "purpose": "SkyAtmosphere, exponential height fog, volumetric clouds actor setup",
+      "actions": [
+        {
+          "name": "set_sky_atmosphere",
+          "dispatch_line": 148,
+          "aliases": []
+        },
+        {
+          "name": "set_fog",
+          "dispatch_line": 149,
+          "aliases": []
+        },
+        {
+          "name": "set_volumetric_clouds",
+          "dispatch_line": 150,
+          "aliases": []
+        },
+        {
+          "name": "set_sky_light",
+          "dispatch_line": 151,
+          "aliases": []
+        },
+        {
+          "name": "apply_time_of_day",
+          "dispatch_line": 152,
+          "aliases": []
+        },
+        {
+          "name": "get_environment_info",
+          "dispatch_line": 153,
+          "aliases": []
+        }
+      ]
+    },
+    {
+      "domain": "eqs",
+      "handler_file": "EQSHandler.cpp",
+      "purpose": "Environment Query System asset authoring and test configuration",
+      "actions": [
+        {
+          "name": "create_query",
+          "dispatch_line": 42,
+          "aliases": []
+        },
+        {
+          "name": "add_test",
+          "dispatch_line": 43,
+          "aliases": []
+        },
+        {
+          "name": "set_context",
+          "dispatch_line": 44,
+          "aliases": []
+        },
+        {
+          "name": "create_context",
+          "dispatch_line": 45,
+          "aliases": []
+        },
+        {
+          "name": "run_debug_query",
+          "dispatch_line": 46,
+          "aliases": [],
+          "stub": true
+        },
+        {
+          "name": "list_queries",
+          "dispatch_line": 47,
+          "aliases": []
+        }
+      ]
+    },
+    {
+      "domain": "foliage",
+      "handler_file": "FoliageHandler.cpp",
+      "purpose": "Foliage type placement, instanced foliage actor operations",
+      "actions": [
+        {
+          "name": "add_type",
+          "dispatch_line": 40,
+          "aliases": []
+        },
+        {
+          "name": "paint_foliage",
+          "dispatch_line": 41,
+          "aliases": []
+        },
+        {
+          "name": "clear_type",
+          "dispatch_line": 42,
+          "aliases": []
+        },
+        {
+          "name": "list_types",
+          "dispatch_line": 43,
+          "aliases": []
+        },
+        {
+          "name": "get_instance_count",
+          "dispatch_line": 44,
+          "aliases": []
+        }
+      ]
+    },
+    {
+      "domain": "gameplay_tag",
+      "handler_file": "GameplayTagHandler.cpp",
+      "purpose": "GameplayTag registration, INI management, tag query",
+      "actions": [
+        {
+          "name": "add_tag_to_config",
+          "dispatch_line": 42,
+          "aliases": []
+        },
+        {
+          "name": "rename_tag",
+          "dispatch_line": 43,
+          "aliases": []
+        },
+        {
+          "name": "list_tags",
+          "dispatch_line": 44,
+          "aliases": []
+        },
+        {
+          "name": "remove_tag",
+          "dispatch_line": 45,
+          "aliases": []
+        },
+        {
+          "name": "validate_tags",
+          "dispatch_line": 46,
+          "aliases": []
+        },
+        {
+          "name": "get_tag_hierarchy",
+          "dispatch_line": 47,
+          "aliases": []
+        }
+      ]
+    },
+    {
+      "domain": "gas",
+      "handler_file": "GASHandler.cpp",
+      "purpose": "Gameplay Ability System: abilities, attributes, effects, cues, tags",
+      "actions": [
+        {
+          "name": "create_gameplay_effect",
+          "dispatch_line": 80,
+          "aliases": []
+        },
+        {
+          "name": "create_gameplay_ability",
+          "dispatch_line": 81,
+          "aliases": [
+            "create_ability"
+          ]
+        },
+        {
+          "name": "add_ge_modifier",
+          "dispatch_line": 82,
+          "aliases": [
+            "add_modifier_to_ge"
+          ]
+        },
+        {
+          "name": "set_ge_tags",
+          "dispatch_line": 83,
+          "aliases": []
+        },
+        {
+          "name": "create_gameplay_cue",
+          "dispatch_line": 84,
+          "aliases": []
+        },
+        {
+          "name": "create_attribute_set",
+          "dispatch_line": 85,
+          "aliases": []
+        },
+        {
+          "name": "set_ge_duration",
+          "dispatch_line": 86,
+          "aliases": []
+        },
+        {
+          "name": "set_ge_period",
+          "dispatch_line": 87,
+          "aliases": []
+        },
+        {
+          "name": "set_ge_stacking",
+          "dispatch_line": 88,
+          "aliases": []
+        },
+        {
+          "name": "get_ge_info",
+          "dispatch_line": 89,
+          "aliases": []
+        },
+        {
+          "name": "read_audit",
+          "dispatch_line": 90,
+          "aliases": []
+        },
+        {
+          "name": "read_gas_capture",
+          "dispatch_line": 91,
+          "aliases": []
+        },
+        {
+          "name": "list_abilities_on_class",
+          "dispatch_line": 92,
+          "aliases": []
+        },
+        {
+          "name": "get_attribute_defaults",
+          "dispatch_line": 93,
+          "aliases": []
+        },
+        {
+          "name": "create_ability_task",
+          "dispatch_line": 94,
+          "aliases": []
+        },
+        {
+          "name": "configure_asc",
+          "dispatch_line": 95,
+          "aliases": []
+        },
+        {
+          "name": "add_ability_to_asc",
+          "dispatch_line": 96,
+          "aliases": []
+        },
+        {
+          "name": "remove_ability_from_asc",
+          "dispatch_line": 97,
+          "aliases": []
+        },
+        {
+          "name": "set_ability_tags",
+          "dispatch_line": 98,
+          "aliases": []
+        },
+        {
+          "name": "create_ability",
+          "dispatch_line": 100,
+          "aliases": []
+        },
+        {
+          "name": "add_modifier_to_ge",
+          "dispatch_line": 101,
+          "aliases": []
+        },
+        {
+          "name": "add_ability_cost",
+          "dispatch_line": 103,
+          "aliases": []
+        },
+        {
+          "name": "set_ability_cooldown",
+          "dispatch_line": 104,
+          "aliases": []
+        },
+        {
+          "name": "add_granted_ability",
+          "dispatch_line": 105,
+          "aliases": []
+        },
+        {
+          "name": "list_attribute_sets",
+          "dispatch_line": 106,
+          "aliases": []
+        },
+        {
+          "name": "get_active_effects",
+          "dispatch_line": 108,
+          "aliases": [],
+          "stub": true
+        },
+        {
+          "name": "apply_gameplay_effect",
+          "dispatch_line": 109,
+          "aliases": [],
+          "stub": true
+        }
+      ]
+    },
+    {
+      "domain": "git",
+      "handler_file": "GitHandler.cpp",
+      "purpose": "Git status, diff, commit, and branch operations scoped to the project",
+      "actions": [
+        {
+          "name": "git_status",
+          "dispatch_line": 31,
+          "aliases": []
+        },
+        {
+          "name": "git_diff",
+          "dispatch_line": 32,
+          "aliases": []
+        },
+        {
+          "name": "git_stage",
+          "dispatch_line": 33,
+          "aliases": []
+        },
+        {
+          "name": "git_commit",
+          "dispatch_line": 34,
+          "aliases": []
+        },
+        {
+          "name": "git_log",
+          "dispatch_line": 35,
+          "aliases": []
+        },
+        {
+          "name": "git_branch",
+          "dispatch_line": 36,
+          "aliases": []
+        },
+        {
+          "name": "git_revert_file",
+          "dispatch_line": 37,
+          "aliases": []
+        }
+      ]
+    },
+    {
+      "domain": "ik_retargeter",
+      "handler_file": "IKRetargeterHandler.cpp",
+      "purpose": "IK Retargeter and IK Rig Definition asset operations",
+      "actions": [
+        {
+          "name": "create_ik_retargeter",
+          "dispatch_line": 95,
+          "aliases": []
+        },
+        {
+          "name": "add_chain_mapping",
+          "dispatch_line": 96,
+          "aliases": []
+        },
+        {
+          "name": "retarget",
+          "dispatch_line": 97,
+          "aliases": []
+        },
+        {
+          "name": "batch_retarget",
+          "dispatch_line": 98,
+          "aliases": []
+        }
+      ]
+    },
+    {
+      "domain": "input",
+      "handler_file": "InputHandler.cpp",
+      "purpose": "Enhanced Input actions, mapping contexts, and legacy input bindings",
+      "actions": [
+        {
+          "name": "create_action",
+          "dispatch_line": 52,
+          "aliases": []
+        },
+        {
+          "name": "create_context",
+          "dispatch_line": 53,
+          "aliases": []
+        },
+        {
+          "name": "add_mapping",
+          "dispatch_line": 54,
+          "aliases": []
+        },
+        {
+          "name": "list_actions",
+          "dispatch_line": 55,
+          "aliases": []
+        },
+        {
+          "name": "list_contexts",
+          "dispatch_line": 56,
+          "aliases": []
+        },
+        {
+          "name": "get_mappings",
+          "dispatch_line": 57,
+          "aliases": []
+        },
+        {
+          "name": "read_input_capture",
+          "dispatch_line": 58,
+          "aliases": []
+        }
+      ]
+    },
+    {
+      "domain": "landscape",
+      "handler_file": "LandscapeHandler.cpp",
+      "purpose": "Landscape creation, sculpt/paint, layer weightmaps, component edits",
+      "actions": [
+        {
+          "name": "create_landscape",
+          "dispatch_line": 63,
+          "aliases": []
+        },
+        {
+          "name": "get_landscape_info",
+          "dispatch_line": 64,
+          "aliases": []
+        },
+        {
+          "name": "sculpt_height",
+          "dispatch_line": 65,
+          "aliases": []
+        },
+        {
+          "name": "paint_layer",
+          "dispatch_line": 66,
+          "aliases": []
+        },
+        {
+          "name": "set_material",
+          "dispatch_line": 67,
+          "aliases": []
+        },
+        {
+          "name": "add_spline",
+          "dispatch_line": 68,
+          "aliases": []
+        },
+        {
+          "name": "read_heightmap_capture",
+          "dispatch_line": 69,
+          "aliases": []
+        },
+        {
+          "name": "apply_noise",
+          "dispatch_line": 70,
+          "aliases": []
+        },
+        {
+          "name": "auto_paint",
+          "dispatch_line": 71,
+          "aliases": []
+        },
+        {
+          "name": "set_hole_mask",
+          "dispatch_line": 72,
+          "aliases": []
+        },
+        {
+          "name": "import_weightmap",
+          "dispatch_line": 73,
+          "aliases": []
+        },
+        {
+          "name": "export_heightmap",
+          "dispatch_line": 74,
+          "aliases": []
+        },
+        {
+          "name": "set_wpo_disable_distance",
+          "dispatch_line": 76,
+          "aliases": []
+        },
+        {
+          "name": "build_hlods",
+          "dispatch_line": 77,
+          "aliases": []
+        },
+        {
+          "name": "import_heightmap",
+          "dispatch_line": 78,
+          "aliases": []
+        },
+        {
+          "name": "get_terrain_data",
+          "dispatch_line": 79,
+          "aliases": []
+        },
+        {
+          "name": "set_layer_info",
+          "dispatch_line": 80,
+          "aliases": []
+        }
+      ]
+    },
+    {
+      "domain": "level",
+      "handler_file": "LevelHandler.cpp",
+      "purpose": "Level (world) load, save, new, streaming sublevels, and level utilities",
+      "actions": [
+        {
+          "name": "open_level",
+          "dispatch_line": 58,
+          "aliases": []
+        },
+        {
+          "name": "save_level",
+          "dispatch_line": 71,
+          "aliases": []
+        },
+        {
+          "name": "save_all",
+          "dispatch_line": 88,
+          "aliases": []
+        },
+        {
+          "name": "get_level_info",
+          "dispatch_line": 100,
+          "aliases": []
+        },
+        {
+          "name": "add_sublevel",
+          "dispatch_line": 133,
+          "aliases": []
+        },
+        {
+          "name": "remove_sublevel",
+          "dispatch_line": 162,
+          "aliases": []
+        },
+        {
+          "name": "list_sublevels",
+          "dispatch_line": 187,
+          "aliases": []
+        },
+        {
+          "name": "set_sublevel_visible",
+          "dispatch_line": 211,
+          "aliases": []
+        },
+        {
+          "name": "run_build",
+          "dispatch_line": 236,
+          "aliases": []
+        },
+        {
+          "name": "set_current_level",
+          "dispatch_line": 257,
+          "aliases": []
+        },
+        {
+          "name": "import_scene",
+          "dispatch_line": 278,
+          "aliases": []
+        },
+        {
+          "name": "build_hlods",
+          "dispatch_line": 294,
+          "aliases": []
+        },
+        {
+          "name": "set_sky_light_source",
+          "dispatch_line": 324,
+          "aliases": []
+        },
+        {
+          "name": "build_all_lighting",
+          "dispatch_line": 371,
+          "aliases": []
+        },
+        {
+          "name": "export_asset_list",
+          "dispatch_line": 406,
+          "aliases": []
+        }
+      ]
+    },
+    {
+      "domain": "lighting",
+      "handler_file": "LightingHandler.cpp",
+      "purpose": "Light actor placement, Lumen settings, lightmass, and baked lighting controls",
+      "actions": [
+        {
+          "name": "create_light",
+          "dispatch_line": 67,
+          "aliases": []
+        },
+        {
+          "name": "set_light_intensity",
+          "dispatch_line": 68,
+          "aliases": []
+        },
+        {
+          "name": "create_camera",
+          "dispatch_line": 69,
+          "aliases": []
+        },
+        {
+          "name": "set_light_color",
+          "dispatch_line": 70,
+          "aliases": []
+        },
+        {
+          "name": "set_light_attenuation",
+          "dispatch_line": 71,
+          "aliases": []
+        },
+        {
+          "name": "create_sky_light",
+          "dispatch_line": 72,
+          "aliases": []
+        },
+        {
+          "name": "set_volumetric_fog",
+          "dispatch_line": 73,
+          "aliases": []
+        },
+        {
+          "name": "bake_lighting",
+          "dispatch_line": 74,
+          "aliases": []
+        },
+        {
+          "name": "delete_light",
+          "dispatch_line": 75,
+          "aliases": []
+        },
+        {
+          "name": "list_lights",
+          "dispatch_line": 76,
+          "aliases": []
+        }
+      ]
+    },
+    {
+      "domain": "localization",
+      "handler_file": "LocalizationHandler.cpp",
+      "purpose": "Localization targets, cultures, string tables, and gather/compile ops",
+      "actions": [
+        {
+          "name": "list_cultures",
+          "dispatch_line": 29,
+          "aliases": []
+        },
+        {
+          "name": "gather_text",
+          "dispatch_line": 30,
+          "aliases": []
+        },
+        {
+          "name": "export_po",
+          "dispatch_line": 31,
+          "aliases": []
+        },
+        {
+          "name": "import_po",
+          "dispatch_line": 32,
+          "aliases": []
+        },
+        {
+          "name": "add_culture",
+          "dispatch_line": 33,
+          "aliases": []
+        },
+        {
+          "name": "find_missing_translations",
+          "dispatch_line": 34,
+          "aliases": []
+        },
+        {
+          "name": "create_localization_target",
+          "dispatch_line": 35,
+          "aliases": []
+        }
+      ]
+    },
+    {
+      "domain": "mass_entity",
+      "handler_file": "MassEntityHandler.cpp",
+      "purpose": "Mass Entity traits, fragments, processors, and entity template setup",
+      "actions": [
+        {
+          "name": "create_mass_config",
+          "dispatch_line": 54,
+          "aliases": []
+        },
+        {
+          "name": "add_trait",
+          "dispatch_line": 91,
+          "aliases": []
+        },
+        {
+          "name": "create_state_tree",
+          "dispatch_line": 163,
+          "aliases": []
+        },
+        {
+          "name": "add_state",
+          "dispatch_line": 198,
+          "aliases": []
+        },
+        {
+          "name": "remove_trait",
+          "dispatch_line": 274,
+          "aliases": []
+        },
+        {
+          "name": "list_traits",
+          "dispatch_line": 275,
+          "aliases": []
+        },
+        {
+          "name": "get_config_info",
+          "dispatch_line": 276,
+          "aliases": []
+        },
+        {
+          "name": "configure_time_slice",
+          "dispatch_line": 277,
+          "aliases": []
+        },
+        {
+          "name": "create_entity_query",
+          "dispatch_line": 278,
+          "aliases": []
+        }
+      ]
+    },
+    {
+      "domain": "material",
+      "handler_file": "MaterialHandler.cpp",
+      "purpose": "Material graph authoring: nodes, expressions, connections, parameters",
+      "actions": [
+        {
+          "name": "material_set_target",
+          "dispatch_line": 118,
+          "aliases": []
+        },
+        {
+          "name": "create_material_function",
+          "dispatch_line": 171,
+          "aliases": []
+        },
+        {
+          "name": "bake_textures",
+          "dispatch_line": 175,
+          "aliases": []
+        },
+        {
+          "name": "add_parameter",
+          "dispatch_line": 179,
+          "aliases": []
+        },
+        {
+          "name": "material_add_node",
+          "dispatch_line": 188,
+          "aliases": []
+        },
+        {
+          "name": "material_connect_nodes",
+          "dispatch_line": 241,
+          "aliases": []
+        },
+        {
+          "name": "material_get_graph",
+          "dispatch_line": 413,
+          "aliases": []
+        },
+        {
+          "name": "material_get_pins",
+          "dispatch_line": 465,
+          "aliases": []
+        },
+        {
+          "name": "material_set_node_properties",
+          "dispatch_line": 549,
+          "aliases": []
+        },
+        {
+          "name": "material_set_hlsl_node_io",
+          "dispatch_line": 622,
+          "aliases": []
+        },
+        {
+          "name": "material_compile_asset",
+          "dispatch_line": 657,
+          "aliases": []
+        },
+        {
+          "name": "material_remove_node",
+          "dispatch_line": 673,
+          "aliases": []
+        },
+        {
+          "name": "material_disconnect_pins",
+          "dispatch_line": 698,
+          "aliases": []
+        },
+        {
+          "name": "material_set_blend_mode",
+          "dispatch_line": 766,
+          "aliases": []
+        },
+        {
+          "name": "material_set_shading_model",
+          "dispatch_line": 796,
+          "aliases": []
+        },
+        {
+          "name": "material_set_two_sided",
+          "dispatch_line": 834,
+          "aliases": []
+        },
+        {
+          "name": "material_get_node_properties",
+          "dispatch_line": 853,
+          "aliases": []
+        },
+        {
+          "name": "material_list_expressions",
+          "dispatch_line": 901,
+          "aliases": []
+        },
+        {
+          "name": "read_material_capture",
+          "dispatch_line": 943,
+          "aliases": []
+        }
+      ]
+    },
+    {
+      "domain": "material_instance",
+      "handler_file": "MaterialInstanceHandler.cpp",
+      "purpose": "Material Instance parameter overrides and parent swaps",
+      "actions": [
+        {
+          "name": "create_instance",
+          "dispatch_line": 45,
+          "aliases": []
+        },
+        {
+          "name": "set_scalar",
+          "dispatch_line": 46,
+          "aliases": []
+        },
+        {
+          "name": "set_vector",
+          "dispatch_line": 47,
+          "aliases": []
+        },
+        {
+          "name": "set_texture",
+          "dispatch_line": 48,
+          "aliases": []
+        },
+        {
+          "name": "set_switch",
+          "dispatch_line": 49,
+          "aliases": []
+        },
+        {
+          "name": "get_parameters",
+          "dispatch_line": 50,
+          "aliases": []
+        },
+        {
+          "name": "get_parent",
+          "dispatch_line": 51,
+          "aliases": []
+        }
+      ]
+    },
+    {
+      "domain": "media",
+      "handler_file": "MediaHandler.cpp",
+      "purpose": "MediaSource, MediaPlayer, and MediaTexture asset operations",
+      "actions": [
+        {
+          "name": "create_media_player",
+          "dispatch_line": 42,
+          "aliases": []
+        },
+        {
+          "name": "create_media_texture",
+          "dispatch_line": 43,
+          "aliases": []
+        },
+        {
+          "name": "create_media_source",
+          "dispatch_line": 44,
+          "aliases": []
+        },
+        {
+          "name": "get_media_info",
+          "dispatch_line": 45,
+          "aliases": []
+        }
+      ]
+    },
+    {
+      "domain": "navmesh",
+      "handler_file": "NavMeshHandler.cpp",
+      "purpose": "Navigation mesh volume, runtime generation, and nav-area setup",
+      "actions": [
+        {
+          "name": "set_agent_params",
+          "dispatch_line": 49,
+          "aliases": []
+        },
+        {
+          "name": "create_nav_volume",
+          "dispatch_line": 50,
+          "aliases": []
+        },
+        {
+          "name": "rebuild_nav",
+          "dispatch_line": 51,
+          "aliases": []
+        },
+        {
+          "name": "query_path",
+          "dispatch_line": 52,
+          "aliases": []
+        },
+        {
+          "name": "add_nav_link",
+          "dispatch_line": 53,
+          "aliases": []
+        },
+        {
+          "name": "set_jump_config",
+          "dispatch_line": 54,
+          "aliases": []
+        },
+        {
+          "name": "get_reachable_area",
+          "dispatch_line": 55,
+          "aliases": []
+        }
+      ]
+    },
+    {
+      "domain": "niagara",
+      "handler_file": "NiagaraHandler.cpp",
+      "purpose": "Niagara system, emitter, module, and variable operations",
+      "actions": [
+        {
+          "name": "create_niagara_system",
+          "dispatch_line": 58,
+          "aliases": [
+            "create_system"
+          ]
+        },
+        {
+          "name": "add_emitter",
+          "dispatch_line": 59,
+          "aliases": []
+        },
+        {
+          "name": "set_user_parameter",
+          "dispatch_line": 60,
+          "aliases": [
+            "set_parameter"
+          ]
+        },
+        {
+          "name": "compile_niagara_system",
+          "dispatch_line": 61,
+          "aliases": [
+            "compile"
+          ]
+        },
+        {
+          "name": "get_parameters",
+          "dispatch_line": 62,
+          "aliases": []
+        },
+        {
+          "name": "set_parameter_default",
+          "dispatch_line": 63,
+          "aliases": []
+        },
+        {
+          "name": "read_niagara_capture",
+          "dispatch_line": 64,
+          "aliases": []
+        },
+        {
+          "name": "update_instances",
+          "dispatch_line": 65,
+          "aliases": []
+        },
+        {
+          "name": "add_module",
+          "dispatch_line": 66,
+          "aliases": []
+        },
+        {
+          "name": "remove_module",
+          "dispatch_line": 67,
+          "aliases": []
+        },
+        {
+          "name": "set_module_property",
+          "dispatch_line": 68,
+          "aliases": []
+        },
+        {
+          "name": "add_renderer",
+          "dispatch_line": 69,
+          "aliases": []
+        },
+        {
+          "name": "set_renderer_property",
+          "dispatch_line": 70,
+          "aliases": []
+        },
+        {
+          "name": "create_system",
+          "dispatch_line": 72,
+          "aliases": []
+        },
+        {
+          "name": "set_parameter",
+          "dispatch_line": 73,
+          "aliases": []
+        },
+        {
+          "name": "compile",
+          "dispatch_line": 74,
+          "aliases": []
+        },
+        {
+          "name": "set_gpu_sim",
+          "dispatch_line": 76,
+          "aliases": []
+        },
+        {
+          "name": "bind_parameter",
+          "dispatch_line": 77,
+          "aliases": []
+        },
+        {
+          "name": "set_particle_lights",
+          "dispatch_line": 78,
+          "aliases": []
+        },
+        {
+          "name": "set_collision_response",
+          "dispatch_line": 79,
+          "aliases": []
+        },
+        {
+          "name": "list_emitters",
+          "dispatch_line": 80,
+          "aliases": []
+        },
+        {
+          "name": "set_emitter_enabled",
+          "dispatch_line": 81,
+          "aliases": []
+        }
+      ]
+    },
+    {
+      "domain": "packaging",
+      "handler_file": "PackagingHandler.cpp",
+      "purpose": "Cook, package, and build-target orchestration",
+      "actions": [
+        {
+          "name": "cook_content",
+          "dispatch_line": 55,
+          "aliases": []
+        },
+        {
+          "name": "package_project",
+          "dispatch_line": 56,
+          "aliases": []
+        },
+        {
+          "name": "get_cook_status",
+          "dispatch_line": 57,
+          "aliases": []
+        },
+        {
+          "name": "validate_content",
+          "dispatch_line": 58,
+          "aliases": []
+        },
+        {
+          "name": "get_package_size",
+          "dispatch_line": 59,
+          "aliases": []
+        },
+        {
+          "name": "list_platforms",
+          "dispatch_line": 60,
+          "aliases": []
+        },
+        {
+          "name": "cook_incremental",
+          "dispatch_line": 61,
+          "aliases": []
+        },
+        {
+          "name": "enable_zen_streaming",
+          "dispatch_line": 62,
+          "aliases": []
+        }
+      ]
+    },
+    {
+      "domain": "pcg",
+      "handler_file": "PCGHandler.cpp",
+      "purpose": "Runtime PCG component control: trigger GenerateLocal and set component properties via reflection",
+      "actions": [
+        {
+          "name": "execute_graph",
+          "dispatch_line": 22,
+          "aliases": []
+        },
+        {
+          "name": "set_pcg_parameter",
+          "dispatch_line": 23,
+          "aliases": []
+        }
+      ]
+    },
+    {
+      "domain": "pcg_graph",
+      "handler_file": "PCGGraphHandler.cpp",
+      "purpose": "UPCGGraph asset authoring: create graph, add/remove nodes, connect pins, set settings, telemetry",
+      "actions": [
+        {
+          "name": "create_pcg_graph",
+          "dispatch_line": 112,
+          "aliases": [
+            "create_graph"
+          ]
+        },
+        {
+          "name": "add_pcg_node",
+          "dispatch_line": 113,
+          "aliases": [
+            "add_node"
+          ]
+        },
+        {
+          "name": "connect_pcg_pins",
+          "dispatch_line": 114,
+          "aliases": [
+            "connect_nodes"
+          ]
+        },
+        {
+          "name": "set_pcg_node_settings",
+          "dispatch_line": 115,
+          "aliases": [
+            "set_node_property",
+            "set_node_settings"
+          ]
+        },
+        {
+          "name": "get_pcg_graph_topology",
+          "dispatch_line": 116,
+          "aliases": [
+            "get_topology"
+          ]
+        },
+        {
+          "name": "remove_pcg_node",
+          "dispatch_line": 117,
+          "aliases": [
+            "remove_node"
+          ]
+        },
+        {
+          "name": "disconnect_pcg_pins",
+          "dispatch_line": 118,
+          "aliases": [
+            "disconnect_nodes"
+          ]
+        },
+        {
+          "name": "get_pcg_parameters",
+          "dispatch_line": 119,
+          "aliases": [
+            "get_parameters"
+          ]
+        },
+        {
+          "name": "set_seed",
+          "dispatch_line": 120,
+          "aliases": []
+        },
+        {
+          "name": "cleanup",
+          "dispatch_line": 121,
+          "aliases": []
+        },
+        {
+          "name": "regenerate",
+          "dispatch_line": 122,
+          "aliases": []
+        },
+        {
+          "name": "read_telemetry",
+          "dispatch_line": 123,
+          "aliases": []
+        },
+        {
+          "name": "add_attribute_override",
+          "dispatch_line": 124,
+          "aliases": []
+        },
+        {
+          "name": "get_node_list",
+          "dispatch_line": 125,
+          "aliases": [
+            "list_nodes"
+          ]
+        },
+        {
+          "name": "set_mesh_entry",
+          "dispatch_line": 126,
+          "aliases": []
+        },
+        {
+          "name": "execute_local",
+          "dispatch_line": 127,
+          "aliases": [
+            "execute"
+          ]
+        },
+        {
+          "name": "create_graph",
+          "dispatch_line": 130,
+          "aliases": []
+        },
+        {
+          "name": "add_node",
+          "dispatch_line": 131,
+          "aliases": []
+        },
+        {
+          "name": "connect_nodes",
+          "dispatch_line": 132,
+          "aliases": []
+        },
+        {
+          "name": "disconnect_nodes",
+          "dispatch_line": 133,
+          "aliases": []
+        },
+        {
+          "name": "remove_node",
+          "dispatch_line": 134,
+          "aliases": []
+        },
+        {
+          "name": "set_node_property",
+          "dispatch_line": 135,
+          "aliases": []
+        },
+        {
+          "name": "set_node_settings",
+          "dispatch_line": 136,
+          "aliases": []
+        },
+        {
+          "name": "get_topology",
+          "dispatch_line": 137,
+          "aliases": []
+        },
+        {
+          "name": "list_nodes",
+          "dispatch_line": 138,
+          "aliases": []
+        },
+        {
+          "name": "get_parameters",
+          "dispatch_line": 139,
+          "aliases": []
+        },
+        {
+          "name": "execute",
+          "dispatch_line": 140,
+          "aliases": []
+        }
+      ]
+    },
+    {
+      "domain": "physics_asset",
+      "handler_file": "PhysicsAssetHandler.cpp",
+      "purpose": "Physics Asset body and constraint setup for skeletal meshes",
+      "actions": [
+        {
+          "name": "create_physics_asset",
+          "dispatch_line": 46,
+          "aliases": []
+        },
+        {
+          "name": "add_body",
+          "dispatch_line": 47,
+          "aliases": []
+        },
+        {
+          "name": "set_body_params",
+          "dispatch_line": 48,
+          "aliases": []
+        },
+        {
+          "name": "add_constraint",
+          "dispatch_line": 49,
+          "aliases": []
+        },
+        {
+          "name": "get_info",
+          "dispatch_line": 50,
+          "aliases": []
+        },
+        {
+          "name": "list_bodies",
+          "dispatch_line": 51,
+          "aliases": []
+        },
+        {
+          "name": "auto_generate_bodies",
+          "dispatch_line": 52,
+          "aliases": []
+        },
+        {
+          "name": "set_constraint_profile",
+          "dispatch_line": 53,
+          "aliases": []
+        }
+      ]
+    },
+    {
+      "domain": "post_process",
+      "handler_file": "PostProcessHandler.cpp",
+      "purpose": "Post Process Volume and material-post-process settings",
+      "actions": [
+        {
+          "name": "create_pp_volume",
+          "dispatch_line": 40,
+          "aliases": []
+        },
+        {
+          "name": "set_bloom",
+          "dispatch_line": 41,
+          "aliases": []
+        },
+        {
+          "name": "set_exposure",
+          "dispatch_line": 42,
+          "aliases": []
+        },
+        {
+          "name": "set_color_grading",
+          "dispatch_line": 43,
+          "aliases": []
+        },
+        {
+          "name": "set_ambient_occlusion",
+          "dispatch_line": 44,
+          "aliases": []
+        },
+        {
+          "name": "read_weather_capture",
+          "dispatch_line": 46,
+          "aliases": []
+        }
+      ]
+    },
+    {
+      "domain": "project",
+      "handler_file": "ProjectHandler.cpp",
+      "purpose": "Project settings, module state, plugin enable/disable, uproject operations",
+      "actions": [
+        {
+          "name": "get_project_info",
+          "dispatch_line": 30,
+          "aliases": []
+        },
+        {
+          "name": "list_plugins",
+          "dispatch_line": 31,
+          "aliases": []
+        },
+        {
+          "name": "enable_plugin",
+          "dispatch_line": 32,
+          "aliases": [
+            "set_plugin_enabled"
+          ]
+        },
+        {
+          "name": "set_plugin_enabled",
+          "dispatch_line": 33,
+          "aliases": []
+        },
+        {
+          "name": "package",
+          "dispatch_line": 34,
+          "aliases": []
+        },
+        {
+          "name": "get_default_map",
+          "dispatch_line": 35,
+          "aliases": []
+        },
+        {
+          "name": "set_default_map",
+          "dispatch_line": 36,
+          "aliases": []
+        },
+        {
+          "name": "set_editor_preference",
+          "dispatch_line": 37,
+          "aliases": []
+        },
+        {
+          "name": "get_editor_preference",
+          "dispatch_line": 38,
+          "aliases": []
+        },
+        {
+          "name": "get_job_status",
+          "dispatch_line": 39,
+          "aliases": []
+        },
+        {
+          "name": "cancel_job",
+          "dispatch_line": 40,
+          "aliases": []
+        },
+        {
+          "name": "list_jobs",
+          "dispatch_line": 41,
+          "aliases": []
+        },
+        {
+          "name": "read_perf_capture",
+          "dispatch_line": 43,
+          "aliases": []
+        },
+        {
+          "name": "read_network_capture",
+          "dispatch_line": 60,
+          "aliases": []
+        }
+      ]
+    },
+    {
+      "domain": "python",
+      "handler_file": "PythonHandler.cpp",
+      "purpose": "Python script execution (soft dependency on PythonScriptPlugin)",
+      "actions": [
+        {
+          "name": "execute_script",
+          "dispatch_line": 48,
+          "aliases": []
+        },
+        {
+          "name": "execute_file",
+          "dispatch_line": 68,
+          "aliases": []
+        },
+        {
+          "name": "execute_with_args",
+          "dispatch_line": 92,
+          "aliases": []
+        },
+        {
+          "name": "is_available",
+          "dispatch_line": 117,
+          "aliases": []
+        },
+        {
+          "name": "exec_with_capture",
+          "dispatch_line": 136,
+          "aliases": []
+        }
+      ]
+    },
+    {
+      "domain": "quarantine",
+      "handler_file": "QuarantineHandler.cpp",
+      "purpose": "Renames suspect assets into /Game/Forge_Quarantine with timestamped name and reason log",
+      "actions": []
+    },
+    {
+      "domain": "reflection",
+      "handler_file": "ReflectionHandler.cpp",
+      "purpose": "UClass/UStruct/UEnum reflection queries for schema introspection",
+      "actions": [
+        {
+          "name": "get_prop",
+          "dispatch_line": 49,
+          "aliases": []
+        },
+        {
+          "name": "set_prop",
+          "dispatch_line": 50,
+          "aliases": []
+        },
+        {
+          "name": "call_utility_fn",
+          "dispatch_line": 51,
+          "aliases": []
+        },
+        {
+          "name": "run_euw",
+          "dispatch_line": 52,
+          "aliases": []
+        },
+        {
+          "name": "list_functions",
+          "dispatch_line": 53,
+          "aliases": []
+        },
+        {
+          "name": "read_symbol_capture",
+          "dispatch_line": 55,
+          "aliases": []
+        }
+      ]
+    },
+    {
+      "domain": "rendering",
+      "handler_file": "RenderingHandler.cpp",
+      "purpose": "Rendering feature toggles: Nanite, Lumen, virtual textures, scalability",
+      "actions": [
+        {
+          "name": "set_nanite",
+          "dispatch_line": 54,
+          "aliases": []
+        },
+        {
+          "name": "set_lumen",
+          "dispatch_line": 55,
+          "aliases": []
+        },
+        {
+          "name": "set_shadow_method",
+          "dispatch_line": 56,
+          "aliases": []
+        },
+        {
+          "name": "capture_reflection",
+          "dispatch_line": 57,
+          "aliases": []
+        },
+        {
+          "name": "set_post_process_blend",
+          "dispatch_line": 58,
+          "aliases": []
+        },
+        {
+          "name": "set_console_var",
+          "dispatch_line": 59,
+          "aliases": []
+        },
+        {
+          "name": "get_render_stats",
+          "dispatch_line": 60,
+          "aliases": []
+        },
+        {
+          "name": "set_lod_screen_size",
+          "dispatch_line": 61,
+          "aliases": []
+        },
+        {
+          "name": "set_ray_tracing",
+          "dispatch_line": 62,
+          "aliases": []
+        },
+        {
+          "name": "set_anti_aliasing",
+          "dispatch_line": 63,
+          "aliases": []
+        },
+        {
+          "name": "set_nanite_settings",
+          "dispatch_line": 64,
+          "aliases": []
+        },
+        {
+          "name": "set_megalights",
+          "dispatch_line": 65,
+          "aliases": []
+        },
+        {
+          "name": "set_smaa",
+          "dispatch_line": 66,
+          "aliases": []
+        },
+        {
+          "name": "set_affect_dynamic_lighting",
+          "dispatch_line": 67,
+          "aliases": []
+        }
+      ]
+    },
+    {
+      "domain": "replication",
+      "handler_file": "ReplicationHandler.cpp",
+      "purpose": "Replication graph, condition, and property-replication configuration",
+      "actions": [
+        {
+          "name": "get_replicated_properties",
+          "dispatch_line": 73,
+          "aliases": []
+        },
+        {
+          "name": "get_rpcs",
+          "dispatch_line": 74,
+          "aliases": []
+        },
+        {
+          "name": "set_net_update_frequency",
+          "dispatch_line": 75,
+          "aliases": []
+        },
+        {
+          "name": "set_relevancy",
+          "dispatch_line": 76,
+          "aliases": []
+        },
+        {
+          "name": "set_replication_condition",
+          "dispatch_line": 77,
+          "aliases": []
+        },
+        {
+          "name": "get_replication_graph_info",
+          "dispatch_line": 78,
+          "aliases": []
+        },
+        {
+          "name": "audit_replication",
+          "dispatch_line": 79,
+          "aliases": []
+        },
+        {
+          "name": "set_iris_filter",
+          "dispatch_line": 80,
+          "aliases": []
+        },
+        {
+          "name": "get_iris_stats",
+          "dispatch_line": 81,
+          "aliases": []
+        }
+      ]
+    },
+    {
+      "domain": "runtime_capture",
+      "handler_file": "RuntimeCaptureHandler.cpp",
+      "purpose": "Captures PIE world snapshot (actors, transforms, GAS tags) and runtime variable dumps to JSON",
+      "actions": [
+        {
+          "name": "capture_pie_state",
+          "dispatch_line": 45,
+          "aliases": []
+        },
+        {
+          "name": "capture_runtime_variables",
+          "dispatch_line": 46,
+          "aliases": []
+        }
+      ]
+    },
+    {
+      "domain": "scene_query",
+      "handler_file": "SceneQueryHandler.cpp",
+      "purpose": "World line/sphere/box traces and overlap queries",
+      "actions": [
+        {
+          "name": "find_actors",
+          "dispatch_line": 182,
+          "aliases": []
+        },
+        {
+          "name": "get_actor_details",
+          "dispatch_line": 183,
+          "aliases": []
+        },
+        {
+          "name": "get_component_tree",
+          "dispatch_line": 184,
+          "aliases": []
+        },
+        {
+          "name": "get_scene_bounds",
+          "dispatch_line": 185,
+          "aliases": []
+        },
+        {
+          "name": "get_actors_in_radius",
+          "dispatch_line": 186,
+          "aliases": []
+        },
+        {
+          "name": "raycast",
+          "dispatch_line": 187,
+          "aliases": []
+        },
+        {
+          "name": "overlap_query",
+          "dispatch_line": 188,
+          "aliases": []
+        }
+      ]
+    },
+    {
+      "domain": "sequencer",
+      "handler_file": "SequencerHandler.cpp",
+      "purpose": "Level Sequence, sections, tracks, keyframe editing for cinematics",
+      "actions": [
+        {
+          "name": "create_sequence",
+          "dispatch_line": 83,
+          "aliases": []
+        },
+        {
+          "name": "add_track",
+          "dispatch_line": 84,
+          "aliases": []
+        },
+        {
+          "name": "add_key",
+          "dispatch_line": 85,
+          "aliases": []
+        },
+        {
+          "name": "add_camera_cut",
+          "dispatch_line": 86,
+          "aliases": []
+        },
+        {
+          "name": "add_possessable",
+          "dispatch_line": 87,
+          "aliases": []
+        },
+        {
+          "name": "set_playback_range",
+          "dispatch_line": 88,
+          "aliases": []
+        },
+        {
+          "name": "remove_track",
+          "dispatch_line": 89,
+          "aliases": []
+        },
+        {
+          "name": "add_section",
+          "dispatch_line": 90,
+          "aliases": []
+        },
+        {
+          "name": "add_subsequence",
+          "dispatch_line": 91,
+          "aliases": []
+        },
+        {
+          "name": "add_event_key",
+          "dispatch_line": 92,
+          "aliases": []
+        },
+        {
+          "name": "add_audio_track",
+          "dispatch_line": 93,
+          "aliases": []
+        },
+        {
+          "name": "get_sequence_topology",
+          "dispatch_line": 94,
+          "aliases": []
+        },
+        {
+          "name": "create_level_sequence",
+          "dispatch_line": 96,
+          "aliases": []
+        },
+        {
+          "name": "add_actor_track",
+          "dispatch_line": 97,
+          "aliases": []
+        },
+        {
+          "name": "add_keyframe",
+          "dispatch_line": 98,
+          "aliases": []
+        },
+        {
+          "name": "bake_transform",
+          "dispatch_line": 99,
+          "aliases": []
+        },
+        {
+          "name": "add_spawnable",
+          "dispatch_line": 100,
+          "aliases": []
+        },
+        {
+          "name": "export_fbx",
+          "dispatch_line": 101,
+          "aliases": []
+        }
+      ]
+    },
+    {
+      "domain": "skeletal_mesh",
+      "handler_file": "SkeletalMeshHandler.cpp",
+      "purpose": "Skeletal Mesh asset operations: LODs, sockets, materials",
+      "actions": [
+        {
+          "name": "set_material_slot",
+          "dispatch_line": 40,
+          "aliases": []
+        },
+        {
+          "name": "get_bones",
+          "dispatch_line": 41,
+          "aliases": []
+        },
+        {
+          "name": "get_morph_targets",
+          "dispatch_line": 42,
+          "aliases": []
+        },
+        {
+          "name": "import_skeletal_mesh",
+          "dispatch_line": 43,
+          "aliases": []
+        },
+        {
+          "name": "reimport",
+          "dispatch_line": 44,
+          "aliases": []
+        },
+        {
+          "name": "get_info",
+          "dispatch_line": 45,
+          "aliases": []
+        }
+      ]
+    },
+    {
+      "domain": "skeleton",
+      "handler_file": "SkeletonHandler.cpp",
+      "purpose": "Skeleton asset bone trees, virtual bones, and retarget chains",
+      "actions": [
+        {
+          "name": "add_socket",
+          "dispatch_line": 37,
+          "aliases": []
+        },
+        {
+          "name": "move_socket",
+          "dispatch_line": 38,
+          "aliases": []
+        },
+        {
+          "name": "add_virtual_bone",
+          "dispatch_line": 39,
+          "aliases": []
+        },
+        {
+          "name": "get_sockets",
+          "dispatch_line": 40,
+          "aliases": []
+        },
+        {
+          "name": "list_virtual_bones",
+          "dispatch_line": 41,
+          "aliases": []
+        },
+        {
+          "name": "get_skeleton_info",
+          "dispatch_line": 42,
+          "aliases": []
+        }
+      ]
+    },
+    {
+      "domain": "smart_object",
+      "handler_file": "SmartObjectHandler.cpp",
+      "purpose": "Smart Object definitions, slots, and subsystem queries",
+      "actions": [
+        {
+          "name": "create_smart_object",
+          "dispatch_line": 69,
+          "aliases": []
+        },
+        {
+          "name": "add_slot",
+          "dispatch_line": 104,
+          "aliases": []
+        },
+        {
+          "name": "set_slot_tag",
+          "dispatch_line": 178,
+          "aliases": []
+        },
+        {
+          "name": "place_smart_object",
+          "dispatch_line": 242,
+          "aliases": []
+        },
+        {
+          "name": "get_smart_object_info",
+          "dispatch_line": 331,
+          "aliases": []
+        },
+        {
+          "name": "list_slots",
+          "dispatch_line": 332,
+          "aliases": []
+        }
+      ]
+    },
+    {
+      "domain": "source_control",
+      "handler_file": "SourceControlHandler.cpp",
+      "purpose": "Source control provider status, checkout, revert, submit",
+      "actions": [
+        {
+          "name": "checkout",
+          "dispatch_line": 69,
+          "aliases": []
+        },
+        {
+          "name": "checkin",
+          "dispatch_line": 70,
+          "aliases": []
+        },
+        {
+          "name": "revert",
+          "dispatch_line": 71,
+          "aliases": []
+        },
+        {
+          "name": "get_status",
+          "dispatch_line": 72,
+          "aliases": []
+        },
+        {
+          "name": "mark_for_add",
+          "dispatch_line": 73,
+          "aliases": []
+        }
+      ]
+    },
+    {
+      "domain": "spline",
+      "handler_file": "SplineHandler.cpp",
+      "purpose": "Spline component point CRUD, tangents, length sampling",
+      "actions": [
+        {
+          "name": "create_spline_actor",
+          "dispatch_line": 40,
+          "aliases": []
+        },
+        {
+          "name": "add_point",
+          "dispatch_line": 41,
+          "aliases": []
+        },
+        {
+          "name": "set_point",
+          "dispatch_line": 42,
+          "aliases": []
+        },
+        {
+          "name": "set_tangent",
+          "dispatch_line": 43,
+          "aliases": []
+        },
+        {
+          "name": "get_points",
+          "dispatch_line": 44,
+          "aliases": []
+        },
+        {
+          "name": "close_loop",
+          "dispatch_line": 45,
+          "aliases": []
+        },
+        {
+          "name": "set_point_type",
+          "dispatch_line": 46,
+          "aliases": []
+        },
+        {
+          "name": "delete_point",
+          "dispatch_line": 47,
+          "aliases": []
+        },
+        {
+          "name": "clear_points",
+          "dispatch_line": 48,
+          "aliases": []
+        },
+        {
+          "name": "get_length",
+          "dispatch_line": 49,
+          "aliases": []
+        },
+        {
+          "name": "get_point_at_distance",
+          "dispatch_line": 50,
+          "aliases": []
+        }
+      ]
+    },
+    {
+      "domain": "state_tree",
+      "handler_file": "StateTreeHandler.cpp",
+      "purpose": "State Tree asset authoring: states, transitions, conditions",
+      "actions": [
+        {
+          "name": "create_state_tree",
+          "dispatch_line": 65,
+          "aliases": []
+        },
+        {
+          "name": "add_state",
+          "dispatch_line": 66,
+          "aliases": []
+        },
+        {
+          "name": "add_transition",
+          "dispatch_line": 67,
+          "aliases": []
+        },
+        {
+          "name": "set_state_tasks",
+          "dispatch_line": 68,
+          "aliases": []
+        },
+        {
+          "name": "add_evaluator",
+          "dispatch_line": 69,
+          "aliases": []
+        }
+      ]
+    },
+    {
+      "domain": "static_mesh",
+      "handler_file": "StaticMeshHandler.cpp",
+      "purpose": "Static Mesh asset operations: LODs, collision, sockets, materials",
+      "actions": [
+        {
+          "name": "set_nanite",
+          "dispatch_line": 38,
+          "aliases": []
+        },
+        {
+          "name": "set_lod_screen_size",
+          "dispatch_line": 39,
+          "aliases": []
+        },
+        {
+          "name": "set_material_slot",
+          "dispatch_line": 40,
+          "aliases": []
+        },
+        {
+          "name": "get_info",
+          "dispatch_line": 41,
+          "aliases": []
+        },
+        {
+          "name": "set_collision",
+          "dispatch_line": 42,
+          "aliases": []
+        }
+      ]
+    },
+    {
+      "domain": "string_table",
+      "handler_file": "StringTableHandler.cpp",
+      "purpose": "String Table asset creation, key/value CRUD",
+      "actions": [
+        {
+          "name": "create_string_table",
+          "dispatch_line": 24,
+          "aliases": []
+        },
+        {
+          "name": "add_entry",
+          "dispatch_line": 72,
+          "aliases": []
+        },
+        {
+          "name": "get_entry",
+          "dispatch_line": 120,
+          "aliases": []
+        },
+        {
+          "name": "list_entries",
+          "dispatch_line": 166,
+          "aliases": []
+        }
+      ]
+    },
+    {
+      "domain": "struct",
+      "handler_file": "StructHandler.cpp",
+      "purpose": "User-defined struct creation and property edits",
+      "actions": [
+        {
+          "name": "create",
+          "dispatch_line": 31,
+          "aliases": []
+        },
+        {
+          "name": "add_field",
+          "dispatch_line": 32,
+          "aliases": []
+        },
+        {
+          "name": "remove_field",
+          "dispatch_line": 33,
+          "aliases": []
+        },
+        {
+          "name": "rename_field",
+          "dispatch_line": 34,
+          "aliases": []
+        },
+        {
+          "name": "set_field_default",
+          "dispatch_line": 35,
+          "aliases": []
+        },
+        {
+          "name": "list_fields",
+          "dispatch_line": 36,
+          "aliases": []
+        }
+      ]
+    },
+    {
+      "domain": "subsystem_query",
+      "handler_file": "SubsystemQueryHandler.cpp",
+      "purpose": "Engine/Editor/World subsystem existence and listing",
+      "actions": [
+        {
+          "name": "list_editor_subsystems",
+          "dispatch_line": 22,
+          "aliases": []
+        },
+        {
+          "name": "list_world_subsystems",
+          "dispatch_line": 52,
+          "aliases": []
+        }
+      ]
+    },
+    {
+      "domain": "testing",
+      "handler_file": "TestingHandler.cpp",
+      "purpose": "Automation test discovery and run orchestration",
+      "actions": [
+        {
+          "name": "list_tests",
+          "dispatch_line": 33,
+          "aliases": []
+        },
+        {
+          "name": "run_test",
+          "dispatch_line": 34,
+          "aliases": []
+        },
+        {
+          "name": "run_test_suite",
+          "dispatch_line": 35,
+          "aliases": []
+        },
+        {
+          "name": "get_test_results",
+          "dispatch_line": 36,
+          "aliases": []
+        },
+        {
+          "name": "create_functional_test",
+          "dispatch_line": 37,
+          "aliases": []
+        },
+        {
+          "name": "run_map_check",
+          "dispatch_line": 38,
+          "aliases": []
+        }
+      ]
+    },
+    {
+      "domain": "texture",
+      "handler_file": "TextureHandler.cpp",
+      "purpose": "Texture2D import, sRGB/compression settings, reimport",
+      "actions": [
+        {
+          "name": "import_texture",
+          "dispatch_line": 55,
+          "aliases": []
+        },
+        {
+          "name": "set_compression",
+          "dispatch_line": 109,
+          "aliases": []
+        },
+        {
+          "name": "set_lod_group",
+          "dispatch_line": 127,
+          "aliases": []
+        },
+        {
+          "name": "set_srgb",
+          "dispatch_line": 145,
+          "aliases": []
+        },
+        {
+          "name": "set_virtual_texture",
+          "dispatch_line": 164,
+          "aliases": []
+        },
+        {
+          "name": "resize",
+          "dispatch_line": 183,
+          "aliases": []
+        },
+        {
+          "name": "get_info",
+          "dispatch_line": 202,
+          "aliases": []
+        }
+      ]
+    },
+    {
+      "domain": "umg",
+      "handler_file": "UMGHandler.cpp",
+      "purpose": "UMG (UserWidget) tree authoring and widget-to-JSON export",
+      "actions": [
+        {
+          "name": "get_widget_tree",
+          "dispatch_line": 164,
+          "aliases": []
+        },
+        {
+          "name": "query_widget_properties",
+          "dispatch_line": 165,
+          "aliases": []
+        },
+        {
+          "name": "get_widget_schema",
+          "dispatch_line": 166,
+          "aliases": []
+        },
+        {
+          "name": "get_layout_data",
+          "dispatch_line": 167,
+          "aliases": []
+        },
+        {
+          "name": "create_widget",
+          "dispatch_line": 168,
+          "aliases": []
+        },
+        {
+          "name": "set_widget_properties",
+          "dispatch_line": 169,
+          "aliases": []
+        },
+        {
+          "name": "reparent_widget",
+          "dispatch_line": 170,
+          "aliases": []
+        },
+        {
+          "name": "set_active_widget",
+          "dispatch_line": 171,
+          "aliases": []
+        },
+        {
+          "name": "save_asset",
+          "dispatch_line": 172,
+          "aliases": []
+        },
+        {
+          "name": "read_umg_capture",
+          "dispatch_line": 173,
+          "aliases": []
+        },
+        {
+          "name": "audit_umg_widget",
+          "dispatch_line": 174,
+          "aliases": []
+        },
+        {
+          "name": "create_widget_blueprint",
+          "dispatch_line": 177,
+          "aliases": []
+        },
+        {
+          "name": "add_widget",
+          "dispatch_line": 178,
+          "aliases": []
+        },
+        {
+          "name": "set_binding",
+          "dispatch_line": 179,
+          "aliases": []
+        },
+        {
+          "name": "set_anchors",
+          "dispatch_line": 180,
+          "aliases": []
+        },
+        {
+          "name": "remove_widget",
+          "dispatch_line": 181,
+          "aliases": []
+        },
+        {
+          "name": "set_widget_property",
+          "dispatch_line": 182,
+          "aliases": []
+        },
+        {
+          "name": "list_widgets",
+          "dispatch_line": 183,
+          "aliases": []
+        }
+      ]
+    },
+    {
+      "domain": "water",
+      "handler_file": "WaterHandler.cpp",
+      "purpose": "Water body actor placement and water-plugin assets",
+      "actions": [
+        {
+          "name": "create_water_body",
+          "dispatch_line": 67,
+          "aliases": []
+        },
+        {
+          "name": "set_water_material",
+          "dispatch_line": 164,
+          "aliases": []
+        },
+        {
+          "name": "configure_waves",
+          "dispatch_line": 218,
+          "aliases": []
+        },
+        {
+          "name": "get_water_info",
+          "dispatch_line": 337,
+          "aliases": []
+        }
+      ]
+    },
+    {
+      "domain": "world_partition",
+      "handler_file": "WorldPartitionHandler.cpp",
+      "purpose": "World Partition cell load, HLOD, data layer, and grid operations",
+      "actions": [
+        {
+          "name": "is_enabled",
+          "dispatch_line": 50,
+          "aliases": []
+        },
+        {
+          "name": "create_data_layer",
+          "dispatch_line": 65,
+          "aliases": []
+        },
+        {
+          "name": "set_data_layer_state",
+          "dispatch_line": 86,
+          "aliases": []
+        },
+        {
+          "name": "list_data_layers",
+          "dispatch_line": 112,
+          "aliases": []
+        },
+        {
+          "name": "set_streaming_source",
+          "dispatch_line": 142,
+          "aliases": []
+        },
+        {
+          "name": "generate_hlods",
+          "dispatch_line": 171,
+          "aliases": []
+        },
+        {
+          "name": "get_cell_info",
+          "dispatch_line": 196,
+          "aliases": []
+        },
+        {
+          "name": "read_worldgen_capture",
+          "dispatch_line": 222,
+          "aliases": []
+        },
+        {
+          "name": "set_actor_data_layer",
+          "dispatch_line": 240,
+          "aliases": []
+        },
+        {
+          "name": "convert_to_world_partition",
+          "dispatch_line": 310,
+          "aliases": []
+        },
+        {
+          "name": "generate_hlod",
+          "dispatch_line": 325,
+          "aliases": []
+        },
+        {
+          "name": "set_hlod_settings",
+          "dispatch_line": 331,
+          "aliases": []
+        },
+        {
+          "name": "get_streaming_cells",
+          "dispatch_line": 378,
+          "aliases": []
+        }
+      ]
+    },
+    {
+      "domain": "world_settings",
+      "handler_file": "WorldSettingsHandler.cpp",
+      "purpose": "World Settings editing: game mode, physics, default pawn, kill Z",
+      "actions": [
+        {
+          "name": "get_world_settings",
+          "dispatch_line": 34,
+          "aliases": []
+        },
+        {
+          "name": "set_game_mode",
+          "dispatch_line": 59,
+          "aliases": []
+        },
+        {
+          "name": "set_kill_z",
+          "dispatch_line": 78,
+          "aliases": []
+        },
+        {
+          "name": "set_global_gravity",
+          "dispatch_line": 93,
+          "aliases": []
+        },
+        {
+          "name": "set_lightmass",
+          "dispatch_line": 109,
+          "aliases": []
+        },
+        {
+          "name": "set_world_property",
+          "dispatch_line": 145,
+          "aliases": []
+        },
+        {
+          "name": "set_default_map",
+          "dispatch_line": 198,
+          "aliases": []
+        },
+        {
+          "name": "set_world_settings",
+          "dispatch_line": 213,
+          "aliases": []
+        }
+      ]
+    }
+  ],
+  "reconciled_at": "2026-04-24T21:21:25Z",
+  "source_of_truth": "Per-domain 'actions' arrays mirror _bridge_index.json (tree-sitter-generated source truth). Per-domain 'purpose' fields and 'stub' flags are human-curated. Run the reconciler whenever _bridge_index.json is regenerated."
+}

@@ -1,0 +1,256 @@
+recipe_schema_version: 1.0
+id: "spline_distributed_placement"
+title: "Distribute actors along a spline"
+goal: "Sample N points along a spline and place an actor at each, optionally aligned to the spline tangent or terrain normal."
+description: |
+  Reads the control points of an existing spline actor, computes sample
+  distances along the spline (even / jittered / density-curve), and spawns an
+  actor at each sample. Alignment options include spline-tangent yaw, terrain-
+  normal up, or world-up. Use for fence posts, roadside props, patrol beacons,
+  and procedural set dressing. For dense foliage, prefer `foliage/paint_foliage`
+  driven off a spline mask.
+
+domain_scope: [spline, actor, landscape, scene_query]
+tested_on_ue: ["5.7"]
+tested_on_plugin: ["0.2.6"]
+
+preconditions:
+  - "$spline_actor_name resolves to an existing spline actor in the current level."
+  - "$asset_path exists and is spawnable."
+  - "If $align_to == 'terrain_normal', at least one landscape actor exists in the level."
+
+inputs:
+  - name: "spline_actor_name"
+    type: "string"
+    required: true
+    description: "Actor label or name of the source spline actor."
+    example: "BP_RoadSpline_01"
+  - name: "asset_path"
+    type: "asset_path"
+    required: true
+    description: "Actor or blueprint asset to place at each sample point."
+    example: "/Game/Props/BP_FencePost"
+  - name: "sample_count"
+    type: "int"
+    required: true
+    description: "Number of points to sample along the spline."
+    example: 40
+  - name: "distribution"
+    type: "string"
+    required: true
+    description: "even | jittered | density_curve. See variants for details."
+    example: "even"
+  - name: "jitter_amount"
+    type: "float"
+    required: false
+    description: "Used when distribution == jittered. Fraction of segment length to jitter (0.0 to 0.5)."
+    example: 0.25
+  - name: "density_curve"
+    type: "array"
+    required: false
+    description: "Used when distribution == density_curve. Array of [t, density] pairs in [0,1]."
+    example: [[0.0, 0.1], [0.5, 1.0], [1.0, 0.1]]
+  - name: "align_to"
+    type: "string"
+    required: true
+    description: "spline_tangent | terrain_normal | world_up."
+    example: "spline_tangent"
+  - name: "height_offset"
+    type: "float"
+    required: false
+    description: "Added to Z after ground snapping. Use for half-buried posts or hovering props."
+    example: 0.0
+
+outputs:
+  - name: "spawned_actors"
+    type: "array"
+    description: "Array of {label, location, sample_index, t}. `t` is spline-normalized [0,1]."
+
+action_dependencies:
+  - actor/find_actors_by_name
+  - spline/get_length
+  - spline/get_point_at_distance
+  - spline/get_points
+  - landscape/get_terrain_data
+  - scene_query/raycast
+  - actor/spawn_actor
+  - actor/spawn_blueprint_actor
+  - asset/get_asset_info
+  - actor/set_actor_label
+  - actor/set_actor_transform
+
+steps:
+  - id: resolve_spline_actor
+    action: "actor/find_actors_by_name"
+    inputs:
+      name_pattern: "$spline_actor_name"
+    captures: "spline_actor_match"
+    on_error: "abort"
+
+  - id: read_spline_length
+    action: "spline/get_length"
+    inputs:
+      actor_label: "$spline_actor_match.actors[0].label"
+    captures: "spline_meta"
+    on_error: "abort"
+    # spline_meta = { length, num_points, is_closed_loop }.
+    # The recipe engine uses spline_meta.length to turn normalized t values
+    # (or arc-length samples) into concrete distances for get_point_at_distance.
+
+  - id: validate_asset
+    action: "asset/get_asset_info"
+    inputs:
+      asset_path: "$asset_path"
+    captures: "asset_info"
+    on_error: "abort"
+
+loops:
+  - id: sample_and_spawn_loop
+    # Runtime generates $sample_count normalized t values per $distribution, then
+    # multiplies each t by $spline_meta.length to get a concrete arc-length distance.
+    # For each distance, spline/get_point_at_distance returns the world-space
+    # location and tangent directly (no recipe-side Hermite interpolation).
+    over: "generated_samples"
+    as: "sample"
+    steps:
+      - id: sample_spline_point
+        action: "spline/get_point_at_distance"
+        inputs:
+          actor_label: "$spline_actor_match.actors[0].label"
+          distance: "$sample.t * $spline_meta.length"
+          coordinate_space: "world"
+          include_tangent: true
+          include_rotation: false
+        captures: "sample_point"
+        on_error: "continue"
+
+      - id: ground_snap_terrain
+        action: "landscape/get_terrain_data"
+        only_if: "$align_to == 'terrain_normal'"
+        inputs:
+          location_xy: [ "$sample_point.location.x", "$sample_point.location.y" ]
+        captures: "terrain"
+        on_error: "continue"
+
+      - id: ground_snap_raycast
+        action: "scene_query/raycast"
+        only_if: "$align_to != 'terrain_normal'"
+        inputs:
+          # Trace straight down from high above the spline point.
+          start: [ "$sample_point.location.x", "$sample_point.location.y", "$sample_point.location.z + 5000.0" ]
+          end:   [ "$sample_point.location.x", "$sample_point.location.y", "$sample_point.location.z - 5000.0" ]
+          channels: ["WorldStatic", "Landscape"]
+        captures: "ray"
+        on_error: "continue"
+
+      - id: spawn_sample_bp
+        action: "actor/spawn_blueprint_actor"
+        only_if: "$asset_info.is_blueprint == true"
+        inputs:
+          blueprint_path: "$asset_path"
+          location:
+            # Prefer landscape height when aligning to terrain, else raycast hit.
+            - "$sample_point.location.x"
+            - "$sample_point.location.y"
+            - |
+              if $align_to == 'terrain_normal':
+                return $terrain.height + $height_offset
+              elif $ray.hit:
+                return $ray.hit_location[2] + $height_offset
+              else:
+                return $sample_point.location.z + $height_offset
+          rotation:
+            - 0
+            - |
+              if $align_to == 'spline_tangent':
+                return atan2($sample_point.tangent.y, $sample_point.tangent.x) * 180.0 / PI
+              else:
+                return 0
+            - 0
+          scale: [1, 1, 1]
+        captures: "spawned"
+        on_error: "continue"
+
+      - id: spawn_sample_native
+        action: "actor/spawn_actor"
+        only_if: "$asset_info.is_blueprint == false"
+        inputs:
+          class_path: "$asset_path"
+          location:
+            - "$sample_point.location.x"
+            - "$sample_point.location.y"
+            - |
+              if $align_to == 'terrain_normal':
+                return $terrain.height + $height_offset
+              elif $ray.hit:
+                return $ray.hit_location[2] + $height_offset
+              else:
+                return $sample_point.location.z + $height_offset
+          rotation: [0, 0, 0]
+          scale: [1, 1, 1]
+        captures: "spawned"
+        on_error: "continue"
+
+      - id: apply_terrain_normal_rotation
+        action: "actor/set_actor_transform"
+        # Align actor up-vector to the terrain normal, preserving yaw.
+        # Plugin action accepts rotation_from_normal natively as of 0.2.6.
+        only_if: "$align_to == 'terrain_normal' and $spawned != null and $terrain != null"
+        inputs:
+          actor_label: "$spawned.spawned_actor_label"
+          rotation:
+            pitch: 0
+            yaw: |
+              if $align_to == 'spline_tangent':
+                return atan2($sample.tangent[1], $sample.tangent[0]) * 180.0 / PI
+              else:
+                return 0
+            roll: 0
+          rotation_from_normal:
+            x: "$terrain.normal[0]"
+            y: "$terrain.normal[1]"
+            z: "$terrain.normal[2]"
+          rotation_from_normal_preserve_yaw: true
+        on_error: "continue"
+
+      - id: label_spawned
+        action: "actor/set_actor_label"
+        only_if: "$spawned != null"
+        inputs:
+          actor_id: "$spawned.actor_id"
+          label: "SplineDist_$sample.index"
+        on_error: "continue"
+
+failure_modes:
+  - trigger: "Spline actor not found"
+    symptom: "find_actors_by_name returns zero matches; read_spline_points never runs."
+    fix: "Verify $spline_actor_name matches the actor's label in the outliner. Labels are case-sensitive."
+  - trigger: "Spline has fewer than 2 points"
+    symptom: "Samples collapse onto one location."
+    fix: "Precondition check: require spline_points.length >= 2 before entering the sample loop."
+  - trigger: "Terrain-normal alignment with no landscape"
+    symptom: "ground_snap_terrain fails; actors spawn at raw spline Z."
+    fix: "Fall back to scene_query/raycast when $terrain is null, or switch $align_to to 'world_up'."
+  - trigger: "Degenerate terrain normal"
+    symptom: "rotation_from_normal returns error 1001 'must be a non-zero vector'."
+    fix: "Landscape/get_terrain_data returned a near-zero normal; this usually means the probe XY was outside any landscape bounds. Fall back to $align_to == 'world_up' and skip the apply_terrain_normal_rotation step."
+
+variants:
+  - name: "even_spacing"
+    differs_by: "$distribution == 'even'. Samples are uniformly spaced in arc length across the full spline."
+  - name: "jittered"
+    differs_by: "$distribution == 'jittered'. Uniform spacing with random offset up to $jitter_amount * segment_length per sample."
+  - name: "density_curve"
+    differs_by: "$distribution == 'density_curve'. Samples concentrated per the $density_curve control points; integrated density is normalized to $sample_count total."
+
+notes: |
+  Uses first-class plugin actions spline/get_length and spline/get_point_at_distance
+  (available in plugin 0.2.6). The recipe engine generates normalized t values per
+  $distribution, multiplies them by $spline_meta.length, and dispatches one
+  get_point_at_distance call per sample to obtain world-space location and tangent.
+  No recipe-side Hermite interpolation or arc-length integration is needed.
+  Terrain sampling uses landscape/get_terrain_data (which returns height + normal)
+  rather than a dedicated sample_height call; no plugin gaps here.
+  As of plugin 0.2.6, actor/set_actor_transform accepts rotation_from_normal +
+  rotation_from_normal_preserve_yaw natively, so no recipe-side quaternion math
+  is required for terrain-normal alignment.

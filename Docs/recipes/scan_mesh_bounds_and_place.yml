@@ -1,0 +1,225 @@
+recipe_schema_version: 1.0
+id: "scan_mesh_bounds_and_place"
+title: "Scan mesh bounds and place on landscape"
+goal: "Place a static mesh at candidate XY positions such that its bounds sit on the landscape surface and do not intersect existing meshes."
+description: |
+  Inspects a static mesh asset to learn its bounds, iterates a list of candidate
+  XY positions, samples the landscape height at each, computes a spawn Z that
+  rests the mesh's min-Z on the terrain (plus $clearance_margin), runs an
+  overlap query in the mesh's bounding box at that transform, and spawns only
+  if clear. Designed for ruin / rock / debris placement on open terrain. For
+  mesh fields that don't need landscape snapping, prefer
+  `mass_spawn_with_collision_avoidance` instead.
+
+domain_scope: [static_mesh, landscape, scene_query, actor]
+tested_on_ue: ["5.7"]
+tested_on_plugin: ["0.2.6"]
+
+preconditions:
+  - "$mesh_path resolves to a valid UStaticMesh asset."
+  - "At least one landscape actor covers the XY range of $candidate_positions."
+  - "Current level is writable."
+
+inputs:
+  - name: "mesh_path"
+    type: "asset_path"
+    required: true
+    description: "Static mesh asset to place."
+    example: "/Game/Environment/Meshes/SM_Boulder_01"
+  - name: "candidate_positions"
+    type: "array"
+    required: true
+    description: "Array of [x, y] world XY coordinates to test."
+    example: [[1200, 3400], [1500, 3500], [1800, 3600]]
+  - name: "clearance_margin"
+    type: "float"
+    required: false
+    description: "Extra Z offset added on top of (landscape_Z - bounds_min_Z). Defaults to 0."
+    example: 5.0
+  - name: "rotation"
+    type: "array"
+    required: false
+    description: "[pitch, yaw, roll]. Defaults to [0, 0, 0]."
+    example: [0, 0, 0]
+  - name: "scale"
+    type: "array"
+    required: false
+    description: "[sx, sy, sz]. Defaults to [1, 1, 1]. Bounds are scaled accordingly before probing."
+    example: [1, 1, 1]
+  - name: "align_to_terrain_normal"
+    type: "bool"
+    required: false
+    description: "If true, rotates the mesh to match the terrain normal at the placement point. Defaults to false."
+    example: false
+  - name: "label_prefix"
+    type: "string"
+    required: false
+    description: "Prefix for spawned actor labels."
+    example: "Boulder"
+
+outputs:
+  - name: "placed_meshes"
+    type: "array"
+    description: "Array of {label, actor_id, location, candidate_index}."
+  - name: "skipped_candidates"
+    type: "array"
+    description: "Array of {candidate_index, reason}. Reasons include: no_landscape, overlap_hit, invalid_bounds."
+
+action_dependencies:
+  - static_mesh/get_info
+  - asset/get_asset_info
+  - landscape/get_terrain_data
+  - scene_query/overlap_query
+  - actor/spawn_actor
+  - actor/set_actor_transform
+  - actor/set_actor_label
+
+steps:
+  - id: validate_mesh_asset
+    action: "asset/get_asset_info"
+    inputs:
+      asset_path: "$mesh_path"
+    captures: "asset_info"
+    on_error: "abort"
+
+  - id: read_mesh_bounds
+    action: "static_mesh/get_info"
+    inputs:
+      asset_path: "$mesh_path"
+    captures: "mesh_info"
+    on_error: "abort"
+    # static_mesh/get_info returns bounds min/max among other fields.
+    # The recipe engine scales these by $scale before using them.
+
+loops:
+  - id: candidate_loop
+    over: "$candidate_positions"
+    as: "xy"
+    steps:
+      - id: sample_landscape
+        action: "landscape/get_terrain_data"
+        inputs:
+          location_xy: "$xy"
+        captures: "terrain"
+        on_error: "continue"
+
+      - id: skip_if_no_landscape
+        # Runtime records a skip entry when $terrain is null and aborts this iteration.
+        action: "noop"
+        only_if: "$terrain == null"
+        on_error: "continue"
+
+      - id: probe_bounds_at_spawn_z
+        action: "scene_query/overlap_query"
+        only_if: "$terrain != null"
+        inputs:
+          location:
+            - "$xy[0]"
+            - "$xy[1]"
+            # spawn_z = terrain_height - scaled_bounds_min_z + clearance_margin
+            # Recipe-side math: scaled_min_z = mesh_info.bounds_min[2] * scale[2].
+            - |
+              $terrain.height - ($mesh_info.bounds_min[2] * $scale[2]) + $clearance_margin
+          extents:
+            # Half-extents of the scaled mesh bounds, with a small shrink so we
+            # don't self-collide with meshes that sit flush against neighbors.
+            - "($mesh_info.bounds_max[0] - $mesh_info.bounds_min[0]) * 0.5 * $scale[0] - 1.0"
+            - "($mesh_info.bounds_max[1] - $mesh_info.bounds_min[1]) * 0.5 * $scale[1] - 1.0"
+            - "($mesh_info.bounds_max[2] - $mesh_info.bounds_min[2]) * 0.5 * $scale[2] - 1.0"
+          rotation: "$rotation"
+          channels: ["WorldStatic", "WorldDynamic"]
+        captures: "probe"
+        on_error: "abort"
+
+      - id: spawn_mesh_actor
+        action: "actor/spawn_actor"
+        only_if: "$terrain != null and $probe.hit == false"
+        inputs:
+          class_name: "StaticMeshActor"
+          location:
+            x: "$xy[0]"
+            y: "$xy[1]"
+            z: "$terrain.height - ($mesh_info.bounds_min[2] * $scale[2]) + $clearance_margin"
+          rotation:
+            pitch: "$rotation[0]"
+            yaw:   "$rotation[1]"
+            roll:  "$rotation[2]"
+          # Plugin action accepts static_mesh natively as of 0.2.6 (applies to
+          # AStaticMeshActor's GetStaticMeshComponent()).
+          static_mesh: "$mesh_path"
+        captures: "spawned"
+        on_error: "continue"
+
+      - id: apply_scale
+        # spawn_actor does not take scale; set scale via set_actor_transform.
+        action: "actor/set_actor_transform"
+        only_if: "$spawned != null"
+        inputs:
+          actor_label: "$spawned.spawned_actor_label"
+          scale:
+            x: "$scale[0]"
+            y: "$scale[1]"
+            z: "$scale[2]"
+        on_error: "continue"
+
+      - id: align_to_terrain
+        action: "actor/set_actor_transform"
+        # Plugin action accepts rotation_from_normal natively as of 0.2.6.
+        only_if: "$align_to_terrain_normal == true and $spawned != null"
+        inputs:
+          actor_label: "$spawned.spawned_actor_label"
+          rotation:
+            pitch: "$rotation[0]"
+            yaw:   "$rotation[1]"
+            roll:  "$rotation[2]"
+          rotation_from_normal:
+            x: "$terrain.normal[0]"
+            y: "$terrain.normal[1]"
+            z: "$terrain.normal[2]"
+          rotation_from_normal_preserve_yaw: true
+        on_error: "continue"
+
+      - id: label_placed
+        action: "actor/set_actor_label"
+        only_if: "$spawned != null"
+        inputs:
+          actor_id: "$spawned.actor_id"
+          label: "$label_prefix + '_' + pad_left($xy_index, 3, '0')"
+        on_error: "continue"
+
+failure_modes:
+  - trigger: "No landscape found under a candidate XY"
+    symptom: "sample_landscape returns null or zero; candidate recorded in skipped_candidates with reason 'no_landscape'."
+    fix: "Confirm your candidate XYs fall inside a landscape actor's bounds. Use landscape/get_landscape_info to check coverage. For non-landscape worlds, swap to a raycast-based recipe."
+  - trigger: "Mesh bounds are zero or degenerate"
+    symptom: "read_mesh_bounds returns bounds_min == bounds_max, or one axis has zero extent. Every probe appears clear and meshes clip through terrain."
+    fix: "Reimport the source mesh with proper collision / bounds extension. Run testing/run_map_check on the asset."
+  - trigger: "probe hits the mesh being spawned"
+    symptom: "Every candidate rejects even in open terrain."
+    fix: "Ensure the overlap_query channel list excludes the newly spawned actor's channel, or shrink extents by more than 1 UU. Known-safe: 5.0 UU shrink."
+  - trigger: "Degenerate terrain normal returned"
+    symptom: "actor/set_actor_transform returns error 1001 'rotation_from_normal must be a non-zero vector'."
+    fix: "Skip the align_to_terrain step for this candidate, or fall back to $align_to_terrain_normal == false. Near-zero normals indicate XY was outside the landscape footprint."
+  - trigger: "Spawned StaticMeshActor has empty mesh even with static_mesh input"
+    symptom: "Result message contains 'warning: Actor class has no UStaticMeshComponent' or 'Failed to load UStaticMesh'."
+    fix: "Verify $mesh_path resolves to a valid UStaticMesh asset. If the warning is about missing component, ensure class_name resolves to AStaticMeshActor (or a subclass) rather than a plain AActor."
+
+variants:
+  - name: "lock_to_rotation"
+    differs_by: "Forces $align_to_terrain_normal == false. Use when art direction requires a fixed mesh orientation."
+  - name: "terrain_normal_aligned"
+    differs_by: "Forces $align_to_terrain_normal == true. Boulders and debris read more natural on sloped terrain."
+  - name: "half_buried"
+    differs_by: "$clearance_margin is negative (e.g. -20). Sinks the mesh into the terrain by the specified amount for embedded-rock looks."
+
+notes: |
+  Actions referenced from _inventory.json: static_mesh/get_info, asset/get_asset_info,
+  landscape/get_terrain_data, scene_query/overlap_query, actor/spawn_actor,
+  actor/set_actor_transform, actor/set_actor_label.
+  As of plugin 0.2.6:
+    - actor/spawn_actor accepts a `static_mesh` input (applies to AStaticMeshActor or the
+      first UStaticMeshComponent on the spawned actor).
+    - actor/set_actor_transform accepts `rotation_from_normal` + `rotation_from_normal_preserve_yaw`
+      natively; no recipe-side cross-product math is required.
+  Note: a dedicated static_mesh/get_bounds action was proposed in the brief but does
+  not exist in 0.2.6; static_mesh/get_info is the current source for bounds data.

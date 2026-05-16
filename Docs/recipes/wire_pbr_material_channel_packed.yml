@@ -1,0 +1,350 @@
+recipe_schema_version: 1.0
+id: "wire_pbr_material_channel_packed"
+title: "Wire a channel-packed PBR material"
+goal: "Import up to 13 PBR source textures and wire them into a compiled UE5 material with channel-packed ORM."
+description: |
+  Ingests a PBR texture set, applies correct sRGB / compression / LOD-group settings
+  per role, creates a new material asset, authors parameter nodes (Texture2DParameter,
+  ScalarParameter), component-masks out the packed channels (R=AO, G=Roughness,
+  B=Metallic from a single ORM texture), wires everything to the material output,
+  and compiles. Use this recipe when you have a standard PBR set (BaseColor, Normal,
+  ORM, optional Emissive / Opacity) and want a production-ready opaque/masked
+  material, not a master-instance flow. For master-instance work, author once and
+  drive via `material_instance/*`.
+
+domain_scope: [texture, asset, material, material_instance]
+tested_on_ue: ["5.7"]
+tested_on_plugin: ["0.2.6"]
+
+preconditions:
+  - "All source texture files exist on disk at the paths in $texture_roles."
+  - "Target package path exists or can be created by the asset domain."
+  - "No existing material at $target_material_path, or $overwrite is true."
+
+inputs:
+  - name: "texture_roles"
+    type: "array"
+    required: true
+    description: |
+      Array of {role, source_path, target_package_path} objects. `role` is one of:
+      basecolor, normal, orm, emissive, opacity, ao (only for non-packed variant),
+      roughness (non-packed), metallic (non-packed), height, subsurface, sheen,
+      clearcoat, clearcoat_normal. Max 13 entries.
+    example:
+      - role: "basecolor"
+        source_path: "D:/Art/Rock/rock_D.png"
+        target_package_path: "/Game/Environment/Textures/T_Rock_D"
+      - role: "normal"
+        source_path: "D:/Art/Rock/rock_N.png"
+        target_package_path: "/Game/Environment/Textures/T_Rock_N"
+      - role: "orm"
+        source_path: "D:/Art/Rock/rock_ORM.png"
+        target_package_path: "/Game/Environment/Textures/T_Rock_ORM"
+  - name: "target_material_path"
+    type: "asset_path"
+    required: true
+    description: "Package path for the new material asset."
+    example: "/Game/Environment/Materials/M_Rock"
+  - name: "blend_mode"
+    type: "string"
+    required: false
+    description: "Opaque | Masked | Translucent. Defaults to Opaque if omitted."
+    example: "Opaque"
+  - name: "shading_model"
+    type: "string"
+    required: false
+    description: "DefaultLit | Subsurface | ClearCoat | Unlit. Defaults to DefaultLit."
+    example: "DefaultLit"
+  - name: "two_sided"
+    type: "bool"
+    required: false
+    description: "Enable two-sided rendering. Defaults to false."
+    example: false
+
+outputs:
+  - name: "created_material_path"
+    type: "asset_path"
+    description: "The compiled material asset path."
+  - name: "imported_texture_paths"
+    type: "array"
+    description: "Array of asset paths for every imported texture, in role order."
+
+action_dependencies:
+  - texture/import_texture
+  - texture/set_srgb
+  - texture/set_compression
+  - texture/set_lod_group
+  - asset/create_material
+  - material/material_set_target
+  - material/material_set_blend_mode
+  - material/material_set_shading_model
+  - material/material_set_two_sided
+  - material/add_parameter
+  - material/material_add_node
+  - material/material_connect_nodes
+  - material/material_compile_asset
+
+steps:
+  - id: create_material_asset
+    action: "asset/create_material"
+    inputs:
+      package_path: "$target_material_path"
+    captures: "material_asset"
+    on_error: "abort"
+
+  - id: set_material_target
+    action: "material/material_set_target"
+    inputs:
+      asset_path: "$material_asset.path"
+    on_error: "abort"
+
+  - id: set_blend_mode
+    action: "material/material_set_blend_mode"
+    inputs:
+      blend_mode: "$blend_mode"
+    on_error: "continue"
+
+  - id: set_shading_model
+    action: "material/material_set_shading_model"
+    inputs:
+      shading_model: "$shading_model"
+    on_error: "continue"
+
+  - id: set_two_sided
+    action: "material/material_set_two_sided"
+    inputs:
+      two_sided: "$two_sided"
+    on_error: "continue"
+
+  - id: compile_material
+    action: "material/material_compile_asset"
+    inputs:
+      asset_path: "$material_asset.path"
+    on_error: "abort"
+
+loops:
+  - id: import_textures_loop
+    over: "$texture_roles"
+    as: "tex"
+    runs_before: create_material_asset
+    steps:
+      - id: import_tex
+        action: "texture/import_texture"
+        inputs:
+          source_path: "$tex.source_path"
+          target_package_path: "$tex.target_package_path"
+        captures: "imported_tex"
+        on_error: "abort"
+      - id: set_tex_srgb
+        action: "texture/set_srgb"
+        inputs:
+          asset_path: "$imported_tex.path"
+          # sRGB rule: true only for basecolor / emissive. Everything else is linear data.
+          srgb: "$tex.role in ['basecolor', 'emissive']"
+        on_error: "abort"
+      - id: set_tex_compression
+        action: "texture/set_compression"
+        inputs:
+          asset_path: "$imported_tex.path"
+          # Compression rule:
+          #   normal   -> TC_Normalmap (BC5)
+          #   basecolor, emissive, orm, opacity -> TC_Default (BC1/BC7 depending on alpha)
+          #   height, subsurface, sheen -> TC_Grayscale or TC_Default
+          compression: |
+            switch($tex.role):
+              case 'normal': return 'TC_Normalmap'
+              case 'height': return 'TC_Grayscale'
+              default: return 'TC_Default'
+        on_error: "abort"
+      - id: set_tex_lod_group
+        action: "texture/set_lod_group"
+        inputs:
+          asset_path: "$imported_tex.path"
+          lod_group: "World"
+        on_error: "continue"
+
+  - id: author_parameters_loop
+    over: "$texture_roles"
+    as: "tex"
+    runs_after: set_material_target
+    runs_before: compile_material
+    steps:
+      - id: add_tex_param
+        action: "material/add_parameter"
+        inputs:
+          parameter_type: "Texture2DParameter"
+          parameter_name: "T_$tex.role"
+          default_value: "$tex.target_package_path"
+          group: "PBR"
+        captures: "tex_param_node"
+        on_error: "abort"
+      - id: add_sampler_node
+        action: "material/material_add_node"
+        inputs:
+          node_class: "MaterialExpressionTextureSample"
+          sampler_source_param: "$tex_param_node.id"
+          sampler_type: |
+            switch($tex.role):
+              case 'normal': return 'SAMPLERTYPE_Normal'
+              case 'basecolor': return 'SAMPLERTYPE_Color'
+              default: return 'SAMPLERTYPE_LinearColor'
+        captures: "sampler_node"
+        on_error: "abort"
+      # ORM packing: author three ComponentMask nodes and wire R->AO, G->Rough, B->Metal.
+      - id: add_orm_mask_r
+        action: "material/material_add_node"
+        inputs:
+          node_class: "MaterialExpressionComponentMask"
+          mask_r: true
+          mask_g: false
+          mask_b: false
+          mask_a: false
+        captures: "mask_r_node"
+        only_if: "$tex.role == 'orm'"
+        on_error: "abort"
+      - id: add_orm_mask_g
+        action: "material/material_add_node"
+        inputs:
+          node_class: "MaterialExpressionComponentMask"
+          mask_r: false
+          mask_g: true
+          mask_b: false
+          mask_a: false
+        captures: "mask_g_node"
+        only_if: "$tex.role == 'orm'"
+        on_error: "abort"
+      - id: add_orm_mask_b
+        action: "material/material_add_node"
+        inputs:
+          node_class: "MaterialExpressionComponentMask"
+          mask_r: false
+          mask_g: false
+          mask_b: true
+          mask_a: false
+        captures: "mask_b_node"
+        only_if: "$tex.role == 'orm'"
+        on_error: "abort"
+      - id: connect_orm_r_to_ao
+        action: "material/material_connect_nodes"
+        inputs:
+          from_node: "$sampler_node.id"
+          from_pin: "RGB"
+          to_node: "$mask_r_node.id"
+          to_pin: "Input"
+        only_if: "$tex.role == 'orm'"
+        on_error: "abort"
+      - id: connect_orm_g_to_rough
+        action: "material/material_connect_nodes"
+        inputs:
+          from_node: "$sampler_node.id"
+          from_pin: "RGB"
+          to_node: "$mask_g_node.id"
+          to_pin: "Input"
+        only_if: "$tex.role == 'orm'"
+        on_error: "abort"
+      - id: connect_orm_b_to_metal
+        action: "material/material_connect_nodes"
+        inputs:
+          from_node: "$sampler_node.id"
+          from_pin: "RGB"
+          to_node: "$mask_b_node.id"
+          to_pin: "Input"
+        only_if: "$tex.role == 'orm'"
+        on_error: "abort"
+      - id: connect_mask_r_to_ao_output
+        action: "material/material_connect_nodes"
+        inputs:
+          from_node: "$mask_r_node.id"
+          from_pin: "Output"
+          to_node: "MaterialOutput"
+          to_pin: "AmbientOcclusion"
+        only_if: "$tex.role == 'orm'"
+        on_error: "abort"
+      - id: connect_mask_g_to_rough_output
+        action: "material/material_connect_nodes"
+        inputs:
+          from_node: "$mask_g_node.id"
+          from_pin: "Output"
+          to_node: "MaterialOutput"
+          to_pin: "Roughness"
+        only_if: "$tex.role == 'orm'"
+        on_error: "abort"
+      - id: connect_mask_b_to_metal_output
+        action: "material/material_connect_nodes"
+        inputs:
+          from_node: "$mask_b_node.id"
+          from_pin: "Output"
+          to_node: "MaterialOutput"
+          to_pin: "Metallic"
+        only_if: "$tex.role == 'orm'"
+        on_error: "abort"
+      # Non-ORM roles wire straight to their output pin.
+      - id: connect_basecolor_to_output
+        action: "material/material_connect_nodes"
+        inputs:
+          from_node: "$sampler_node.id"
+          from_pin: "RGB"
+          to_node: "MaterialOutput"
+          to_pin: "BaseColor"
+        only_if: "$tex.role == 'basecolor'"
+        on_error: "abort"
+      - id: connect_normal_to_output
+        action: "material/material_connect_nodes"
+        inputs:
+          from_node: "$sampler_node.id"
+          from_pin: "RGB"
+          to_node: "MaterialOutput"
+          to_pin: "Normal"
+        only_if: "$tex.role == 'normal'"
+        on_error: "abort"
+      - id: connect_emissive_to_output
+        action: "material/material_connect_nodes"
+        inputs:
+          from_node: "$sampler_node.id"
+          from_pin: "RGB"
+          to_node: "MaterialOutput"
+          to_pin: "EmissiveColor"
+        only_if: "$tex.role == 'emissive'"
+        on_error: "abort"
+      - id: connect_opacity_to_output
+        action: "material/material_connect_nodes"
+        inputs:
+          from_node: "$sampler_node.id"
+          from_pin: "R"
+          to_node: "MaterialOutput"
+          to_pin: "OpacityMask"
+        only_if: "$tex.role == 'opacity'"
+        on_error: "abort"
+
+failure_modes:
+  - trigger: "sRGB left on for normal or ORM texture"
+    symptom: "Lighting looks wrong; normals appear faceted; roughness/metallic read too dark."
+    fix: "Re-run with $texture_roles.srgb rule enforced. Only basecolor/emissive get sRGB=true."
+  - trigger: "Normal map green channel not flipped to match UE tangent space"
+    symptom: "Lighting looks concave where it should be convex."
+    fix: "Either pre-flip G in source art or author a FlattenNormal / DeriveNormalZ fix-up node before the Normal pin."
+  - trigger: "Opacity wired without Masked blend mode"
+    symptom: "Texture imports fine but opacity has no visual effect."
+    fix: "Pass $blend_mode: 'Masked' and ensure OpacityMask pin (not Opacity) is wired."
+  - trigger: "material_compile_asset fails with 'pin type mismatch'"
+    symptom: "Compile fails; editor log shows 'float3 -> float' coercion error."
+    fix: "Check that ComponentMask single-channel outputs route to single-channel pins (Roughness, Metallic, AO), and RGB outputs route to float3 pins (BaseColor, Normal, EmissiveColor)."
+  - trigger: "Too many Texture2DParameter nodes for the target platform"
+    symptom: "Shader compiles but exceeds sampler limits on console / mobile."
+    fix: "Use the 'channel_packed' variant exclusively (5 textures max) or combine emissive into basecolor alpha."
+
+variants:
+  - name: "channel_packed_9ch"
+    differs_by: "Drops AO. ORM becomes RM (roughness + metallic in G and B). Only 9 meaningful channels across BaseColor (RGB), Normal (RG), RM (GB). No AO connection; leaves MaterialOutput.AmbientOcclusion at default 1.0."
+  - name: "separate_textures_non_packed"
+    differs_by: "Each PBR channel comes from its own texture (ao, roughness, metallic as distinct entries in $texture_roles). Skip the ComponentMask nodes; wire sampler RGB R channel directly to each pin. Heavier sampler cost but simpler authoring."
+  - name: "masked_foliage"
+    differs_by: "Forces $blend_mode: Masked, uses basecolor alpha for opacity mask, and enables two-sided rendering. Typical foliage / decal use."
+
+notes: |
+  All actions above exist in _inventory.json as of plugin 0.2.6.
+  The switch() expressions in `compression` / `sampler_type` / `only_if` are recipe-engine
+  pseudo-syntax; the runtime is expected to evaluate these before dispatching. If the
+  runtime does not support inline expressions, unroll the loop per-role in a future revision.
+  Consider adding a `material_instance/create_instance` follow-up step to produce a
+  paintable master-instance chain on top of the compiled base material.

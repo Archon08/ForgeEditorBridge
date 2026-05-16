@@ -1,0 +1,1193 @@
+#!/usr/bin/env python3
+"""bridge-stack - ForgeEditorBridge cognitive stack orchestrator.
+
+Phase 0 scope: Map (Tier 0) and Recipes (Tier 1).
+Phase 1 scope: Graph tier (Tier 2) via tree-sitter-cpp.
+Phase 2 scope (this revision): Vector tier (Tier 3) via sentence-transformers
+    + sqlite-vec. Model: nomic-ai/nomic-embed-text-v2-moe (see adapter).
+Tier 4 (ue_kg) remains a stub for Phase 3.
+
+Subcommands:
+  init, status, verify
+  map regen
+  rebuild --tier graph|vector|ue_kg|all [--force]
+  graph list-domains | list-actions <domain> | query-caller <fn>
+        | query-action <domain> <action> | stats
+  search "<query>" [--k N] [--kind action|recipe|domain_overview] [--domain X]
+  vector stats
+
+PyYAML is optional (recipes parse fine without it via a regex fallback).
+"""
+
+from __future__ import annotations
+
+import argparse
+import datetime as _dt
+import json
+import os
+import re
+import subprocess
+import sys
+from pathlib import Path
+
+STACK_DIR = Path(__file__).resolve().parent
+DOCS_DIR = STACK_DIR.parent
+INVENTORY_PATH = DOCS_DIR / "_inventory.json"
+MAP_PATH = DOCS_DIR / "_bridge_map.md"
+STATUS_PATH = DOCS_DIR / "_stack_status.md"
+RECIPES_DIR = DOCS_DIR / "recipes"
+BRIDGE_INDEX_PATH = DOCS_DIR / "_bridge_index.json"
+ADAPTERS_DIR = STACK_DIR / "adapters"
+VENV_PY = STACK_DIR / ".venv" / "Scripts" / "python.exe"
+VENV_PY_POSIX = STACK_DIR / ".venv" / "bin" / "python"
+# Tier 3 artifact (gitignored via Docs/.gitignore).
+VECTORS_DIR = DOCS_DIR / ".vectors"
+VECTOR_DB_PATH = VECTORS_DIR / "chunks.sqlite"
+# Tier 4 artifacts (gitignored via Docs/.gitignore). Per-UE-version subdir.
+UE_KG_ROOT = DOCS_DIR / "ue_kg"
+UE_KG_MANIFEST = STACK_DIR / "ue_kg_manifest.json"
+
+try:
+    import yaml  # type: ignore
+    HAVE_YAML = True
+except ImportError:
+    yaml = None  # type: ignore
+    HAVE_YAML = False
+
+
+# --- Helpers ----------------------------------------------------------------
+
+def _now_stamp() -> str:
+    return _dt.datetime.now().strftime("%Y-%m-%d %H:%M")
+
+
+def _read(path: Path) -> str:
+    return path.read_text(encoding="utf-8")
+
+
+def _write(path: Path, content: str) -> None:
+    path.write_text(content, encoding="utf-8")
+
+
+def _load_inventory() -> dict:
+    if not INVENTORY_PATH.exists():
+        raise FileNotFoundError(f"Inventory not found at {INVENTORY_PATH}")
+    return json.loads(_read(INVENTORY_PATH))
+
+
+def _iter_recipe_files():
+    if not RECIPES_DIR.exists():
+        return []
+    return sorted(p for p in RECIPES_DIR.glob("*.yml") if p.name != "_template.yml")
+
+
+def _parse_recipe(path: Path) -> dict:
+    """Parse a recipe. PyYAML if available, else a shallow regex fallback that
+    only extracts the fields Phase 0 actually cares about."""
+    text = _read(path)
+    if HAVE_YAML:
+        data = yaml.safe_load(text) or {}
+        if not isinstance(data, dict):
+            raise ValueError(f"{path.name}: top-level YAML is not a mapping")
+        data["_raw"] = text
+        return data
+    out: dict = {"_raw": text}
+    for key in ("id", "title", "goal"):
+        m = re.search(rf"^{key}\s*:\s*(.+?)\s*$", text, re.MULTILINE)
+        if m:
+            v = m.group(1).strip()
+            if len(v) >= 2 and v[0] == v[-1] and v[0] in ("'", '"'):
+                v = v[1:-1]
+            out[key] = v
+    dm = re.search(r"^action_dependencies\s*:\s*\n((?:[ \t]+-[^\n]*\n?)+)",
+                   text, re.MULTILINE)
+    if dm:
+        deps = []
+        for line in dm.group(1).splitlines():
+            m = re.match(r"\s*-\s*(.+?)\s*$", line)
+            if m:
+                deps.append(m.group(1).strip().strip('"').strip("'"))
+        out["action_dependencies"] = deps
+    return out
+
+
+def _build_domain_index(inv: dict) -> dict:
+    """domain name -> set of action names (including aliases)."""
+    idx: dict = {}
+    for dom in inv.get("domains", []):
+        name = dom.get("domain")
+        if not name:
+            continue
+        actions = {a.get("name") for a in dom.get("actions", []) if a.get("name")}
+        for a in dom.get("actions", []):
+            for alias in a.get("aliases", []) or []:
+                actions.add(alias)
+        idx[name] = actions
+    return idx
+
+
+def _mtime(path: Path) -> str:
+    ts = _dt.datetime.fromtimestamp(path.stat().st_mtime)
+    return ts.strftime("%Y-%m-%d %H:%M")
+
+
+ZONE_PATTERN = re.compile(
+    r"(<!--\s*BEGIN:(?P<name>[A-Z_]+)\s*-->)(?P<body>.*?)(<!--\s*END:(?P=name)\s*-->)",
+    re.DOTALL,
+)
+
+
+def _rewrite_zone(text: str, zone: str, new_body: str) -> tuple[str, bool]:
+    """Replace body between <!-- BEGIN:zone --> and <!-- END:zone -->."""
+    hit = {"v": False}
+
+    def _sub(m: re.Match) -> str:
+        if m.group("name") != zone:
+            return m.group(0)
+        hit["v"] = True
+        return f"{m.group(1)}\n{new_body.rstrip()}\n{m.group(4)}"
+
+    return ZONE_PATTERN.sub(_sub, text), hit["v"]
+
+
+def _trim(s: str, n: int) -> str:
+    s = re.sub(r"\s+", " ", (s or "").strip())
+    return s if len(s) <= n else s[: n - 3] + "..."
+
+
+# --- Subcommands ------------------------------------------------------------
+
+def cmd_init(_args) -> int:
+    print(
+        "Phase 0 init: Map and recipes are authored. "
+        "Tiers 2-4 not yet wired. Run `bridge-stack status` to see what's live."
+    )
+    return 0
+
+
+def cmd_status(_args) -> int:
+    info = {"version": "unknown", "handlers": "?", "actions": "?"}
+    if INVENTORY_PATH.exists():
+        try:
+            inv = _load_inventory()
+            info["version"] = inv.get("plugin_version", "unknown")
+            c = inv.get("counts", {})
+            info["handlers"] = c.get("handlers", "?")
+            info["actions"] = c.get("actions_distinct", "?")
+        except Exception as e:
+            info["error"] = str(e)
+
+    map_ok = MAP_PATH.exists()
+    status_ok = STATUS_PATH.exists()
+    n_recipes = len(_iter_recipe_files())
+
+    # Graph tier status
+    graph_status = "pending (Phase 1)"
+    graph_stats_line = ""
+    if BRIDGE_INDEX_PATH.exists():
+        try:
+            idx = json.loads(BRIDGE_INDEX_PATH.read_text(encoding="utf-8"))
+            s = idx.get("stats", {})
+            graph_status = f"live ({idx.get('graph_backend', '?')})"
+            graph_stats_line = (f"                   {s.get('domains', 0)} domains, "
+                                f"{s.get('actions', 0)} actions, "
+                                f"{s.get('nodes', 0)} nodes, "
+                                f"{s.get('edges', 0)} edges")
+        except Exception:
+            pass
+
+    lines = [
+        "=" * 60,
+        "bridge-stack status",
+        "=" * 60,
+        f"Docs dir       : {DOCS_DIR}",
+        f"Plugin version : {info['version']}",
+        f"Handlers       : {info['handlers']}",
+        f"Actions        : {info['actions']}",
+        "",
+        "Tiers:",
+        f"  0 Map         : {'live' if map_ok else 'MISSING'} ({MAP_PATH.name})",
+        f"  1 Recipes     : {'live' if n_recipes else 'empty'} ({n_recipes} files)",
+        f"  2 Graph       : {graph_status}",
+    ]
+    if graph_stats_line:
+        lines.append(graph_stats_line)
+    # Vector tier status
+    vector_status = "pending (Phase 2)"
+    vector_stats_line = ""
+    if VECTOR_DB_PATH.exists():
+        try:
+            vstats = _load_vector_stats_quick()
+            if vstats:
+                vector_status = f"live ({vstats.get('model_id', '?')})"
+                vector_stats_line = (
+                    f"                   {vstats.get('chunks_total', 0)} chunks"
+                    f" ({vstats.get('by_kind_str', '')}),"
+                    f" {vstats.get('db_size_mb', 0)} MB")
+        except Exception:
+            pass
+    lines.append(f"  3 Vector      : {vector_status}")
+    if vector_stats_line:
+        lines.append(vector_stats_line)
+    # UE KG (Tier 4) status
+    ue_kg_status = "pending (Phase 3)"
+    ue_kg_lines: list[str] = []
+    versions = _ue_kg_versions()
+    if versions:
+        active = _ue_kg_manifest_version() or versions[0]
+        s = _load_ue_kg_stats_quick(active)
+        if s:
+            ue_kg_status = f"live (UE {s['ue_version']})"
+            ue_kg_lines.append(
+                f"                   {s['classes']} classes, {s['methods']} methods, "
+                f"{s['deprecated_count']} deprecated, {s['modules_indexed']} modules"
+            )
+            ue_kg_lines.append(
+                f"                   {s['embeddings']} embeddings, "
+                f"index={s['index_mb']} MB, kg={s['kg_pickle_mb']} MB, emb={s['embeddings_mb']} MB"
+            )
+        if len(versions) > 1:
+            other = [v for v in versions if v != active]
+            ue_kg_lines.append(f"                   other versions: {', '.join(other)}")
+    lines.append(f"  4 UE KG       : {ue_kg_status}")
+    lines.extend(ue_kg_lines)
+    lines += [
+        "",
+        f"Last map edit  : {_mtime(MAP_PATH) if map_ok else '-'}",
+        f"Last status    : {_mtime(STATUS_PATH) if status_ok else '-'}",
+        "",
+        (f"See {STATUS_PATH.name} for the dashboard details." if status_ok
+         else f"(_stack_status.md not found at {STATUS_PATH})"),
+    ]
+    print("\n".join(lines))
+    return 0
+
+
+def cmd_map_regen(_args) -> int:
+    if not MAP_PATH.exists():
+        print(f"ERROR: {MAP_PATH} does not exist yet. Author the Map first "
+              "with <!-- BEGIN:X --> / <!-- END:X --> zone markers for "
+              "DOMAIN_CATALOG, RECIPE_CATALOG, INDEX_FRESHNESS.",
+              file=sys.stderr)
+        return 2
+    inv = _load_inventory()
+    text = _read(MAP_PATH)
+    # DOMAIN_CATALOG
+    rows = ["| domain | handler file | actions | purpose |", "|---|---|---:|---|"]
+    for dom in sorted(inv.get("domains", []), key=lambda d: d.get("domain", "")):
+        rows.append(
+            f"| {dom.get('domain', '?')} | {dom.get('handler_file', '?')} | "
+            f"{len(dom.get('actions', []))} | "
+            f"{_trim(dom.get('purpose', '').replace('|', '\\|'), 140)} |")
+    text, hit_dc = _rewrite_zone(text, "DOMAIN_CATALOG", "\n".join(rows))
+    # RECIPE_CATALOG
+    rows = ["| id | title | goal |", "|---|---|---|"]
+    recipe_files = _iter_recipe_files()
+    for rp in recipe_files:
+        try:
+            d = _parse_recipe(rp)
+        except Exception as e:
+            rows.append(f"| `{rp.name}` | PARSE ERROR | {e} |")
+            continue
+        rid = d.get("id", rp.stem)
+        title = (d.get("title", "") or "").replace("|", "\\|")
+        goal = _trim((d.get("goal", "") or "").replace("|", "\\|"), 160)
+        rows.append(f"| `{rid}` | {title} | {goal} |")
+    text, hit_rc = _rewrite_zone(text, "RECIPE_CATALOG", "\n".join(rows))
+    # INDEX_FRESHNESS
+    stamp = _now_stamp()
+    # Graph tier: read from _bridge_index.json if present.
+    graph_row = "| 2 Graph | - | pending Phase 1 |"
+    if BRIDGE_INDEX_PATH.exists():
+        try:
+            gi = json.loads(BRIDGE_INDEX_PATH.read_text(encoding="utf-8"))
+            gstamp = (gi.get("generated_at", "") or "").replace("T", " ").rstrip("Z")[:16]
+            backend = gi.get("graph_backend", "?")
+            gs = gi.get("stats", {})
+            graph_row = (f"| 2 Graph | {gstamp or stamp} | "
+                         f"`bridge-stack rebuild --tier graph` (backend: {backend}, "
+                         f"{gs.get('domains', '?')} domains / {gs.get('actions', '?')} actions) |")
+        except Exception:
+            pass
+    # Vector tier row: read from .vectors/chunks.sqlite if present.
+    vector_row = "| 3 Vector | - | pending Phase 2 |"
+    vstats = _load_vector_stats_quick()
+    if vstats:
+        vstamp = (vstats.get("last_build_iso", "") or "").replace("T", " ").rstrip("Z")[:16]
+        vector_row = (f"| 3 Vector | {vstamp or stamp} | "
+                      f"`bridge-stack rebuild --tier vector` "
+                      f"(model: {vstats.get('model_id', '?')}, "
+                      f"{vstats.get('chunks_total', 0)} chunks, "
+                      f"{vstats.get('db_size_mb', 0)} MB) |")
+    # UE KG row.
+    ue_kg_row = "| 4 UE KG | - | pending Phase 3 |"
+    versions = _ue_kg_versions()
+    if versions:
+        active = _ue_kg_manifest_version() or versions[0]
+        us = _load_ue_kg_stats_quick(active)
+        if us:
+            ustamp = (us.get("last_build_iso", "") or "").replace("T", " ").rstrip("Z")[:16]
+            ue_kg_row = (f"| 4 UE KG | {ustamp or stamp} | "
+                         f"`bridge-stack rebuild --tier ue_kg --ue-version {active}` "
+                         f"(UE {us['ue_version']}, {us['classes']} classes, "
+                         f"{us['methods']} methods, {us['deprecated_count']} deprecated, "
+                         f"{us['modules_indexed']} modules) |")
+    fresh = "\n".join([
+        "| tier | last built | source |", "|---|---|---|",
+        f"| 0 Map | {stamp} | hand-authored + `bridge-stack map regen` |",
+        f"| 1 Recipes | {stamp} | `recipes/*.yml` |",
+        graph_row,
+        vector_row,
+        ue_kg_row,
+    ])
+    text, hit_if = _rewrite_zone(text, "INDEX_FRESHNESS", fresh)
+    missing = [z for z, h in (("DOMAIN_CATALOG", hit_dc),
+                              ("RECIPE_CATALOG", hit_rc),
+                              ("INDEX_FRESHNESS", hit_if)) if not h]
+    if missing:
+        print(
+            f"WARN: map zones not found in {MAP_PATH.name}: {', '.join(missing)}. "
+            "Add <!-- BEGIN:ZONE --> / <!-- END:ZONE --> markers to enable regen.",
+            file=sys.stderr,
+        )
+
+    _write(MAP_PATH, text)
+    print(f"Regenerated: {MAP_PATH.name}")
+    print(f"  domains : {len(inv.get('domains', []))}")
+    print(f"  recipes : {len(recipe_files)}")
+    print(f"  stamped : {stamp}")
+    return 1 if missing else 0
+
+
+REBUILD_HELP = """\
+Instructions for later phases:
+  Phase 1 - graph  : LIVE. `bridge-stack rebuild --tier graph` runs the
+                     tree-sitter indexer and writes Docs/_bridge_index.json.
+  Phase 2 - vector : LIVE. `bridge-stack rebuild --tier vector` embeds all
+                     actions, recipes, and domain overviews into
+                     Docs/.vectors/chunks.sqlite via sentence-transformers
+                     + sqlite-vec.
+  Phase 3 - ue_kg  : scope engine modules from Build.cs, run LightRAG
+                     over engine source, then `bridge-stack rebuild
+                     --tier ue_kg --ue-version 5.7` (or 5.8)."""
+
+
+def _load_vector_stats_quick() -> dict | None:
+    """Cheap sqlite read so `status` does not pay the model-load cost.
+
+    Returns {} if the DB exists but has no data yet.
+    """
+    if not VECTOR_DB_PATH.exists():
+        return None
+    import sqlite3
+    try:
+        con = sqlite3.connect(str(VECTOR_DB_PATH))
+        # Do not load sqlite-vec here; all we need is plain table counts + meta.
+        rows = con.execute(
+            "SELECT kind, COUNT(*) FROM chunks GROUP BY kind"
+        ).fetchall()
+        by_kind: dict = {}
+        for k, n in rows:
+            by_kind[k] = n
+        total = con.execute("SELECT COUNT(*) FROM chunks").fetchone()[0]
+        meta = dict(con.execute("SELECT key, value FROM meta").fetchall())
+        con.close()
+        size_mb = round(VECTOR_DB_PATH.stat().st_size / (1024.0 * 1024.0), 2)
+        by_kind_str = ", ".join(f"{k}:{v}" for k, v in sorted(by_kind.items()))
+        return {
+            "chunks_total": total,
+            "by_kind": by_kind,
+            "by_kind_str": by_kind_str,
+            "model_id": meta.get("model_id", "?"),
+            "model_dim": int(meta.get("model_dim", "0") or 0),
+            "db_size_mb": size_mb,
+            "last_build_iso": meta.get("last_build_iso", ""),
+        }
+    except Exception:
+        return None
+
+
+def _ue_kg_versions() -> list[str]:
+    if not UE_KG_ROOT.exists():
+        return []
+    out: list[str] = []
+    for p in UE_KG_ROOT.iterdir():
+        if p.is_dir() and (p / "index.sqlite").exists():
+            out.append(p.name)
+    return sorted(out)
+
+
+def _ue_kg_manifest_version() -> str | None:
+    if not UE_KG_MANIFEST.exists():
+        return None
+    try:
+        m = json.loads(UE_KG_MANIFEST.read_text(encoding="utf-8"))
+        return m.get("ue_version")
+    except Exception:
+        return None
+
+
+def _load_ue_kg_stats_quick(ue_version: str) -> dict | None:
+    """Cheap sqlite read of the ue_kg index (no model load)."""
+    idx_path = UE_KG_ROOT / ue_version / "index.sqlite"
+    emb_path = UE_KG_ROOT / ue_version / "embeddings.sqlite"
+    kg_path = UE_KG_ROOT / ue_version / "kg.pickle"
+    if not idx_path.exists():
+        return None
+    import sqlite3
+    try:
+        con = sqlite3.connect(str(idx_path))
+        n_classes = con.execute("SELECT COUNT(*) FROM classes").fetchone()[0]
+        n_members = con.execute("SELECT COUNT(*) FROM members").fetchone()[0]
+        n_methods = con.execute(
+            "SELECT COUNT(*) FROM members WHERE kind = 'method'").fetchone()[0]
+        n_dep = con.execute(
+            "SELECT COUNT(*) FROM members WHERE deprecated = 1").fetchone()[0]
+        n_modules = con.execute("SELECT COUNT(*) FROM modules").fetchone()[0]
+        meta = dict(con.execute("SELECT key, value FROM meta").fetchall())
+        con.close()
+        emb_count = 0
+        if emb_path.exists():
+            try:
+                ec = sqlite3.connect(str(emb_path))
+                emb_count = ec.execute(
+                    "SELECT COUNT(*) FROM ue_entities").fetchone()[0]
+                ec.close()
+            except Exception:
+                pass
+        kg_size_mb = round(kg_path.stat().st_size / (1024.0 * 1024.0), 2) if kg_path.exists() else 0.0
+        emb_size_mb = round(emb_path.stat().st_size / (1024.0 * 1024.0), 2) if emb_path.exists() else 0.0
+        idx_size_mb = round(idx_path.stat().st_size / (1024.0 * 1024.0), 2)
+        return {
+            "ue_version": ue_version,
+            "classes": n_classes,
+            "members": n_members,
+            "methods": n_methods,
+            "deprecated_count": n_dep,
+            "modules_indexed": n_modules,
+            "embeddings": emb_count,
+            "last_build_iso": meta.get("last_build_iso", ""),
+            "kg_pickle_mb": kg_size_mb,
+            "embeddings_mb": emb_size_mb,
+            "index_mb": idx_size_mb,
+        }
+    except Exception:
+        return None
+
+
+def _run_vector_rebuild(force: bool) -> int:
+    """Invoke the vector adapter from the venv's Python."""
+    py = _pick_python()
+    force_lit = "True" if force else "False"
+    script = (
+        "import sys, json\n"
+        f"sys.path.insert(0, r'{STACK_DIR}')\n"
+        "from adapters.vector_adapter import VectorAdapter\n"
+        f"va = VectorAdapter(r'{STACK_DIR}', r'{VECTOR_DB_PATH}')\n"
+        f"stats = va.rebuild_index(force={force_lit})\n"
+        "print(json.dumps(stats, indent=2))\n"
+    )
+    print(f"[rebuild:vector] {py}  (db: {VECTOR_DB_PATH})")
+    try:
+        return subprocess.call([py, "-c", script])
+    except FileNotFoundError as e:
+        print(f"ERROR: {e}", file=sys.stderr)
+        return 2
+
+
+def _run_ue_kg_rebuild(ue_version: str | None, force: bool) -> int:
+    """Invoke the UE KG adapter from the venv's Python."""
+    if not UE_KG_MANIFEST.exists():
+        print(f"ERROR: {UE_KG_MANIFEST} not found. Run the manifest generator first "
+              "(stack/build_manifest.py).", file=sys.stderr)
+        return 2
+    if not ue_version:
+        ue_version = _ue_kg_manifest_version() or "5.7"
+    py = _pick_python()
+    force_lit = "True" if force else "False"
+    script = (
+        "import sys, json\n"
+        f"sys.path.insert(0, r'{STACK_DIR}')\n"
+        "from adapters.ue_kg_adapter import UEKGAdapter\n"
+        f"a = UEKGAdapter(r'{UE_KG_MANIFEST}', '{ue_version}', r'{UE_KG_ROOT}')\n"
+        f"stats = a.rebuild(force={force_lit})\n"
+        "print(json.dumps(stats, indent=2))\n"
+    )
+    print(f"[rebuild:ue_kg] {py}  (manifest: {UE_KG_MANIFEST}, version: {ue_version})")
+    try:
+        return subprocess.call([py, "-c", script])
+    except FileNotFoundError as e:
+        print(f"ERROR: {e}", file=sys.stderr)
+        return 2
+
+
+def _pick_python() -> str:
+    """Prefer the stack venv's Python so tree-sitter is available, then
+    fall back to current interpreter."""
+    if VENV_PY.exists():
+        return str(VENV_PY)
+    if VENV_PY_POSIX.exists():
+        return str(VENV_PY_POSIX)
+    return sys.executable
+
+
+def _run_graph_generator() -> int:
+    """Invoke the generator as a subprocess so it runs under the venv's
+    Python. This keeps the CLI callable from any shell without activation."""
+    gen = ADAPTERS_DIR / "_bridge_index_generator.py"
+    if not gen.exists():
+        print(f"ERROR: generator not found at {gen}", file=sys.stderr)
+        return 2
+    py = _pick_python()
+    cmd = [py, str(gen)]
+    print(f"[rebuild:graph] {py} {gen}")
+    try:
+        rc = subprocess.call(cmd)
+    except FileNotFoundError as e:
+        print(f"ERROR: failed to launch generator: {e}", file=sys.stderr)
+        return 2
+    return rc
+
+
+def cmd_rebuild(args) -> int:
+    force = bool(getattr(args, "force", False))
+    if args.tier in ("graph", "all"):
+        rc = _run_graph_generator()
+        if rc != 0:
+            print(f"[rebuild:graph] generator exited with rc={rc}", file=sys.stderr)
+            return rc
+        # Chain map regen so INDEX_FRESHNESS reflects the new build.
+        print()
+        print("[rebuild:graph] chaining `map regen`...")
+        rc2 = cmd_map_regen(argparse.Namespace())
+        if rc2 != 0:
+            print(f"[rebuild:graph] map regen exited with rc={rc2}", file=sys.stderr)
+            return rc2
+        if args.tier == "graph":
+            return 0
+    if args.tier in ("vector", "all"):
+        rc = _run_vector_rebuild(force=force)
+        if rc != 0:
+            print(f"[rebuild:vector] rebuild exited with rc={rc}", file=sys.stderr)
+            return rc
+        print()
+        print("[rebuild:vector] chaining `map regen`...")
+        rc2 = cmd_map_regen(argparse.Namespace())
+        if rc2 != 0:
+            print(f"[rebuild:vector] map regen exited with rc={rc2}", file=sys.stderr)
+            return rc2
+        if args.tier == "vector":
+            return 0
+    if args.tier in ("ue_kg", "all"):
+        ue_version = getattr(args, "ue_version", None)
+        rc = _run_ue_kg_rebuild(ue_version, force=force)
+        if rc != 0:
+            print(f"[rebuild:ue_kg] rebuild exited with rc={rc}", file=sys.stderr)
+            return rc
+        print()
+        print("[rebuild:ue_kg] chaining `map regen`...")
+        rc2 = cmd_map_regen(argparse.Namespace())
+        if rc2 != 0:
+            print(f"[rebuild:ue_kg] map regen exited with rc={rc2}", file=sys.stderr)
+            return rc2
+        if args.tier == "ue_kg":
+            return 0
+    if args.tier == "all":
+        print("[rebuild:all] graph + vector + ue_kg done.")
+        return 0
+    print(f"Unknown tier: {args.tier}")
+    return 2
+
+
+# --- Vector (Tier 3) subcommands -------------------------------------------
+
+def cmd_search(args) -> int:
+    """Semantic search over the vector index. Delegates to the adapter in
+    the venv's Python so sentence-transformers imports cleanly."""
+    if not VECTOR_DB_PATH.exists():
+        print(f"ERROR: {VECTOR_DB_PATH} not found. Run "
+              "`bridge-stack rebuild --tier vector` first.", file=sys.stderr)
+        return 2
+    py = _pick_python()
+    filt: dict = {}
+    if getattr(args, "kind", None):
+        filt["kind"] = args.kind
+    if getattr(args, "domain", None):
+        filt["domain"] = args.domain
+    filt_lit = repr(filt) if filt else "None"
+    k = int(getattr(args, "k", 5) or 5)
+    query = args.query
+    script = (
+        "import sys, json\n"
+        f"sys.path.insert(0, r'{STACK_DIR}')\n"
+        "from adapters.vector_adapter import VectorAdapter\n"
+        f"va = VectorAdapter(r'{STACK_DIR}', r'{VECTOR_DB_PATH}')\n"
+        f"hits = va.search({query!r}, k={k}, filter={filt_lit})\n"
+        "for i, h in enumerate(hits, 1):\n"
+        "    label_parts = []\n"
+        "    if h.get('kind'):         label_parts.append(h['kind'])\n"
+        "    if h.get('domain'):       label_parts.append(h['domain'])\n"
+        "    if h.get('action'):       label_parts.append(h['action'])\n"
+        "    if h.get('recipe_id'):    label_parts.append(h['recipe_id'])\n"
+        "    label = ' / '.join(label_parts)\n"
+        "    print(f\"{i:>2}. [{h['score']:.3f}] {label}\")\n"
+        "    line = h.get('line')\n"
+        "    loc  = h.get('file') or ''\n"
+        "    if line: loc = f\"{loc}:{line}\"\n"
+        "    if loc: print(f\"     {loc}\")\n"
+        "    snip = h.get('snippet') or ''\n"
+        "    if snip: print(f\"     {snip}\")\n"
+        "print()\n"
+        "print(f'{len(hits)} hit(s).')\n"
+    )
+    try:
+        return subprocess.call([py, "-c", script])
+    except FileNotFoundError as e:
+        print(f"ERROR: {e}", file=sys.stderr)
+        return 2
+
+
+def _resolve_ue_kg_version(args) -> str:
+    v = getattr(args, "ue_version", None)
+    if v:
+        return v
+    versions = _ue_kg_versions()
+    if versions:
+        return _ue_kg_manifest_version() or versions[0]
+    return _ue_kg_manifest_version() or "5.7"
+
+
+def _spawn_ue_kg(method_call: str, ue_version: str) -> int:
+    if not UE_KG_MANIFEST.exists():
+        print(f"ERROR: {UE_KG_MANIFEST} not found. Run the manifest generator first.",
+              file=sys.stderr)
+        return 2
+    py = _pick_python()
+    script = (
+        "import sys, json\n"
+        f"sys.path.insert(0, r'{STACK_DIR}')\n"
+        "from adapters.ue_kg_adapter import UEKGAdapter\n"
+        f"a = UEKGAdapter(r'{UE_KG_MANIFEST}', '{ue_version}', r'{UE_KG_ROOT}')\n"
+        f"out = {method_call}\n"
+        "print(json.dumps(out, indent=2, default=str))\n"
+    )
+    try:
+        return subprocess.call([py, "-c", script])
+    except FileNotFoundError as e:
+        print(f"ERROR: {e}", file=sys.stderr)
+        return 2
+
+
+def cmd_ue_kg_query(args) -> int:
+    ue_version = _resolve_ue_kg_version(args)
+    k = int(getattr(args, "k", 5) or 5)
+    q = args.query
+    return _spawn_ue_kg(f"a.query({q!r}, k={k})", ue_version)
+
+
+def cmd_ue_kg_deprecated(args) -> int:
+    ue_version = _resolve_ue_kg_version(args)
+    cls = getattr(args, "cls", None)
+    mod = getattr(args, "module", None)
+    cls_lit = repr(cls) if cls else "None"
+    mod_lit = repr(mod) if mod else "None"
+    return _spawn_ue_kg(f"a.deprecated(class_name={cls_lit}, module={mod_lit})",
+                         ue_version)
+
+
+def cmd_ue_kg_sig(args) -> int:
+    ue_version = _resolve_ue_kg_version(args)
+    qn = args.qualified_name
+    return _spawn_ue_kg(f"a.signature({qn!r})", ue_version)
+
+
+def cmd_ue_kg_members(args) -> int:
+    ue_version = _resolve_ue_kg_version(args)
+    cls = args.class_name
+    scope = getattr(args, "scope", None) or "public"
+    return _spawn_ue_kg(f"a.members({cls!r}, scope={scope!r})", ue_version)
+
+
+def cmd_ue_kg_callers(args) -> int:
+    ue_version = _resolve_ue_kg_version(args)
+    qn = args.qualified_name
+    return _spawn_ue_kg(f"a.callers_in_engine({qn!r})", ue_version)
+
+
+def cmd_ue_kg_stats(args) -> int:
+    ue_version = _resolve_ue_kg_version(args)
+    s = _load_ue_kg_stats_quick(ue_version)
+    if s is None:
+        print(f"No KG built for UE {ue_version}. Run "
+              f"`bridge-stack rebuild --tier ue_kg --ue-version {ue_version}`.")
+        return 1
+    print(f"UE version       : {s['ue_version']}")
+    print(f"Last build       : {s['last_build_iso']}")
+    print(f"Modules indexed  : {s['modules_indexed']}")
+    print(f"Classes / structs: {s['classes']}")
+    print(f"Members          : {s['members']}")
+    print(f"  methods        : {s['methods']}")
+    print(f"  deprecated     : {s['deprecated_count']}")
+    print(f"Embeddings       : {s['embeddings']}")
+    print(f"Index DB         : {s['index_mb']} MB")
+    print(f"KG pickle        : {s['kg_pickle_mb']} MB")
+    print(f"Embeddings DB    : {s['embeddings_mb']} MB")
+    return 0
+
+
+def cmd_vector_stats(_args) -> int:
+    s = _load_vector_stats_quick()
+    if s is None:
+        print(f"{VECTOR_DB_PATH} not found. Run "
+              "`bridge-stack rebuild --tier vector` first.")
+        return 1
+    print(f"DB path       : {VECTOR_DB_PATH}")
+    print(f"DB size       : {s.get('db_size_mb', 0)} MB")
+    print(f"Model         : {s.get('model_id', '?')}")
+    print(f"Model dim     : {s.get('model_dim', 0)}")
+    print(f"Last build    : {s.get('last_build_iso', '')}")
+    print(f"Chunks total  : {s.get('chunks_total', 0)}")
+    print("By kind:")
+    for kind, n in sorted((s.get("by_kind") or {}).items()):
+        print(f"  {kind:<18} {n}")
+    return 0
+
+
+# --- Graph subcommands ------------------------------------------------------
+
+def _require_bridge_index() -> dict | None:
+    if not BRIDGE_INDEX_PATH.exists():
+        print(f"ERROR: {BRIDGE_INDEX_PATH.name} not found. Run "
+              "`bridge-stack rebuild --tier graph` first.",
+              file=sys.stderr)
+        return None
+    try:
+        return json.loads(BRIDGE_INDEX_PATH.read_text(encoding="utf-8"))
+    except Exception as e:
+        print(f"ERROR: {BRIDGE_INDEX_PATH.name} parse failed: {e}",
+              file=sys.stderr)
+        return None
+
+
+def cmd_graph_list_domains(_args) -> int:
+    idx = _require_bridge_index()
+    if idx is None:
+        return 2
+    for d in idx.get("domains", []):
+        print(f"{d['domain']:<24} {len(d.get('actions', [])):>4}  "
+              f"{d.get('handler_file', '')}")
+    print()
+    print(f"Total: {len(idx.get('domains', []))} domains")
+    return 0
+
+
+def cmd_graph_list_actions(args) -> int:
+    idx = _require_bridge_index()
+    if idx is None:
+        return 2
+    for d in idx.get("domains", []):
+        if d.get("domain") != args.domain:
+            continue
+        actions = d.get("actions", [])
+        print(f"Domain: {args.domain}  (handler: {d.get('handler_file', '?')})")
+        print("-" * 60)
+        for a in actions:
+            fn = a.get("handler_fn") or "(inline)"
+            aliases = a.get("aliases") or []
+            alias_str = f"  aliases: {aliases}" if aliases else ""
+            print(f"  L{a.get('dispatch_line', '?'):>5}  "
+                  f"{a.get('name', '?'):<32} -> {fn}{alias_str}")
+        print()
+        print(f"Total: {len(actions)} actions")
+        return 0
+    print(f"Domain not found: {args.domain}", file=sys.stderr)
+    return 1
+
+
+def cmd_graph_query_caller(args) -> int:
+    # Delegate to the adapter so we get cache-aware lookup.
+    py = _pick_python()
+    script = (
+        "import sys, json\n"
+        f"sys.path.insert(0, r'{STACK_DIR}')\n"
+        "from adapters.graph_adapter import GraphAdapter\n"
+        f"a = GraphAdapter(r'{DOCS_DIR.parent / 'Source' / 'ForgeEditorBridge'}', "
+        f"r'{STACK_DIR / '.cache' / 'graph_cache.json'}')\n"
+        f"hits = a.query_caller({args.fn!r})\n"
+        "for h in hits[:200]:\n"
+        "    print(f\"  {h['file']}:{h['line']}  in {h['caller_fn']}\")\n"
+        "    if h.get('context'):\n"
+        "        print(f\"      {h['context']}\")\n"
+        "print(f'\\nTotal: {len(hits)} callsites')\n"
+    )
+    try:
+        return subprocess.call([py, "-c", script])
+    except FileNotFoundError as e:
+        print(f"ERROR: {e}", file=sys.stderr)
+        return 2
+
+
+def cmd_graph_query_action(args) -> int:
+    idx = _require_bridge_index()
+    if idx is None:
+        return 2
+    for d in idx.get("domains", []):
+        if d.get("domain") != args.domain:
+            continue
+        for a in d.get("actions", []):
+            if a.get("name") == args.action or args.action in (a.get("aliases") or []):
+                print(f"domain       : {d['domain']}")
+                print(f"action       : {a['name']}")
+                print(f"handler_file : {d.get('handler_file_abs', d.get('handler_file', ''))}")
+                print(f"dispatch_line: {a.get('dispatch_line')}")
+                print(f"handler_fn   : {a.get('handler_fn') or '(inline)'}")
+                if a.get("aliases"):
+                    print(f"aliases      : {a['aliases']}")
+                return 0
+        print(f"Action '{args.action}' not found in domain '{args.domain}'.",
+              file=sys.stderr)
+        return 1
+    print(f"Domain '{args.domain}' not found.", file=sys.stderr)
+    return 1
+
+
+def cmd_graph_stats(_args) -> int:
+    idx = _require_bridge_index()
+    if idx is None:
+        return 2
+    s = idx.get("stats", {})
+    print(f"Backend       : {idx.get('graph_backend', '?')}")
+    print(f"Generated at  : {idx.get('generated_at', '?')}")
+    print(f"Plugin version: {idx.get('plugin_version', '?')}")
+    print(f"Nodes         : {s.get('nodes', 0)}")
+    print(f"Edges         : {s.get('edges', 0)}")
+    print(f"Files indexed : {s.get('files', 0)}")
+    print(f"Domains       : {s.get('domains', 0)}")
+    print(f"Actions       : {s.get('actions', 0)}")
+    xc = idx.get("inventory_cross_check") or {}
+    if xc:
+        print()
+        print("Inventory cross-check:")
+        na = xc.get("name_aliases") or {}
+        if na:
+            print("  name aliases (graph <-> inventory):")
+            for g, i in na.items():
+                print(f"    {g} <-> {i}")
+        if xc.get("inventory_only_domains"):
+            print(f"  inventory-only domains: {xc['inventory_only_domains']}")
+        if xc.get("graph_only_domains"):
+            print(f"  graph-only domains   : {xc['graph_only_domains']}")
+    return 0
+
+
+def cmd_verify(_args) -> int:
+    errors: list[str] = []
+    warnings: list[str] = []
+    domain_index: dict = {}
+    # 1) Inventory
+    if not INVENTORY_PATH.exists():
+        errors.append(f"Missing inventory: {INVENTORY_PATH}")
+    else:
+        try:
+            inv = _load_inventory()
+            doms = inv.get("domains", [])
+            if len(doms) < 50:
+                errors.append(f"Inventory has only {len(doms)} domains; expected >= 50.")
+            domain_index = _build_domain_index(inv)
+        except Exception as e:
+            errors.append(f"Inventory parse error: {e}")
+    # 2) Map exists + frontmatter
+    if not MAP_PATH.exists():
+        errors.append(f"Missing map: {MAP_PATH}")
+    elif not re.match(r"\A---\s*\n.*?\n---\s*\n", _read(MAP_PATH), re.DOTALL):
+        errors.append(f"{MAP_PATH.name} is missing YAML frontmatter.")
+    # 3) Recipes parse + references resolve
+    recipe_files = _iter_recipe_files()
+    if not recipe_files:
+        warnings.append(f"No recipes found in {RECIPES_DIR}")
+    for rp in recipe_files:
+        if rp.stat().st_size == 0:
+            errors.append(f"{rp.name}: empty file")
+            continue
+        try:
+            data = _parse_recipe(rp)
+        except Exception as e:
+            errors.append(f"{rp.name}: YAML parse failed ({e})")
+            continue
+        for key in ("id", "goal"):
+            if not data.get(key):
+                errors.append(f"{rp.name}: missing required top-level key `{key}`")
+        deps = data.get("action_dependencies") or []
+        pending = "pending_plugin_support" in (data.get("_raw") or "")
+        for dep in deps:
+            if not isinstance(dep, str):
+                continue
+            parts = re.split(r"[./]", dep.strip(), maxsplit=1)
+            if len(parts) != 2:
+                warnings.append(f"{rp.name}: action_dependency `{dep}` not in "
+                                "`domain.action` form; skipping resolution.")
+                continue
+            dom, act = parts
+            if not domain_index:
+                continue
+            actions = domain_index.get(dom)
+            if actions is None or act not in actions:
+                (warnings if pending else errors).append(
+                    f"{rp.name}: action_dependency `{dep}` "
+                    f"{'not in inventory (OK: pending_plugin_support).' if pending else 'not found in inventory and recipe is not marked pending_plugin_support.'}"
+                )
+
+    # Phase 1: also verify _bridge_index.json if it exists.
+    index_status = "-"
+    if BRIDGE_INDEX_PATH.exists():
+        try:
+            gi = json.loads(BRIDGE_INDEX_PATH.read_text(encoding="utf-8"))
+            if not gi.get("domains"):
+                warnings.append(f"{BRIDGE_INDEX_PATH.name}: no domains extracted.")
+            index_status = (f"ok ({gi.get('graph_backend', '?')}, "
+                            f"{len(gi.get('domains', []))} domains)")
+        except Exception as e:
+            errors.append(f"{BRIDGE_INDEX_PATH.name} parse error: {e}")
+            index_status = "PARSE ERROR"
+    else:
+        index_status = "not built (run `bridge-stack rebuild --tier graph`)"
+
+    # Phase 2: verify vector DB if it exists.
+    vector_status = "-"
+    if VECTOR_DB_PATH.exists():
+        vs = _load_vector_stats_quick()
+        if vs is None:
+            errors.append(f"{VECTOR_DB_PATH.name} could not be opened.")
+            vector_status = "PARSE ERROR"
+        else:
+            # Expected count: actions + recipes + domain_overviews.
+            expected = 0
+            if BRIDGE_INDEX_PATH.exists():
+                try:
+                    gi = json.loads(BRIDGE_INDEX_PATH.read_text(encoding="utf-8"))
+                    n_actions = sum(len(d.get("actions", []) or [])
+                                    for d in gi.get("domains", []))
+                    n_domains = len(gi.get("domains", []))
+                    expected = n_actions + len(recipe_files) + n_domains
+                except Exception:
+                    expected = 0
+            actual = vs.get("chunks_total", 0)
+            if expected and actual != expected:
+                warnings.append(
+                    f"vector chunks_total ({actual}) != expected ({expected}).")
+            # Model dim sanity: the stored value must match something plausible.
+            if vs.get("model_dim", 0) <= 0:
+                warnings.append("vector DB has no model_dim metadata recorded.")
+            vector_status = (f"ok ({vs.get('chunks_total', 0)} chunks, "
+                             f"{vs.get('db_size_mb', 0)} MB, "
+                             f"model: {vs.get('model_id', '?')})")
+    else:
+        vector_status = "not built (run `bridge-stack rebuild --tier vector`)"
+
+    # Phase 3: verify UE KG if present.
+    ue_kg_status = "-"
+    ue_kg_active = _ue_kg_manifest_version()
+    if ue_kg_active:
+        if not UE_KG_MANIFEST.exists():
+            errors.append(f"UE KG manifest missing: {UE_KG_MANIFEST}")
+        s = _load_ue_kg_stats_quick(ue_kg_active) if ue_kg_active else None
+        if s is None:
+            ue_kg_status = (
+                f"not built for UE {ue_kg_active} "
+                f"(run `bridge-stack rebuild --tier ue_kg --ue-version {ue_kg_active}`)"
+            )
+        else:
+            # Cross-check class count > 0 and module count matches the manifest.
+            try:
+                manifest = json.loads(UE_KG_MANIFEST.read_text(encoding="utf-8"))
+                expected_modules = manifest.get("module_count", 0)
+            except Exception:
+                expected_modules = 0
+            if s["classes"] <= 0:
+                errors.append("UE KG has 0 classes - check extractor and manifest.")
+            if expected_modules and s["modules_indexed"] != expected_modules:
+                warnings.append(
+                    f"UE KG modules_indexed ({s['modules_indexed']}) != "
+                    f"manifest module_count ({expected_modules})."
+                )
+            kg_pickle = UE_KG_ROOT / ue_kg_active / "kg.pickle"
+            emb_db = UE_KG_ROOT / ue_kg_active / "embeddings.sqlite"
+            if not kg_pickle.exists():
+                errors.append(f"UE KG pickle missing: {kg_pickle}")
+            if not emb_db.exists():
+                errors.append(f"UE KG embeddings DB missing: {emb_db}")
+            ue_kg_status = (
+                f"ok (UE {s['ue_version']}, {s['classes']} classes, "
+                f"{s['methods']} methods, {s['deprecated_count']} deprecated, "
+                f"{s['modules_indexed']} modules)"
+            )
+
+    print("bridge-stack verify")
+    print("-" * 40)
+    print(f"Inventory   : {'ok' if INVENTORY_PATH.exists() else 'MISSING'}")
+    print(f"Map         : {'ok' if MAP_PATH.exists() else 'MISSING'}")
+    print(f"Recipes     : {len(recipe_files)} file(s)")
+    print(f"Graph index : {index_status}")
+    print(f"Vector index: {vector_status}")
+    print(f"UE KG       : {ue_kg_status}")
+    if not HAVE_YAML:
+        print("  note      : PyYAML not installed; using regex fallback.")
+    print()
+    if warnings:
+        print("Warnings:")
+        for w in warnings:
+            print(f"  - {w}")
+        print()
+    if errors:
+        print("Errors:")
+        for e in errors:
+            print(f"  - {e}")
+        print()
+        print("FAIL")
+        return 1
+    print("PASS")
+    return 0
+
+
+# --- Argparse wiring --------------------------------------------------------
+
+def build_parser() -> argparse.ArgumentParser:
+    p = argparse.ArgumentParser(
+        prog="bridge-stack",
+        description="ForgeEditorBridge cognitive stack orchestrator.",
+    )
+    sub = p.add_subparsers(dest="cmd", required=True)
+    sub.add_parser("init", help="Print onboarding blurb.")
+    sub.add_parser("status", help="One-screen stack dashboard.")
+    sub.add_parser("verify", help="Sanity checks across all live tiers.")
+
+    p_map = sub.add_parser("map", help="Map (_bridge_map.md) operations.")
+    map_sub = p_map.add_subparsers(dest="map_cmd", required=True)
+    map_sub.add_parser("regen", help="Regenerate catalog + freshness zones.")
+
+    p_rebuild = sub.add_parser("rebuild", help="Rebuild a tier.")
+    p_rebuild.add_argument(
+        "--tier", required=True,
+        choices=["graph", "vector", "ue_kg", "all"],
+        help="Which tier to rebuild.",
+    )
+    p_rebuild.add_argument(
+        "--ue-version", default=None,
+        help="UE version for ue_kg builds (e.g. 5.7, 5.8).",
+    )
+    p_rebuild.add_argument(
+        "--force", action="store_true",
+        help="Vector tier: nuke and fully re-embed (ignore hash reuse).",
+    )
+
+    # Graph query subcommands (Tier 2)
+    p_graph = sub.add_parser("graph", help="Tier 2 graph queries.")
+    graph_sub = p_graph.add_subparsers(dest="graph_cmd", required=True)
+    graph_sub.add_parser("list-domains", help="Print all known domains.")
+    g_la = graph_sub.add_parser("list-actions", help="List actions in a domain.")
+    g_la.add_argument("domain")
+    g_qc = graph_sub.add_parser("query-caller",
+                                help="Show callsites of a function.")
+    g_qc.add_argument("fn", help="Function name (bare or Class::Method form).")
+    g_qa = graph_sub.add_parser("query-action",
+                                help="Locate a domain.action in source.")
+    g_qa.add_argument("domain")
+    g_qa.add_argument("action")
+    graph_sub.add_parser("stats", help="Print graph build stats.")
+
+    # Tier 3 semantic search
+    p_search = sub.add_parser("search", help="Semantic search over the vector index.")
+    p_search.add_argument("query", help="Natural-language search string.")
+    p_search.add_argument("--k", type=int, default=5, help="Top-k hits (default 5).")
+    p_search.add_argument("--kind", choices=["action", "recipe", "domain_overview"],
+                          default=None, help="Restrict to a chunk kind.")
+    p_search.add_argument("--domain", default=None,
+                          help="Restrict to a specific domain.")
+
+    p_vector = sub.add_parser("vector", help="Tier 3 vector operations.")
+    vector_sub = p_vector.add_subparsers(dest="vector_cmd", required=True)
+    vector_sub.add_parser("stats", help="Print vector DB stats.")
+
+    # Tier 4 UE KG subcommands
+    p_ukg = sub.add_parser("ue-kg", help="Tier 4 UE engine knowledge graph.")
+    ukg_sub = p_ukg.add_subparsers(dest="ue_kg_cmd", required=True)
+    u_q = ukg_sub.add_parser("query", help="Free-form query against the UE KG.")
+    u_q.add_argument("query")
+    u_q.add_argument("--k", type=int, default=5)
+    u_q.add_argument("--ue-version", default=None)
+    u_d = ukg_sub.add_parser("deprecated", help="List deprecated members.")
+    u_d.add_argument("--class", dest="cls", default=None,
+                     help="Filter by class qualified name.")
+    u_d.add_argument("--module", default=None, help="Filter by module name.")
+    u_d.add_argument("--ue-version", default=None)
+    u_s = ukg_sub.add_parser("sig", help="Look up a signature by qualified name.")
+    u_s.add_argument("qualified_name", help="Class::Member or Class.")
+    u_s.add_argument("--ue-version", default=None)
+    u_m = ukg_sub.add_parser("members", help="List members of a class.")
+    u_m.add_argument("class_name")
+    u_m.add_argument("--scope", choices=["public", "protected", "private", "all"],
+                      default="public")
+    u_m.add_argument("--ue-version", default=None)
+    u_c = ukg_sub.add_parser("callers", help="Best-effort engine call sites of a member.")
+    u_c.add_argument("qualified_name")
+    u_c.add_argument("--ue-version", default=None)
+    u_st = ukg_sub.add_parser("stats", help="Print UE KG stats for a version.")
+    u_st.add_argument("--ue-version", default=None)
+
+    return p
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = build_parser()
+    args = parser.parse_args(argv)
+
+    if args.cmd == "init":
+        return cmd_init(args)
+    if args.cmd == "status":
+        return cmd_status(args)
+    if args.cmd == "verify":
+        return cmd_verify(args)
+    if args.cmd == "map":
+        if args.map_cmd == "regen":
+            return cmd_map_regen(args)
+        parser.error(f"unknown map subcommand: {args.map_cmd}")
+    if args.cmd == "rebuild":
+        return cmd_rebuild(args)
+    if args.cmd == "graph":
+        if args.graph_cmd == "list-domains":
+            return cmd_graph_list_domains(args)
+        if args.graph_cmd == "list-actions":
+            return cmd_graph_list_actions(args)
+        if args.graph_cmd == "query-caller":
+            return cmd_graph_query_caller(args)
+        if args.graph_cmd == "query-action":
+            return cmd_graph_query_action(args)
+        if args.graph_cmd == "stats":
+            return cmd_graph_stats(args)
+        parser.error(f"unknown graph subcommand: {args.graph_cmd}")
+    if args.cmd == "search":
+        return cmd_search(args)
+    if args.cmd == "vector":
+        if args.vector_cmd == "stats":
+            return cmd_vector_stats(args)
+        parser.error(f"unknown vector subcommand: {args.vector_cmd}")
+    if args.cmd == "ue-kg":
+        if args.ue_kg_cmd == "query":
+            return cmd_ue_kg_query(args)
+        if args.ue_kg_cmd == "deprecated":
+            return cmd_ue_kg_deprecated(args)
+        if args.ue_kg_cmd == "sig":
+            return cmd_ue_kg_sig(args)
+        if args.ue_kg_cmd == "members":
+            return cmd_ue_kg_members(args)
+        if args.ue_kg_cmd == "callers":
+            return cmd_ue_kg_callers(args)
+        if args.ue_kg_cmd == "stats":
+            return cmd_ue_kg_stats(args)
+        parser.error(f"unknown ue-kg subcommand: {args.ue_kg_cmd}")
+    parser.error(f"unknown command: {args.cmd}")
+    return 2
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

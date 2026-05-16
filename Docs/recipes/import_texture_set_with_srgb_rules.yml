@@ -1,0 +1,196 @@
+recipe_schema_version: 1.0
+id: "import_texture_set_with_srgb_rules"
+title: "Batch-import a texture set with suffix-driven PBR rules"
+goal: "Import a folder of textures and apply correct sRGB / compression / LOD-group settings based on filename suffix conventions."
+description: |
+  Batch-imports a source folder via asset/import_folder, then walks the list of
+  imported asset paths and applies sRGB / compression / LOD-group settings
+  defined in $suffix_rules for the matching suffix. Intended as the first step
+  of any new material's texture pipeline. Pair with
+  `wire_pbr_material_channel_packed` to produce a finished material from the
+  imported set.
+
+domain_scope: [asset, texture]
+tested_on_ue: ["5.7"]
+tested_on_plugin: ["0.2.6"]
+
+preconditions:
+  - "$source_folder exists on disk and is readable."
+  - "$target_package_path exists or can be created by the asset domain."
+  - "Every file intended for import has a suffix present in $suffix_rules (or matches the default set)."
+
+inputs:
+  - name: "source_folder"
+    type: "string"
+    required: true
+    description: "Absolute on-disk path containing the textures to import."
+    example: "D:/Art/Incoming/Rock_Pack_01"
+  - name: "target_package_path"
+    type: "string"
+    required: true
+    description: "UE content-browser package folder to receive the imported textures."
+    example: "/Game/Environment/Textures/Rock_Pack_01"
+  - name: "suffix_rules"
+    type: "object"
+    required: false
+    description: |
+      Map of filename suffix (lowercase, without extension) to a settings object:
+      { srgb: bool, compression: string, lod_group: string }. If omitted, a
+      sensible default dictionary is used (see notes).
+    example:
+      _D:
+        srgb: true
+        compression: "TC_Default"
+        lod_group: "World"
+      _N:
+        srgb: false
+        compression: "TC_Normalmap"
+        lod_group: "World"
+      _ORM:
+        srgb: false
+        compression: "TC_Default"
+        lod_group: "World"
+      _M:
+        srgb: false
+        compression: "TC_Masks"
+        lod_group: "WorldSpecular"
+      _E:
+        srgb: true
+        compression: "TC_Default"
+        lod_group: "World"
+  - name: "file_patterns"
+    type: "array"
+    required: false
+    description: "Glob patterns to match inside $source_folder. Defaults to ['*.png', '*.tga', '*.exr']."
+    example: ["*.png", "*.tga", "*.exr"]
+  - name: "skip_unmatched"
+    type: "bool"
+    required: false
+    description: "If true, files whose suffix is not in $suffix_rules are skipped. If false, they import with engine defaults. Defaults to true."
+    example: true
+
+outputs:
+  - name: "imported_textures"
+    type: "array"
+    description: "Array of {source_file, asset_path, matched_suffix, settings_applied}."
+  - name: "unmatched_files"
+    type: "array"
+    description: "Array of source filenames that had no matching suffix (and were skipped or imported with defaults per $skip_unmatched)."
+
+action_dependencies:
+  - asset/import_folder
+  - texture/set_srgb
+  - texture/set_compression
+  - texture/set_lod_group
+
+steps:
+  - id: extract_extensions
+    # Turn $file_patterns (e.g. ["*.png", "*.tga"]) into a bare extensions list
+    # for asset/import_folder (which expects ["png","tga"] or ["*"]).
+    # Recipe-side: strip leading "*." from each pattern.
+    action: "noop"
+    inputs:
+      patterns: "$file_patterns"
+    captures: "extensions"
+    on_error: "abort"
+
+  - id: batch_import
+    action: "asset/import_folder"
+    inputs:
+      source_folder: "$source_folder"
+      target_package_path: "$target_package_path"
+      file_extensions: "$extensions"
+      recursive: false
+      replace_existing: false
+    captures: "import_result"
+    on_error: "abort"
+    # import_result = { imported_count, skipped_count, failed_count,
+    #                   imported_assets: [/Game/.../Asset.Asset], errors: [{source_file, reason}] }
+
+loops:
+  - id: tag_imported_loop
+    over: "$import_result.imported_assets"
+    as: "asset_path"
+    steps:
+      - id: compute_match
+        # Recipe-side lookup: match the asset stem (last path component, before '.')
+        # against keys of $suffix_rules. Produces
+        # $match = { suffix: string_or_null, settings: object_or_null }.
+        action: "noop"
+        inputs:
+          asset_path: "$asset_path"
+          suffix_rules: "$suffix_rules"
+        captures: "match"
+        on_error: "continue"
+
+      - id: skip_unmatched_asset
+        action: "noop"
+        only_if: "$match.suffix == null and $skip_unmatched == true"
+        on_error: "continue"
+
+      - id: apply_srgb
+        action: "texture/set_srgb"
+        only_if: "$match.settings != null"
+        inputs:
+          asset_path: "$asset_path"
+          srgb: "$match.settings.srgb"
+        on_error: "continue"
+
+      - id: apply_compression
+        action: "texture/set_compression"
+        only_if: "$match.settings != null"
+        inputs:
+          asset_path: "$asset_path"
+          compression: "$match.settings.compression"
+        on_error: "continue"
+
+      - id: apply_lod_group
+        action: "texture/set_lod_group"
+        only_if: "$match.settings != null and $match.settings.lod_group != null"
+        inputs:
+          asset_path: "$asset_path"
+          lod_group: "$match.settings.lod_group"
+        on_error: "continue"
+
+failure_modes:
+  - trigger: "Source folder not found or unreadable"
+    symptom: "list_candidate_files captures an empty array or fails outright."
+    fix: "Verify $source_folder is an absolute path with correct slashes for the host OS. On Windows, both forward and backslashes work, but trailing slashes vary by runtime."
+  - trigger: "Suffix collision (e.g. _D matches both _D and _Diff)"
+    symptom: "Wrong settings applied to a texture."
+    fix: "Order $suffix_rules keys from most specific to least specific, or use an explicit regex rules variant (future work)."
+  - trigger: "Texture already exists at target path"
+    symptom: "import_tex aborts with 'asset exists' or silently overwrites depending on runtime."
+    fix: "Run asset/search_assets first and decide whether to overwrite. Add an $overwrite input in a future revision."
+  - trigger: "Compression value not recognized"
+    symptom: "texture/set_compression fails; texture keeps engine-default compression."
+    fix: "Use engine-canonical values: TC_Default, TC_Normalmap, TC_Masks, TC_Grayscale, TC_HDR, TC_BC7, TC_HDR_Compressed, TC_Alpha. Typos are silent but effective."
+  - trigger: "Partial import (some files fail)"
+    symptom: "$import_result.failed_count > 0; $import_result.errors lists source files that did not produce an asset."
+    fix: "Inspect $import_result.errors for unsupported formats or bad target paths. The successfully imported assets in $import_result.imported_assets still get their texture settings applied."
+
+variants:
+  - name: "default_suffix_map"
+    differs_by: "$suffix_rules omitted; runtime uses the built-in default: _D/_BC -> sRGB color, _N -> normalmap, _ORM/_M/_MRA -> linear masks, _E/_EM -> sRGB emissive, _H -> grayscale height."
+  - name: "strict"
+    differs_by: "$skip_unmatched == true. Only files with a recognized suffix are imported."
+  - name: "permissive"
+    differs_by: "$skip_unmatched == false. All matched files import with engine defaults when no suffix matches."
+
+notes: |
+  As of plugin 0.2.6, asset/import_folder performs folder enumeration + batch
+  import in a single call (backed by UAssetImportTask / IAssetTools::ImportAssetTasks).
+  The recipe now dispatches one batch_import step and then loops over
+  $import_result.imported_assets to apply texture settings per suffix rule.
+  `extract_extensions` and `compute_match` remain runtime-internal (marker noops):
+  extract_extensions converts glob patterns ("*.png") to bare extensions ("png")
+  for the plugin API, and compute_match does the recipe-side suffix lookup
+  against $suffix_rules.
+  Default suffix dictionary (used when $suffix_rules is omitted):
+    _D, _BC, _Diff -> srgb=true,  compression=TC_Default,   lod_group=World
+    _N, _NRM       -> srgb=false, compression=TC_Normalmap, lod_group=World
+    _ORM, _MRA     -> srgb=false, compression=TC_Default,   lod_group=World
+    _M, _Masks     -> srgb=false, compression=TC_Masks,     lod_group=WorldSpecular
+    _E, _EM        -> srgb=true,  compression=TC_Default,   lod_group=World
+    _H, _Height    -> srgb=false, compression=TC_Grayscale, lod_group=World
+    _AO            -> srgb=false, compression=TC_Grayscale, lod_group=World

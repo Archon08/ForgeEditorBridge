@@ -1,0 +1,25 @@
+# Unreal generated files
+Binaries/
+Intermediate/
+Saved/
+DerivedDataCache/
+
+# Local working area
+Temp/
+
+# Optional cognitive stack artifacts
+Docs/.vectors/
+Docs/ue_kg/
+Docs/stack/.venv/
+Docs/stack/.cache/
+Docs/stack/graphify-out/
+
+# Python cache
+__pycache__/
+*.py[cod]
+
+# OS/editor noise
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

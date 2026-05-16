@@ -1,0 +1,1569 @@
+{
+  "manifest_schema_version": "1.0",
+  "ue_version": "5.7",
+  "engine_root": "${UE_ENGINE_ROOT}\\",
+  "generated_at": "2026-04-25T09:10:09Z",
+  "plugin_module": "ForgeEditorBridge",
+  "plugin_build_cs": "Source/ForgeEditorBridge/ForgeEditorBridge.Build.cs",
+  "module_count": 87,
+  "header_count_total": 9237,
+  "loc_total": 1775716,
+  "modules_unresolved": [],
+  "casing_mismatches": [
+    {
+      "build_cs_name": "HTTPServer",
+      "canonical_engine_name": "HttpServer",
+      "note": "Build.cs uses different casing than UE module file basename. UE/UBT on Windows is case-insensitive so it likely compiles, but should be normalized."
+    }
+  ],
+  "modules": [
+    {
+      "module_name": "Core",
+      "module_type": "Runtime",
+      "module_build_cs_path": "${UE_ENGINE_ROOT}\\Source\\Runtime\\Core\\Core.Build.cs",
+      "header_roots": [
+        "${UE_ENGINE_ROOT}\\Source\\Runtime\\Core\\Public",
+        "${UE_ENGINE_ROOT}\\Source\\Runtime\\Core\\Internal"
+      ],
+      "estimated_header_count": 1215,
+      "estimated_total_loc": 278903,
+      "in_use_by_plugin": [
+        "ActorHandler.cpp",
+        "ActorHandler.h",
+        "AnimationAssetHandler.h",
+        "AnimationHandler.h",
+        "AssetGraphHandler.cpp",
+        "AssetHandler.cpp",
+        "AssetHandler.h",
+        "BehaviorTreeHandler.cpp",
+        "BlueprintGraphAssembler.h",
+        "BlueprintGraphLayout.h",
+        "BlueprintHandler.cpp",
+        "BlueprintHandler.h",
+        "BridgeHandlerBase.h",
+        "CollisionHandler.cpp",
+        "ConsoleHandler.cpp",
+        "ContextHandler.h",
+        "CppHandler.cpp",
+        "DataTableHandler.cpp",
+        "DebugHandler.cpp",
+        "EditorPrefsHandler.cpp",
+        "EditorUtilityHandler.h",
+        "GASHandler.cpp",
+        "GameplayTagHandler.cpp",
+        "GitHandler.cpp",
+        "InputHandler.cpp",
+        "LandscapeHandler.cpp",
+        "LevelHandler.cpp",
+        "LevelHandler.h",
+        "LocalizationHandler.cpp",
+        "MassEntityHandler.cpp",
+        "MassEntityHandler.h",
+        "MaterialHandler.cpp",
+        "MaterialHandler.h",
+        "NiagaraHandler.cpp",
+        "PCGHandler.h",
+        "PackagingHandler.cpp",
+        "PostProcessHandler.cpp",
+        "ProjectHandler.cpp",
+        "ProjectHandler.h",
+        "PythonHandler.cpp",
+        "PythonHandler.h",
+        "QuarantineHandler.cpp",
+        "QuarantineHandler.h",
+        "ReflectionHandler.cpp",
+        "RenderingHandler.cpp",
+        "ReplicationHandler.cpp",
+        "RuntimeCaptureHandler.cpp",
+        "SkeletalMeshHandler.cpp",
+        "SkeletalMeshHandler.h",
+        "SmartObjectHandler.h",
+        "SourceControlHandler.h",
+        "StringTableHandler.cpp",
+        "StringTableHandler.h",
+        "SubsystemQueryHandler.h",
+        "TestingHandler.cpp",
+        "TextureHandler.cpp",
+        "TextureHandler.h",
+        "UMGHandler.h",
+        "WaterHandler.h",
+        "WorldPartitionHandler.cpp",
+        "WorldPartitionHandler.h",
+        "WorldSettingsHandler.cpp",
+        "WorldSettingsHandler.h"
+      ],
+      "alt_candidates": []
+    },
+    {
+      "module_name": "CoreUObject",
+      "module_type": "Runtime",
+      "module_build_cs_path": "${UE_ENGINE_ROOT}\\Source\\Runtime\\CoreUObject\\CoreUObject.Build.cs",
+      "header_roots": [
+        "${UE_ENGINE_ROOT}\\Source\\Runtime\\CoreUObject\\Public",
+        "${UE_ENGINE_ROOT}\\Source\\Runtime\\CoreUObject\\Internal"
+      ],
+      "estimated_header_count": 468,
+      "estimated_total_loc": 115266,
+      "in_use_by_plugin": [
+        "ActorHandler.cpp",
+        "AnimBlueprintHandler.cpp",
+        "AnimationAssetHandler.cpp",
+        "AnimationHandler.cpp",
+        "AssetGraphHandler.cpp",
+        "AssetHandler.cpp",
+        "AudioHandler.cpp",
+        "BehaviorTreeHandler.cpp",
+        "BlueprintHandler.cpp",
+        "BridgeHandlerBase.h",
+        "CameraHandler.cpp",
+        "ChaosHandler.cpp",
+        "ClothLODHandler.cpp",
+        "ControlRigHandler.cpp",
+        "DataTableHandler.cpp",
+        "DebugHandler.cpp",
+        "EQSHandler.cpp",
+        "EnvironmentHandler.cpp",
+        "FoliageHandler.cpp",
+        "GASHandler.cpp",
+        "IKRetargeterHandler.cpp",
+        "InputHandler.cpp",
+        "LandscapeHandler.cpp",
+        "MassEntityHandler.cpp",
+        "MaterialHandler.cpp",
+        "MaterialInstanceHandler.cpp",
+        "MediaHandler.cpp",
+        "NiagaraHandler.cpp",
+        "PCGGraphHandler.cpp",
+        "PackagingHandler.cpp",
+        "PhysicsAssetHandler.cpp",
+        "QuarantineHandler.h",
+        "ReflectionHandler.cpp",
+        "ReplicationHandler.cpp",
+        "SceneQueryHandler.cpp",
+        "SequencerHandler.cpp",
+        "SkeletalMeshHandler.cpp",
+        "SkeletonHandler.cpp",
+        "SmartObjectHandler.cpp",
+        "SourceControlHandler.cpp",
+        "StateTreeHandler.cpp",
+        "StaticMeshHandler.cpp",
+        "StringTableHandler.cpp",
+        "StructHandler.cpp",
+        "SubsystemQueryHandler.cpp",
+        "UMGHandler.cpp"
+      ],
+      "alt_candidates": []
+    },
+    {
+      "module_name": "Engine",
+      "module_type": "Runtime",
+      "module_build_cs_path": "${UE_ENGINE_ROOT}\\Source\\Runtime\\Engine\\Engine.Build.cs",
+      "header_roots": [
+        "${UE_ENGINE_ROOT}\\Source\\Runtime\\Engine\\Public",
+        "${UE_ENGINE_ROOT}\\Source\\Runtime\\Engine\\Classes",
+        "${UE_ENGINE_ROOT}\\Source\\Runtime\\Engine\\Internal"
+      ],
+      "estimated_header_count": 2167,
+      "estimated_total_loc": 425339,
+      "in_use_by_plugin": [
+        "ActorHandler.cpp",
+        "AnimBlueprintHandler.cpp",
+        "AnimationAssetHandler.cpp",
+        "AnimationHandler.cpp",
+        "AssetHandler.cpp",
+        "AudioHandler.cpp",
+        "BlueprintGraphAssembler.cpp",
+        "BlueprintGraphLayout.cpp",
+        "BlueprintHandler.cpp",
+        "BridgeHandlerBase.cpp",
+        "CameraHandler.cpp",
+        "ChaosHandler.cpp",
+        "ClothLODHandler.cpp",
+        "CollisionHandler.cpp",
+        "ConsoleHandler.cpp",
+        "DataTableHandler.cpp",
+        "DebugHandler.cpp",
+        "EditorUtilityHandler.cpp",
+        "EnvironmentHandler.cpp",
+        "GASHandler.cpp",
+        "IKRetargeterHandler.cpp",
+        "LandscapeHandler.cpp",
+        "LevelHandler.cpp",
+        "LightingHandler.cpp",
+        "MaterialHandler.cpp",
+        "MaterialInstanceHandler.cpp",
+        "NavMeshHandler.cpp",
+        "PCGGraphHandler.cpp",
+        "PCGHandler.cpp",
+        "PhysicsAssetHandler.cpp",
+        "PostProcessHandler.cpp",
+        "PythonHandler.cpp",
+        "RenderingHandler.cpp",
+        "ReplicationHandler.cpp",
+        "RuntimeCaptureHandler.cpp",
+        "SceneQueryHandler.cpp",
+        "SequencerHandler.cpp",
+        "SkeletalMeshHandler.cpp",
+        "SkeletonHandler.cpp",
+        "SmartObjectHandler.cpp",
+        "SplineHandler.cpp",
+        "StaticMeshHandler.cpp",
+        "StringTableHandler.cpp",
+        "StructHandler.cpp",
+        "SubsystemQueryHandler.cpp",
+        "TestingHandler.cpp",
+        "TextureHandler.cpp",
+        "WaterHandler.cpp",
+        "WorldPartitionHandler.cpp",
+        "WorldSettingsHandler.cpp"
+      ],
+      "alt_candidates": []
+    },
+    {
+      "module_name": "UnrealEd",
+      "module_type": "Editor",
+      "module_build_cs_path": "${UE_ENGINE_ROOT}\\Source\\Editor\\UnrealEd\\UnrealEd.Build.cs",
+      "header_roots": [
+        "${UE_ENGINE_ROOT}\\Source\\Editor\\UnrealEd\\Public",
+        "${UE_ENGINE_ROOT}\\Source\\Editor\\UnrealEd\\Classes",
+        "${UE_ENGINE_ROOT}\\Source\\Editor\\UnrealEd\\Internal"
+      ],
+      "estimated_header_count": 718,
+      "estimated_total_loc": 86270,
+      "in_use_by_plugin": [
+        "ActorHandler.cpp",
+        "AnimBlueprintHandler.cpp",
+        "AnimationAssetHandler.cpp",
+        "AnimationHandler.cpp",
+        "AssetHandler.cpp",
+        "AudioHandler.cpp",
+        "BlueprintGraphAssembler.cpp",
+        "BlueprintGraphLayout.cpp",
+        "BlueprintHandler.cpp",
+        "BridgeHandlerBase.cpp",
+        "BridgeHandlerBase.h",
+        "CameraHandler.cpp",
+        "ChaosHandler.cpp",
+        "CollisionHandler.cpp",
+        "ConsoleHandler.cpp",
+        "ControlRigHandler.cpp",
+        "DataTableHandler.cpp",
+        "DebugHandler.cpp",
+        "EQSHandler.cpp",
+        "EditorPrefsHandler.cpp",
+        "EditorUtilityHandler.cpp",
+        "EnvironmentHandler.cpp",
+        "FoliageHandler.cpp",
+        "GASHandler.cpp",
+        "IKRetargeterHandler.cpp",
+        "LandscapeHandler.cpp",
+        "LevelHandler.cpp",
+        "LightingHandler.cpp",
+        "MassEntityHandler.cpp",
+        "MaterialHandler.cpp",
+        "MaterialInstanceHandler.cpp",
+        "MediaHandler.cpp",
+        "NavMeshHandler.cpp",
+        "PCGGraphHandler.cpp",
+        "PCGHandler.cpp",
+        "PackagingHandler.cpp",
+        "PhysicsAssetHandler.cpp",
+        "PostProcessHandler.cpp",
+        "PythonHandler.cpp",
+        "ReflectionHandler.cpp",
+        "RenderingHandler.cpp",
+        "ReplicationHandler.cpp",
+        "SceneQueryHandler.cpp",
+        "SequencerHandler.cpp",
+        "SkeletalMeshHandler.cpp",
+        "SmartObjectHandler.cpp",
+        "SplineHandler.cpp",
+        "StringTableHandler.cpp",
+        "StructHandler.cpp",
+        "SubsystemQueryHandler.cpp",
+        "TestingHandler.cpp",
+        "TextureHandler.cpp",
+        "UMGHandler.cpp",
+        "WaterHandler.cpp",
+        "WorldPartitionHandler.cpp",
+        "WorldSettingsHandler.cpp"
+      ],
+      "alt_candidates": []
+    },
+    {
+      "module_name": "EditorSubsystem",
+      "module_type": "Editor",
+      "module_build_cs_path": "${UE_ENGINE_ROOT}\\Source\\Editor\\EditorSubsystem\\EditorSubsystem.Build.cs",
+      "header_roots": [
+        "${UE_ENGINE_ROOT}\\Source\\Editor\\EditorSubsystem\\Public"
+      ],
+      "estimated_header_count": 2,
+      "estimated_total_loc": 55,
+      "in_use_by_plugin": [
+        "SubsystemQueryHandler.cpp"
+      ],
+      "alt_candidates": []
+    },
+    {
+      "module_name": "DeveloperSettings",
+      "module_type": "Runtime",
+      "module_build_cs_path": "${UE_ENGINE_ROOT}\\Source\\Runtime\\DeveloperSettings\\DeveloperSettings.Build.cs",
+      "header_roots": [
+        "${UE_ENGINE_ROOT}\\Source\\Runtime\\DeveloperSettings\\Public"
+      ],
+      "estimated_header_count": 4,
+      "estimated_total_loc": 303,
+      "in_use_by_plugin": [],
+      "alt_candidates": []
+    },
+    {
+      "module_name": "HTTP",
+      "module_type": "Runtime",
+      "module_build_cs_path": "${UE_ENGINE_ROOT}\\Source\\Runtime\\Online\\HTTP\\HTTP.Build.cs",
+      "header_roots": [
+        "${UE_ENGINE_ROOT}\\Source\\Runtime\\Online\\HTTP\\Public",
+        "${UE_ENGINE_ROOT}\\Source\\Runtime\\Online\\HTTP\\Internal"
+      ],
+      "estimated_header_count": 29,
+      "estimated_total_loc": 3499,
+      "in_use_by_plugin": [],
+      "alt_candidates": []
+    },
+    {
+      "module_name": "HTTPServer",
+      "module_type": "Runtime",
+      "module_build_cs_path": "${UE_ENGINE_ROOT}\\Source\\Runtime\\Online\\HTTPServer\\HttpServer.Build.cs",
+      "header_roots": [
+        "${UE_ENGINE_ROOT}\\Source\\Runtime\\Online\\HTTPServer\\Public"
+      ],
+      "estimated_header_count": 10,
+      "estimated_total_loc": 636,
+      "in_use_by_plugin": [],
+      "alt_candidates": []
+    },
+    {
+      "module_name": "Json",
+      "module_type": "Runtime",
+      "module_build_cs_path": "${UE_ENGINE_ROOT}\\Source\\Runtime\\Json\\Json.Build.cs",
+      "header_roots": [
+        "${UE_ENGINE_ROOT}\\Source\\Runtime\\Json\\Public"
+      ],
+      "estimated_header_count": 22,
+      "estimated_total_loc": 6028,
+      "in_use_by_plugin": [
+        "ActorHandler.cpp",
+        "AnimBlueprintHandler.cpp",
+        "AnimationAssetHandler.cpp",
+        "AnimationHandler.cpp",
+        "AssetGraphHandler.cpp",
+        "AssetHandler.cpp",
+        "AudioHandler.cpp",
+        "BehaviorTreeHandler.cpp",
+        "BlueprintGraphAssembler.h",
+        "BlueprintGraphLayout.cpp",
+        "BlueprintGraphLayout.h",
+        "BlueprintHandler.cpp",
+        "BridgeHandlerBase.h",
+        "CameraHandler.cpp",
+        "ChaosHandler.cpp",
+        "ClothLODHandler.cpp",
+        "CollisionHandler.cpp",
+        "ConsoleHandler.cpp",
+        "ContextHandler.cpp",
+        "ControlRigHandler.cpp",
+        "CppHandler.cpp",
+        "DataTableHandler.cpp",
+        "DebugHandler.cpp",
+        "EQSHandler.cpp",
+        "EditorPrefsHandler.cpp",
+        "EditorUtilityHandler.cpp",
+        "EnvironmentHandler.cpp",
+        "FoliageHandler.cpp",
+        "GASHandler.cpp",
+        "GameplayTagHandler.cpp",
+        "GitHandler.cpp",
+        "IKRetargeterHandler.cpp",
+        "InputHandler.cpp",
+        "LandscapeHandler.cpp",
+        "LevelHandler.cpp",
+        "LightingHandler.cpp",
+        "LocalizationHandler.cpp",
+        "MassEntityHandler.cpp",
+        "MaterialHandler.cpp",
+        "MaterialInstanceHandler.cpp",
+        "MediaHandler.cpp",
+        "NavMeshHandler.cpp",
+        "NiagaraHandler.cpp",
+        "PCGGraphHandler.cpp",
+        "PackagingHandler.cpp",
+        "PhysicsAssetHandler.cpp",
+        "PostProcessHandler.cpp",
+        "ProjectHandler.cpp",
+        "PythonHandler.cpp",
+        "QuarantineHandler.cpp",
+        "ReflectionHandler.cpp",
+        "RenderingHandler.cpp",
+        "ReplicationHandler.cpp",
+        "RuntimeCaptureHandler.cpp",
+        "SceneQueryHandler.cpp",
+        "SequencerHandler.cpp",
+        "SkeletalMeshHandler.cpp",
+        "SkeletonHandler.cpp",
+        "SmartObjectHandler.cpp",
+        "SourceControlHandler.cpp",
+        "SplineHandler.cpp",
+        "StateTreeHandler.cpp",
+        "StaticMeshHandler.cpp",
+        "StringTableHandler.cpp",
+        "StructHandler.cpp",
+        "SubsystemQueryHandler.cpp",
+        "TestingHandler.cpp",
+        "TextureHandler.cpp",
+        "UMGHandler.cpp",
+        "WaterHandler.cpp",
+        "WorldPartitionHandler.cpp",
+        "WorldSettingsHandler.cpp"
+      ],
+      "alt_candidates": []
+    },
+    {
+      "module_name": "JsonUtilities",
+      "module_type": "Runtime",
+      "module_build_cs_path": "${UE_ENGINE_ROOT}\\Source\\Runtime\\JsonUtilities\\JsonUtilities.Build.cs",
+      "header_roots": [
+        "${UE_ENGINE_ROOT}\\Source\\Runtime\\JsonUtilities\\Public"
+      ],
+      "estimated_header_count": 5,
+      "estimated_total_loc": 761,
+      "in_use_by_plugin": [
+        "DataTableHandler.cpp"
+      ],
+      "alt_candidates": []
+    },
+    {
+      "module_name": "UMG",
+      "module_type": "Runtime",
+      "module_build_cs_path": "${UE_ENGINE_ROOT}\\Source\\Runtime\\UMG\\UMG.Build.cs",
+      "header_roots": [
+        "${UE_ENGINE_ROOT}\\Source\\Runtime\\UMG\\Public"
+      ],
+      "estimated_header_count": 163,
+      "estimated_total_loc": 22998,
+      "in_use_by_plugin": [
+        "AnimationHandler.cpp",
+        "UMGHandler.cpp"
+      ],
+      "alt_candidates": []
+    },
+    {
+      "module_name": "UMGEditor",
+      "module_type": "Editor",
+      "module_build_cs_path": "${UE_ENGINE_ROOT}\\Source\\Editor\\UMGEditor\\UMGEditor.Build.cs",
+      "header_roots": [
+        "${UE_ENGINE_ROOT}\\Source\\Editor\\UMGEditor\\Public",
+        "${UE_ENGINE_ROOT}\\Source\\Editor\\UMGEditor\\Classes"
+      ],
+      "estimated_header_count": 45,
+      "estimated_total_loc": 4569,
+      "in_use_by_plugin": [
+        "AnimationHandler.cpp",
+        "BlueprintHandler.cpp",
+        "UMGHandler.cpp"
+      ],
+      "alt_candidates": []
+    },
+    {
+      "module_name": "SlateCore",
+      "module_type": "Runtime",
+      "module_build_cs_path": "${UE_ENGINE_ROOT}\\Source\\Runtime\\SlateCore\\SlateCore.Build.cs",
+      "header_roots": [
+        "${UE_ENGINE_ROOT}\\Source\\Runtime\\SlateCore\\Public"
+      ],
+      "estimated_header_count": 154,
+      "estimated_total_loc": 36972,
+      "in_use_by_plugin": [],
+      "alt_candidates": []
+    },
+    {
+      "module_name": "BlueprintGraph",
+      "module_type": "Editor",
+      "module_build_cs_path": "${UE_ENGINE_ROOT}\\Source\\Editor\\BlueprintGraph\\BlueprintGraph.Build.cs",
+      "header_roots": [
+        "${UE_ENGINE_ROOT}\\Source\\Editor\\BlueprintGraph\\Public",
+        "${UE_ENGINE_ROOT}\\Source\\Editor\\BlueprintGraph\\Classes"
+      ],
+      "estimated_header_count": 145,
+      "estimated_total_loc": 15206,
+      "in_use_by_plugin": [
+        "BlueprintGraphAssembler.cpp",
+        "BlueprintGraphLayout.cpp",
+        "BlueprintHandler.cpp",
+        "StructHandler.cpp"
+      ],
+      "alt_candidates": []
+    },
+    {
+      "module_name": "Kismet",
+      "module_type": "Editor",
+      "module_build_cs_path": "${UE_ENGINE_ROOT}\\Source\\Editor\\Kismet\\Kismet.Build.cs",
+      "header_roots": [
+        "${UE_ENGINE_ROOT}\\Source\\Editor\\Kismet\\Public",
+        "${UE_ENGINE_ROOT}\\Source\\Editor\\Kismet\\Classes",
+        "${UE_ENGINE_ROOT}\\Source\\Editor\\Kismet\\Internal"
+      ],
+      "estimated_header_count": 54,
+      "estimated_total_loc": 11272,
+      "in_use_by_plugin": [],
+      "alt_candidates": []
+    },
+    {
+      "module_name": "KismetCompiler",
+      "module_type": "Editor",
+      "module_build_cs_path": "${UE_ENGINE_ROOT}\\Source\\Editor\\KismetCompiler\\KismetCompiler.Build.cs",
+      "header_roots": [
+        "${UE_ENGINE_ROOT}\\Source\\Editor\\KismetCompiler\\Public",
+        "${UE_ENGINE_ROOT}\\Source\\Editor\\KismetCompiler\\Internal"
+      ],
+      "estimated_header_count": 10,
+      "estimated_total_loc": 2089,
+      "in_use_by_plugin": [
+        "BlueprintHandler.cpp"
+      ],
+      "alt_candidates": []
+    },
+    {
+      "module_name": "BlueprintEditorLibrary",
+      "module_type": "Editor",
+      "module_build_cs_path": "${UE_ENGINE_ROOT}\\Source\\Editor\\BlueprintEditorLibrary\\BlueprintEditorLibrary.Build.cs",
+      "header_roots": [
+        "${UE_ENGINE_ROOT}\\Source\\Editor\\BlueprintEditorLibrary\\Public"
+      ],
+      "estimated_header_count": 2,
+      "estimated_total_loc": 369,
+      "in_use_by_plugin": [],
+      "alt_candidates": []
+    },
+    {
+      "module_name": "AssetTools",
+      "module_type": "Developer",
+      "module_build_cs_path": "${UE_ENGINE_ROOT}\\Source\\Developer\\AssetTools\\AssetTools.Build.cs",
+      "header_roots": [
+        "${UE_ENGINE_ROOT}\\Source\\Developer\\AssetTools\\Public",
+        "${UE_ENGINE_ROOT}\\Source\\Developer\\AssetTools\\Internal"
+      ],
+      "estimated_header_count": 22,
+      "estimated_total_loc": 2776,
+      "in_use_by_plugin": [
+        "AnimBlueprintHandler.cpp",
+        "AnimationAssetHandler.cpp",
+        "AssetHandler.cpp",
+        "AudioHandler.cpp",
+        "BehaviorTreeHandler.cpp",
+        "BlueprintHandler.cpp",
+        "CameraHandler.cpp",
+        "ChaosHandler.cpp",
+        "ControlRigHandler.cpp",
+        "DataTableHandler.cpp",
+        "EQSHandler.cpp",
+        "GASHandler.cpp",
+        "IKRetargeterHandler.cpp",
+        "MassEntityHandler.cpp",
+        "MaterialHandler.cpp",
+        "MaterialInstanceHandler.cpp",
+        "NiagaraHandler.cpp",
+        "PCGGraphHandler.cpp",
+        "PhysicsAssetHandler.cpp",
+        "QuarantineHandler.cpp",
+        "SequencerHandler.cpp",
+        "SkeletalMeshHandler.cpp",
+        "SmartObjectHandler.cpp",
+        "StateTreeHandler.cpp",
+        "StructHandler.cpp",
+        "TextureHandler.cpp",
+        "UMGHandler.cpp",
+        "WorldPartitionHandler.cpp"
+      ],
+      "alt_candidates": []
+    },
+    {
+      "module_name": "AssetRegistry",
+      "module_type": "Runtime",
+      "module_build_cs_path": "${UE_ENGINE_ROOT}\\Source\\Runtime\\AssetRegistry\\AssetRegistry.Build.cs",
+      "header_roots": [
+        "${UE_ENGINE_ROOT}\\Source\\Runtime\\AssetRegistry\\Public",
+        "${UE_ENGINE_ROOT}\\Source\\Runtime\\AssetRegistry\\Internal"
+      ],
+      "estimated_header_count": 11,
+      "estimated_total_loc": 4539,
+      "in_use_by_plugin": [
+        "AssetGraphHandler.cpp",
+        "AssetHandler.cpp",
+        "AudioHandler.cpp",
+        "BehaviorTreeHandler.cpp",
+        "BlueprintHandler.cpp",
+        "ChaosHandler.cpp",
+        "DebugHandler.cpp",
+        "EQSHandler.cpp",
+        "EditorUtilityHandler.cpp",
+        "GASHandler.cpp",
+        "IKRetargeterHandler.cpp",
+        "InputHandler.cpp",
+        "MassEntityHandler.cpp",
+        "MaterialHandler.cpp",
+        "MediaHandler.cpp",
+        "PCGGraphHandler.cpp",
+        "PackagingHandler.cpp",
+        "QuarantineHandler.cpp",
+        "StringTableHandler.cpp",
+        "StructHandler.cpp"
+      ],
+      "alt_candidates": []
+    },
+    {
+      "module_name": "Networking",
+      "module_type": "Runtime",
+      "module_build_cs_path": "${UE_ENGINE_ROOT}\\Source\\Runtime\\Networking\\Networking.Build.cs",
+      "header_roots": [
+        "${UE_ENGINE_ROOT}\\Source\\Runtime\\Networking\\Public"
+      ],
+      "estimated_header_count": 12,
+      "estimated_total_loc": 2513,
+      "in_use_by_plugin": [],
+      "alt_candidates": []
+    },
+    {
+      "module_name": "Sockets",
+      "module_type": "Runtime",
+      "module_build_cs_path": "${UE_ENGINE_ROOT}\\Source\\Runtime\\Sockets\\Sockets.Build.cs",
+      "header_roots": [
+        "${UE_ENGINE_ROOT}\\Source\\Runtime\\Sockets\\Public"
+      ],
+      "estimated_header_count": 15,
+      "estimated_total_loc": 3046,
+      "in_use_by_plugin": [],
+      "alt_candidates": []
+    },
+    {
+      "module_name": "MovieScene",
+      "module_type": "Runtime",
+      "module_build_cs_path": "${UE_ENGINE_ROOT}\\Source\\Runtime\\MovieScene\\MovieScene.Build.cs",
+      "header_roots": [
+        "${UE_ENGINE_ROOT}\\Source\\Runtime\\MovieScene\\Public"
+      ],
+      "estimated_header_count": 279,
+      "estimated_total_loc": 59336,
+      "in_use_by_plugin": [
+        "AnimationHandler.cpp",
+        "SequencerHandler.cpp"
+      ],
+      "alt_candidates": []
+    },
+    {
+      "module_name": "MovieSceneTracks",
+      "module_type": "Runtime",
+      "module_build_cs_path": "${UE_ENGINE_ROOT}\\Source\\Runtime\\MovieSceneTracks\\MovieSceneTracks.Build.cs",
+      "header_roots": [
+        "${UE_ENGINE_ROOT}\\Source\\Runtime\\MovieSceneTracks\\Public"
+      ],
+      "estimated_header_count": 177,
+      "estimated_total_loc": 15496,
+      "in_use_by_plugin": [
+        "AnimationHandler.cpp",
+        "SequencerHandler.cpp"
+      ],
+      "alt_candidates": []
+    },
+    {
+      "module_name": "MaterialEditor",
+      "module_type": "Editor",
+      "module_build_cs_path": "${UE_ENGINE_ROOT}\\Source\\Editor\\MaterialEditor\\MaterialEditor.Build.cs",
+      "header_roots": [
+        "${UE_ENGINE_ROOT}\\Source\\Editor\\MaterialEditor\\Public",
+        "${UE_ENGINE_ROOT}\\Source\\Editor\\MaterialEditor\\Internal"
+      ],
+      "estimated_header_count": 25,
+      "estimated_total_loc": 3309,
+      "in_use_by_plugin": [
+        "MaterialHandler.cpp"
+      ],
+      "alt_candidates": []
+    },
+    {
+      "module_name": "EditorScriptingUtilities",
+      "module_type": "Plugin",
+      "module_build_cs_path": "${UE_ENGINE_ROOT}\\Plugins\\Editor\\EditorScriptingUtilities\\Source\\EditorScriptingUtilities\\EditorScriptingUtilities.Build.cs",
+      "header_roots": [
+        "${UE_ENGINE_ROOT}\\Plugins\\Editor\\EditorScriptingUtilities\\Source\\EditorScriptingUtilities\\Public"
+      ],
+      "estimated_header_count": 6,
+      "estimated_total_loc": 1751,
+      "in_use_by_plugin": [],
+      "alt_candidates": []
+    },
+    {
+      "module_name": "LiveCoding",
+      "module_type": "Developer",
+      "module_build_cs_path": "${UE_ENGINE_ROOT}\\Source\\Developer\\Windows\\LiveCoding\\LiveCoding.Build.cs",
+      "header_roots": [
+        "${UE_ENGINE_ROOT}\\Source\\Developer\\Windows\\LiveCoding\\Public"
+      ],
+      "estimated_header_count": 1,
+      "estimated_total_loc": 69,
+      "in_use_by_plugin": [
+        "CppHandler.cpp"
+      ],
+      "alt_candidates": []
+    },
+    {
+      "module_name": "HotReload",
+      "module_type": "Developer",
+      "module_build_cs_path": "${UE_ENGINE_ROOT}\\Source\\Developer\\HotReload\\HotReload.Build.cs",
+      "header_roots": [
+        "${UE_ENGINE_ROOT}\\Source\\Developer\\HotReload\\Public"
+      ],
+      "estimated_header_count": 1,
+      "estimated_total_loc": 39,
+      "in_use_by_plugin": [],
+      "alt_candidates": []
+    },
+    {
+      "module_name": "MessageLog",
+      "module_type": "Developer",
+      "module_build_cs_path": "${UE_ENGINE_ROOT}\\Source\\Developer\\MessageLog\\MessageLog.Build.cs",
+      "header_roots": [
+        "${UE_ENGINE_ROOT}\\Source\\Developer\\MessageLog\\Public"
+      ],
+      "estimated_header_count": 6,
+      "estimated_total_loc": 922,
+      "in_use_by_plugin": [],
+      "alt_candidates": []
+    },
+    {
+      "module_name": "GameplayAbilities",
+      "module_type": "Plugin",
+      "module_build_cs_path": "${UE_ENGINE_ROOT}\\Plugins\\Runtime\\GameplayAbilities\\Source\\GameplayAbilities\\GameplayAbilities.Build.cs",
+      "header_roots": [
+        "${UE_ENGINE_ROOT}\\Plugins\\Runtime\\GameplayAbilities\\Source\\GameplayAbilities\\Public"
+      ],
+      "estimated_header_count": 136,
+      "estimated_total_loc": 21833,
+      "in_use_by_plugin": [
+        "GASHandler.cpp",
+        "RuntimeCaptureHandler.cpp"
+      ],
+      "alt_candidates": []
+    },
+    {
+      "module_name": "GameplayTags",
+      "module_type": "Runtime",
+      "module_build_cs_path": "${UE_ENGINE_ROOT}\\Source\\Runtime\\GameplayTags\\GameplayTags.Build.cs",
+      "header_roots": [
+        "${UE_ENGINE_ROOT}\\Source\\Runtime\\GameplayTags\\Public",
+        "${UE_ENGINE_ROOT}\\Source\\Runtime\\GameplayTags\\Classes"
+      ],
+      "estimated_header_count": 12,
+      "estimated_total_loc": 3054,
+      "in_use_by_plugin": [
+        "GASHandler.cpp",
+        "GameplayTagHandler.cpp",
+        "SmartObjectHandler.cpp",
+        "StateTreeHandler.cpp"
+      ],
+      "alt_candidates": []
+    },
+    {
+      "module_name": "GameplayTasks",
+      "module_type": "Runtime",
+      "module_build_cs_path": "${UE_ENGINE_ROOT}\\Source\\Runtime\\GameplayTasks\\GameplayTasks.Build.cs",
+      "header_roots": [
+        "${UE_ENGINE_ROOT}\\Source\\Runtime\\GameplayTasks\\Public",
+        "${UE_ENGINE_ROOT}\\Source\\Runtime\\GameplayTasks\\Classes"
+      ],
+      "estimated_header_count": 10,
+      "estimated_total_loc": 1008,
+      "in_use_by_plugin": [],
+      "alt_candidates": []
+    },
+    {
+      "module_name": "PCG",
+      "module_type": "Plugin",
+      "module_build_cs_path": "${UE_ENGINE_ROOT}\\Plugins\\PCG\\Source\\PCG\\PCG.Build.cs",
+      "header_roots": [
+        "${UE_ENGINE_ROOT}\\Plugins\\PCG\\Source\\PCG\\Public",
+        "${UE_ENGINE_ROOT}\\Plugins\\PCG\\Source\\PCG\\Internal"
+      ],
+      "estimated_header_count": 408,
+      "estimated_total_loc": 51811,
+      "in_use_by_plugin": [
+        "PCGGraphHandler.cpp",
+        "PCGHandler.cpp"
+      ],
+      "alt_candidates": []
+    },
+    {
+      "module_name": "PCGEditor",
+      "module_type": "Plugin",
+      "module_build_cs_path": "${UE_ENGINE_ROOT}\\Plugins\\PCG\\Source\\PCGEditor\\PCGEditor.Build.cs",
+      "header_roots": [
+        "${UE_ENGINE_ROOT}\\Plugins\\PCG\\Source\\PCGEditor\\Public"
+      ],
+      "estimated_header_count": 36,
+      "estimated_total_loc": 2861,
+      "in_use_by_plugin": [],
+      "alt_candidates": []
+    },
+    {
+      "module_name": "AnimationBlueprintEditor",
+      "module_type": "Editor",
+      "module_build_cs_path": "${UE_ENGINE_ROOT}\\Source\\Editor\\AnimationBlueprintEditor\\AnimationBlueprintEditor.Build.cs",
+      "header_roots": [
+        "${UE_ENGINE_ROOT}\\Source\\Editor\\AnimationBlueprintEditor\\Public"
+      ],
+      "estimated_header_count": 4,
+      "estimated_total_loc": 226,
+      "in_use_by_plugin": [],
+      "alt_candidates": []
+    },
+    {
+      "module_name": "AnimGraph",
+      "module_type": "Editor",
+      "module_build_cs_path": "${UE_ENGINE_ROOT}\\Source\\Editor\\AnimGraph\\AnimGraph.Build.cs",
+      "header_roots": [
+        "${UE_ENGINE_ROOT}\\Source\\Editor\\AnimGraph\\Public",
+        "${UE_ENGINE_ROOT}\\Source\\Editor\\AnimGraph\\Internal"
+      ],
+      "estimated_header_count": 132,
+      "estimated_total_loc": 8607,
+      "in_use_by_plugin": [
+        "AnimBlueprintHandler.cpp"
+      ],
+      "alt_candidates": []
+    },
+    {
+      "module_name": "Niagara",
+      "module_type": "Plugin",
+      "module_build_cs_path": "${UE_ENGINE_ROOT}\\Plugins\\FX\\Niagara\\Source\\Niagara\\Niagara.Build.cs",
+      "header_roots": [
+        "${UE_ENGINE_ROOT}\\Plugins\\FX\\Niagara\\Source\\Niagara\\Public",
+        "${UE_ENGINE_ROOT}\\Plugins\\FX\\Niagara\\Source\\Niagara\\Classes",
+        "${UE_ENGINE_ROOT}\\Plugins\\FX\\Niagara\\Source\\Niagara\\Internal"
+      ],
+      "estimated_header_count": 293,
+      "estimated_total_loc": 52539,
+      "in_use_by_plugin": [
+        "NiagaraHandler.cpp"
+      ],
+      "alt_candidates": []
+    },
+    {
+      "module_name": "NiagaraEditor",
+      "module_type": "Plugin",
+      "module_build_cs_path": "${UE_ENGINE_ROOT}\\Plugins\\FX\\Niagara\\Source\\NiagaraEditor\\NiagaraEditor.Build.cs",
+      "header_roots": [
+        "${UE_ENGINE_ROOT}\\Plugins\\FX\\Niagara\\Source\\NiagaraEditor\\Public",
+        "${UE_ENGINE_ROOT}\\Plugins\\FX\\Niagara\\Source\\NiagaraEditor\\Internal"
+      ],
+      "estimated_header_count": 155,
+      "estimated_total_loc": 25099,
+      "in_use_by_plugin": [
+        "NiagaraHandler.cpp"
+      ],
+      "alt_candidates": []
+    },
+    {
+      "module_name": "DataTableEditor",
+      "module_type": "Editor",
+      "module_build_cs_path": "${UE_ENGINE_ROOT}\\Source\\Editor\\DataTableEditor\\DataTableEditor.Build.cs",
+      "header_roots": [
+        "${UE_ENGINE_ROOT}\\Source\\Editor\\DataTableEditor\\Public"
+      ],
+      "estimated_header_count": 2,
+      "estimated_total_loc": 74,
+      "in_use_by_plugin": [],
+      "alt_candidates": []
+    },
+    {
+      "module_name": "PhysicsCore",
+      "module_type": "Runtime",
+      "module_build_cs_path": "${UE_ENGINE_ROOT}\\Source\\Runtime\\PhysicsCore\\PhysicsCore.Build.cs",
+      "header_roots": [
+        "${UE_ENGINE_ROOT}\\Source\\Runtime\\PhysicsCore\\Public"
+      ],
+      "estimated_header_count": 39,
+      "estimated_total_loc": 4580,
+      "in_use_by_plugin": [
+        "ActorHandler.cpp"
+      ],
+      "alt_candidates": []
+    },
+    {
+      "module_name": "SkeletalMeshEditor",
+      "module_type": "Editor",
+      "module_build_cs_path": "${UE_ENGINE_ROOT}\\Source\\Editor\\SkeletalMeshEditor\\SkeletalMeshEditor.Build.cs",
+      "header_roots": [
+        "${UE_ENGINE_ROOT}\\Source\\Editor\\SkeletalMeshEditor\\Public"
+      ],
+      "estimated_header_count": 4,
+      "estimated_total_loc": 437,
+      "in_use_by_plugin": [],
+      "alt_candidates": []
+    },
+    {
+      "module_name": "ClothingSystemRuntimeInterface",
+      "module_type": "Runtime",
+      "module_build_cs_path": "${UE_ENGINE_ROOT}\\Source\\Runtime\\ClothingSystemRuntimeInterface\\ClothingSystemRuntimeInterface.Build.cs",
+      "header_roots": [
+        "${UE_ENGINE_ROOT}\\Source\\Runtime\\ClothingSystemRuntimeInterface\\Public"
+      ],
+      "estimated_header_count": 13,
+      "estimated_total_loc": 1543,
+      "in_use_by_plugin": [
+        "ClothLODHandler.cpp"
+      ],
+      "alt_candidates": []
+    },
+    {
+      "module_name": "IKRig",
+      "module_type": "Plugin",
+      "module_build_cs_path": "${UE_ENGINE_ROOT}\\Plugins\\Animation\\IKRig\\Source\\IKRig\\IKRig.Build.cs",
+      "header_roots": [
+        "${UE_ENGINE_ROOT}\\Plugins\\Animation\\IKRig\\Source\\IKRig\\Public"
+      ],
+      "estimated_header_count": 46,
+      "estimated_total_loc": 9230,
+      "in_use_by_plugin": [
+        "IKRetargeterHandler.cpp"
+      ],
+      "alt_candidates": []
+    },
+    {
+      "module_name": "IKRigEditor",
+      "module_type": "Plugin",
+      "module_build_cs_path": "${UE_ENGINE_ROOT}\\Plugins\\Animation\\IKRig\\Source\\IKRigEditor\\IKRigEditor.Build.cs",
+      "header_roots": [
+        "${UE_ENGINE_ROOT}\\Plugins\\Animation\\IKRig\\Source\\IKRigEditor\\Public"
+      ],
+      "estimated_header_count": 60,
+      "estimated_total_loc": 6787,
+      "in_use_by_plugin": [
+        "IKRetargeterHandler.cpp"
+      ],
+      "alt_candidates": []
+    },
+    {
+      "module_name": "ControlRig",
+      "module_type": "Plugin",
+      "module_build_cs_path": "${UE_ENGINE_ROOT}\\Plugins\\Animation\\ControlRig\\Source\\ControlRig\\ControlRig.Build.cs",
+      "header_roots": [
+        "${UE_ENGINE_ROOT}\\Plugins\\Animation\\ControlRig\\Source\\ControlRig\\Public"
+      ],
+      "estimated_header_count": 195,
+      "estimated_total_loc": 47194,
+      "in_use_by_plugin": [
+        "ControlRigHandler.cpp"
+      ],
+      "alt_candidates": []
+    },
+    {
+      "module_name": "ControlRigDeveloper",
+      "module_type": "Plugin",
+      "module_build_cs_path": "${UE_ENGINE_ROOT}\\Plugins\\Animation\\ControlRig\\Source\\ControlRigDeveloper\\ControlRigDeveloper.Build.cs",
+      "header_roots": [
+        "${UE_ENGINE_ROOT}\\Plugins\\Animation\\ControlRig\\Source\\ControlRigDeveloper\\Public"
+      ],
+      "estimated_header_count": 11,
+      "estimated_total_loc": 1268,
+      "in_use_by_plugin": [
+        "ControlRigHandler.cpp"
+      ],
+      "alt_candidates": []
+    },
+    {
+      "module_name": "ControlRigEditor",
+      "module_type": "Plugin",
+      "module_build_cs_path": "${UE_ENGINE_ROOT}\\Plugins\\Animation\\ControlRig\\Source\\ControlRigEditor\\ControlRigEditor.Build.cs",
+      "header_roots": [
+        "${UE_ENGINE_ROOT}\\Plugins\\Animation\\ControlRig\\Source\\ControlRigEditor\\Public"
+      ],
+      "estimated_header_count": 22,
+      "estimated_total_loc": 3623,
+      "in_use_by_plugin": [
+        "ControlRigHandler.cpp"
+      ],
+      "alt_candidates": []
+    },
+    {
+      "module_name": "RigVM",
+      "module_type": "Plugin",
+      "module_build_cs_path": "${UE_ENGINE_ROOT}\\Plugins\\Runtime\\RigVM\\Source\\RigVM\\RigVM.Build.cs",
+      "header_roots": [
+        "${UE_ENGINE_ROOT}\\Plugins\\Runtime\\RigVM\\Source\\RigVM\\Public"
+      ],
+      "estimated_header_count": 108,
+      "estimated_total_loc": 27958,
+      "in_use_by_plugin": [],
+      "alt_candidates": []
+    },
+    {
+      "module_name": "RigVMDeveloper",
+      "module_type": "Plugin",
+      "module_build_cs_path": "${UE_ENGINE_ROOT}\\Plugins\\Runtime\\RigVM\\Source\\RigVMDeveloper\\RigVMDeveloper.Build.cs",
+      "header_roots": [
+        "${UE_ENGINE_ROOT}\\Plugins\\Runtime\\RigVM\\Source\\RigVMDeveloper\\Public"
+      ],
+      "estimated_header_count": 51,
+      "estimated_total_loc": 13237,
+      "in_use_by_plugin": [
+        "ControlRigHandler.cpp"
+      ],
+      "alt_candidates": []
+    },
+    {
+      "module_name": "Landscape",
+      "module_type": "Runtime",
+      "module_build_cs_path": "${UE_ENGINE_ROOT}\\Source\\Runtime\\Landscape\\Landscape.Build.cs",
+      "header_roots": [
+        "${UE_ENGINE_ROOT}\\Source\\Runtime\\Landscape\\Public",
+        "${UE_ENGINE_ROOT}\\Source\\Runtime\\Landscape\\Classes",
+        "${UE_ENGINE_ROOT}\\Source\\Runtime\\Landscape\\Internal"
+      ],
+      "estimated_header_count": 65,
+      "estimated_total_loc": 15248,
+      "in_use_by_plugin": [
+        "LandscapeHandler.cpp"
+      ],
+      "alt_candidates": []
+    },
+    {
+      "module_name": "LandscapeEditor",
+      "module_type": "Editor",
+      "module_build_cs_path": "${UE_ENGINE_ROOT}\\Source\\Editor\\LandscapeEditor\\LandscapeEditor.Build.cs",
+      "header_roots": [
+        "${UE_ENGINE_ROOT}\\Source\\Editor\\LandscapeEditor\\Public"
+      ],
+      "estimated_header_count": 8,
+      "estimated_total_loc": 1680,
+      "in_use_by_plugin": [
+        "LandscapeHandler.cpp"
+      ],
+      "alt_candidates": []
+    },
+    {
+      "module_name": "Foliage",
+      "module_type": "Runtime",
+      "module_build_cs_path": "${UE_ENGINE_ROOT}\\Source\\Runtime\\Foliage\\Foliage.Build.cs",
+      "header_roots": [
+        "${UE_ENGINE_ROOT}\\Source\\Runtime\\Foliage\\Public"
+      ],
+      "estimated_header_count": 21,
+      "estimated_total_loc": 2744,
+      "in_use_by_plugin": [
+        "FoliageHandler.cpp"
+      ],
+      "alt_candidates": []
+    },
+    {
+      "module_name": "CinematicCamera",
+      "module_type": "Runtime",
+      "module_build_cs_path": "${UE_ENGINE_ROOT}\\Source\\Runtime\\CinematicCamera\\CinematicCamera.Build.cs",
+      "header_roots": [
+        "${UE_ENGINE_ROOT}\\Source\\Runtime\\CinematicCamera\\Public"
+      ],
+      "estimated_header_count": 6,
+      "estimated_total_loc": 986,
+      "in_use_by_plugin": [
+        "CameraHandler.cpp",
+        "LightingHandler.cpp"
+      ],
+      "alt_candidates": []
+    },
+    {
+      "module_name": "AIModule",
+      "module_type": "Runtime",
+      "module_build_cs_path": "${UE_ENGINE_ROOT}\\Source\\Runtime\\AIModule\\AIModule.Build.cs",
+      "header_roots": [
+        "${UE_ENGINE_ROOT}\\Source\\Runtime\\AIModule\\Public",
+        "${UE_ENGINE_ROOT}\\Source\\Runtime\\AIModule\\Classes"
+      ],
+      "estimated_header_count": 202,
+      "estimated_total_loc": 22555,
+      "in_use_by_plugin": [
+        "BehaviorTreeHandler.cpp",
+        "EQSHandler.cpp",
+        "NavMeshHandler.cpp"
+      ],
+      "alt_candidates": []
+    },
+    {
+      "module_name": "BehaviorTreeEditor",
+      "module_type": "Editor",
+      "module_build_cs_path": "${UE_ENGINE_ROOT}\\Source\\Editor\\BehaviorTreeEditor\\BehaviorTreeEditor.Build.cs",
+      "header_roots": [
+        "${UE_ENGINE_ROOT}\\Source\\Editor\\BehaviorTreeEditor\\Public",
+        "${UE_ENGINE_ROOT}\\Source\\Editor\\BehaviorTreeEditor\\Classes"
+      ],
+      "estimated_header_count": 25,
+      "estimated_total_loc": 1748,
+      "in_use_by_plugin": [],
+      "alt_candidates": []
+    },
+    {
+      "module_name": "NavigationSystem",
+      "module_type": "Runtime",
+      "module_build_cs_path": "${UE_ENGINE_ROOT}\\Source\\Runtime\\NavigationSystem\\NavigationSystem.Build.cs",
+      "header_roots": [
+        "${UE_ENGINE_ROOT}\\Source\\Runtime\\NavigationSystem\\Public"
+      ],
+      "estimated_header_count": 57,
+      "estimated_total_loc": 10597,
+      "in_use_by_plugin": [
+        "NavMeshHandler.cpp",
+        "WorldSettingsHandler.cpp"
+      ],
+      "alt_candidates": []
+    },
+    {
+      "module_name": "EnhancedInput",
+      "module_type": "Plugin",
+      "module_build_cs_path": "${UE_ENGINE_ROOT}\\Plugins\\EnhancedInput\\Source\\EnhancedInput\\EnhancedInput.Build.cs",
+      "header_roots": [
+        "${UE_ENGINE_ROOT}\\Plugins\\EnhancedInput\\Source\\EnhancedInput\\Public"
+      ],
+      "estimated_header_count": 21,
+      "estimated_total_loc": 5341,
+      "in_use_by_plugin": [
+        "InputHandler.cpp"
+      ],
+      "alt_candidates": []
+    },
+    {
+      "module_name": "InputCore",
+      "module_type": "Runtime",
+      "module_build_cs_path": "${UE_ENGINE_ROOT}\\Source\\Runtime\\InputCore\\InputCore.Build.cs",
+      "header_roots": [
+        "${UE_ENGINE_ROOT}\\Source\\Runtime\\InputCore\\Public",
+        "${UE_ENGINE_ROOT}\\Source\\Runtime\\InputCore\\Classes"
+      ],
+      "estimated_header_count": 11,
+      "estimated_total_loc": 1004,
+      "in_use_by_plugin": [
+        "InputHandler.cpp"
+      ],
+      "alt_candidates": []
+    },
+    {
+      "module_name": "AudioEditor",
+      "module_type": "Editor",
+      "module_build_cs_path": "${UE_ENGINE_ROOT}\\Source\\Editor\\AudioEditor\\AudioEditor.Build.cs",
+      "header_roots": [
+        "${UE_ENGINE_ROOT}\\Source\\Editor\\AudioEditor\\Public",
+        "${UE_ENGINE_ROOT}\\Source\\Editor\\AudioEditor\\Classes"
+      ],
+      "estimated_header_count": 42,
+      "estimated_total_loc": 2574,
+      "in_use_by_plugin": [
+        "AudioHandler.cpp"
+      ],
+      "alt_candidates": []
+    },
+    {
+      "module_name": "MetasoundFrontend",
+      "module_type": "Plugin",
+      "module_build_cs_path": "${UE_ENGINE_ROOT}\\Plugins\\Runtime\\Metasound\\Source\\MetasoundFrontend\\MetasoundFrontend.Build.cs",
+      "header_roots": [
+        "${UE_ENGINE_ROOT}\\Plugins\\Runtime\\Metasound\\Source\\MetasoundFrontend\\Public"
+      ],
+      "estimated_header_count": 82,
+      "estimated_total_loc": 18731,
+      "in_use_by_plugin": [],
+      "alt_candidates": []
+    },
+    {
+      "module_name": "MetasoundEditor",
+      "module_type": "Plugin",
+      "module_build_cs_path": "${UE_ENGINE_ROOT}\\Plugins\\Runtime\\Metasound\\Source\\MetasoundEditor\\MetasoundEditor.Build.cs",
+      "header_roots": [
+        "${UE_ENGINE_ROOT}\\Plugins\\Runtime\\Metasound\\Source\\MetasoundEditor\\Public"
+      ],
+      "estimated_header_count": 17,
+      "estimated_total_loc": 3410,
+      "in_use_by_plugin": [],
+      "alt_candidates": []
+    },
+    {
+      "module_name": "MetasoundEngine",
+      "module_type": "Plugin",
+      "module_build_cs_path": "${UE_ENGINE_ROOT}\\Plugins\\Runtime\\Metasound\\Source\\MetasoundEngine\\MetasoundEngine.Build.cs",
+      "header_roots": [
+        "${UE_ENGINE_ROOT}\\Plugins\\Runtime\\Metasound\\Source\\MetasoundEngine\\Public"
+      ],
+      "estimated_header_count": 24,
+      "estimated_total_loc": 4363,
+      "in_use_by_plugin": [
+        "AudioHandler.cpp"
+      ],
+      "alt_candidates": []
+    },
+    {
+      "module_name": "LevelSequence",
+      "module_type": "Runtime",
+      "module_build_cs_path": "${UE_ENGINE_ROOT}\\Source\\Runtime\\LevelSequence\\LevelSequence.Build.cs",
+      "header_roots": [
+        "${UE_ENGINE_ROOT}\\Source\\Runtime\\LevelSequence\\Public"
+      ],
+      "estimated_header_count": 18,
+      "estimated_total_loc": 1957,
+      "in_use_by_plugin": [
+        "SequencerHandler.cpp"
+      ],
+      "alt_candidates": []
+    },
+    {
+      "module_name": "LevelSequenceEditor",
+      "module_type": "Plugin",
+      "module_build_cs_path": "${UE_ENGINE_ROOT}\\Plugins\\MovieScene\\LevelSequenceEditor\\Source\\LevelSequenceEditor\\LevelSequenceEditor.Build.cs",
+      "header_roots": [
+        "${UE_ENGINE_ROOT}\\Plugins\\MovieScene\\LevelSequenceEditor\\Source\\LevelSequenceEditor\\Public"
+      ],
+      "estimated_header_count": 11,
+      "estimated_total_loc": 1289,
+      "in_use_by_plugin": [],
+      "alt_candidates": []
+    },
+    {
+      "module_name": "Chaos",
+      "module_type": "Runtime",
+      "module_build_cs_path": "${UE_ENGINE_ROOT}\\Source\\Runtime\\Experimental\\Chaos\\Chaos.Build.cs",
+      "header_roots": [
+        "${UE_ENGINE_ROOT}\\Source\\Runtime\\Experimental\\Chaos\\Public"
+      ],
+      "estimated_header_count": 486,
+      "estimated_total_loc": 136137,
+      "in_use_by_plugin": [
+        "ChaosHandler.cpp"
+      ],
+      "alt_candidates": []
+    },
+    {
+      "module_name": "GeometryCollectionEngine",
+      "module_type": "Runtime",
+      "module_build_cs_path": "${UE_ENGINE_ROOT}\\Source\\Runtime\\Experimental\\GeometryCollectionEngine\\GeometryCollectionEngine.Build.cs",
+      "header_roots": [
+        "${UE_ENGINE_ROOT}\\Source\\Runtime\\Experimental\\GeometryCollectionEngine\\Public"
+      ],
+      "estimated_header_count": 34,
+      "estimated_total_loc": 6009,
+      "in_use_by_plugin": [
+        "ChaosHandler.cpp"
+      ],
+      "alt_candidates": []
+    },
+    {
+      "module_name": "GeometryCollectionEditor",
+      "module_type": "Plugin",
+      "module_build_cs_path": "${UE_ENGINE_ROOT}\\Plugins\\Experimental\\GeometryCollectionPlugin\\Source\\GeometryCollectionEditor\\GeometryCollectionEditor.Build.cs",
+      "header_roots": [
+        "${UE_ENGINE_ROOT}\\Plugins\\Experimental\\GeometryCollectionPlugin\\Source\\GeometryCollectionEditor\\Public"
+      ],
+      "estimated_header_count": 13,
+      "estimated_total_loc": 617,
+      "in_use_by_plugin": [
+        "ChaosHandler.cpp"
+      ],
+      "alt_candidates": []
+    },
+    {
+      "module_name": "ChaosSolverEngine",
+      "module_type": "Runtime",
+      "module_build_cs_path": "${UE_ENGINE_ROOT}\\Source\\Runtime\\Experimental\\ChaosSolverEngine\\ChaosSolverEngine.Build.cs",
+      "header_roots": [
+        "${UE_ENGINE_ROOT}\\Source\\Runtime\\Experimental\\ChaosSolverEngine\\Public"
+      ],
+      "estimated_header_count": 13,
+      "estimated_total_loc": 1552,
+      "in_use_by_plugin": [],
+      "alt_candidates": []
+    },
+    {
+      "module_name": "FieldSystemEngine",
+      "module_type": "Runtime",
+      "module_build_cs_path": "${UE_ENGINE_ROOT}\\Source\\Runtime\\Experimental\\FieldSystem\\Source\\FieldSystemEngine\\FieldSystemEngine.Build.cs",
+      "header_roots": [
+        "${UE_ENGINE_ROOT}\\Source\\Runtime\\Experimental\\FieldSystem\\Source\\FieldSystemEngine\\Public"
+      ],
+      "estimated_header_count": 5,
+      "estimated_total_loc": 1418,
+      "in_use_by_plugin": [
+        "ChaosHandler.cpp"
+      ],
+      "alt_candidates": []
+    },
+    {
+      "module_name": "DataValidation",
+      "module_type": "Plugin",
+      "module_build_cs_path": "${UE_ENGINE_ROOT}\\Plugins\\Editor\\DataValidation\\Source\\DataValidation\\DataValidation.Build.cs",
+      "header_roots": [
+        "${UE_ENGINE_ROOT}\\Plugins\\Editor\\DataValidation\\Source\\DataValidation\\Public"
+      ],
+      "estimated_header_count": 11,
+      "estimated_total_loc": 1332,
+      "in_use_by_plugin": [
+        "AssetHandler.cpp",
+        "DebugHandler.cpp",
+        "PackagingHandler.cpp"
+      ],
+      "alt_candidates": []
+    },
+    {
+      "module_name": "Blutility",
+      "module_type": "Editor",
+      "module_build_cs_path": "${UE_ENGINE_ROOT}\\Source\\Editor\\Blutility\\Blutility.Build.cs",
+      "header_roots": [
+        "${UE_ENGINE_ROOT}\\Source\\Editor\\Blutility\\Public",
+        "${UE_ENGINE_ROOT}\\Source\\Editor\\Blutility\\Classes"
+      ],
+      "estimated_header_count": 25,
+      "estimated_total_loc": 1979,
+      "in_use_by_plugin": [
+        "EditorUtilityHandler.cpp",
+        "ReflectionHandler.cpp"
+      ],
+      "alt_candidates": []
+    },
+    {
+      "module_name": "LevelEditor",
+      "module_type": "Editor",
+      "module_build_cs_path": "${UE_ENGINE_ROOT}\\Source\\Editor\\LevelEditor\\LevelEditor.Build.cs",
+      "header_roots": [
+        "${UE_ENGINE_ROOT}\\Source\\Editor\\LevelEditor\\Public"
+      ],
+      "estimated_header_count": 19,
+      "estimated_total_loc": 4846,
+      "in_use_by_plugin": [
+        "LevelHandler.cpp"
+      ],
+      "alt_candidates": []
+    },
+    {
+      "module_name": "SourceControl",
+      "module_type": "Developer",
+      "module_build_cs_path": "${UE_ENGINE_ROOT}\\Source\\Developer\\SourceControl\\SourceControl.Build.cs",
+      "header_roots": [
+        "${UE_ENGINE_ROOT}\\Source\\Developer\\SourceControl\\Public"
+      ],
+      "estimated_header_count": 21,
+      "estimated_total_loc": 4792,
+      "in_use_by_plugin": [
+        "SourceControlHandler.cpp"
+      ],
+      "alt_candidates": []
+    },
+    {
+      "module_name": "Projects",
+      "module_type": "Runtime",
+      "module_build_cs_path": "${UE_ENGINE_ROOT}\\Source\\Runtime\\Projects\\Projects.Build.cs",
+      "header_roots": [
+        "${UE_ENGINE_ROOT}\\Source\\Runtime\\Projects\\Public",
+        "${UE_ENGINE_ROOT}\\Source\\Runtime\\Projects\\Internal"
+      ],
+      "estimated_header_count": 15,
+      "estimated_total_loc": 2221,
+      "in_use_by_plugin": [
+        "ProjectHandler.cpp"
+      ],
+      "alt_candidates": []
+    },
+    {
+      "module_name": "MassEntity",
+      "module_type": "Runtime",
+      "module_build_cs_path": "${UE_ENGINE_ROOT}\\Source\\Runtime\\MassEntity\\MassEntity.Build.cs",
+      "header_roots": [
+        "${UE_ENGINE_ROOT}\\Source\\Runtime\\MassEntity\\Public",
+        "${UE_ENGINE_ROOT}\\Source\\Runtime\\MassEntity\\Internal"
+      ],
+      "estimated_header_count": 51,
+      "estimated_total_loc": 15292,
+      "in_use_by_plugin": [
+        "MassEntityHandler.cpp"
+      ],
+      "alt_candidates": []
+    },
+    {
+      "module_name": "MassSpawner",
+      "module_type": "Plugin",
+      "module_build_cs_path": "${UE_ENGINE_ROOT}\\Plugins\\Runtime\\MassGameplay\\Source\\MassSpawner\\MassSpawner.Build.cs",
+      "header_roots": [
+        "${UE_ENGINE_ROOT}\\Plugins\\Runtime\\MassGameplay\\Source\\MassSpawner\\Public"
+      ],
+      "estimated_header_count": 14,
+      "estimated_total_loc": 1811,
+      "in_use_by_plugin": [
+        "MassEntityHandler.cpp"
+      ],
+      "alt_candidates": []
+    },
+    {
+      "module_name": "StateTreeModule",
+      "module_type": "Plugin",
+      "module_build_cs_path": "${UE_ENGINE_ROOT}\\Plugins\\Runtime\\StateTree\\Source\\StateTreeModule\\StateTreeModule.Build.cs",
+      "header_roots": [
+        "${UE_ENGINE_ROOT}\\Plugins\\Runtime\\StateTree\\Source\\StateTreeModule\\Public"
+      ],
+      "estimated_header_count": 57,
+      "estimated_total_loc": 14027,
+      "in_use_by_plugin": [
+        "MassEntityHandler.cpp",
+        "StateTreeHandler.cpp"
+      ],
+      "alt_candidates": []
+    },
+    {
+      "module_name": "StateTreeEditorModule",
+      "module_type": "Plugin",
+      "module_build_cs_path": "${UE_ENGINE_ROOT}\\Plugins\\Runtime\\StateTree\\Source\\StateTreeEditorModule\\StateTreeEditorModule.Build.cs",
+      "header_roots": [
+        "${UE_ENGINE_ROOT}\\Plugins\\Runtime\\StateTree\\Source\\StateTreeEditorModule\\Public"
+      ],
+      "estimated_header_count": 23,
+      "estimated_total_loc": 2998,
+      "in_use_by_plugin": [
+        "StateTreeHandler.cpp"
+      ],
+      "alt_candidates": []
+    },
+    {
+      "module_name": "SmartObjectsModule",
+      "module_type": "Plugin",
+      "module_build_cs_path": "${UE_ENGINE_ROOT}\\Plugins\\Runtime\\SmartObjects\\Source\\SmartObjectsModule\\SmartObjectsModule.Build.cs",
+      "header_roots": [
+        "${UE_ENGINE_ROOT}\\Plugins\\Runtime\\SmartObjects\\Source\\SmartObjectsModule\\Public"
+      ],
+      "estimated_header_count": 37,
+      "estimated_total_loc": 6798,
+      "in_use_by_plugin": [
+        "SmartObjectHandler.cpp"
+      ],
+      "alt_candidates": []
+    },
+    {
+      "module_name": "Water",
+      "module_type": "Plugin",
+      "module_build_cs_path": "${UE_ENGINE_ROOT}\\Plugins\\Experimental\\Water\\Source\\Runtime\\Water.Build.cs",
+      "header_roots": [
+        "${UE_ENGINE_ROOT}\\Plugins\\Experimental\\Water\\Source\\Runtime\\Public"
+      ],
+      "estimated_header_count": 54,
+      "estimated_total_loc": 7089,
+      "in_use_by_plugin": [
+        "WaterHandler.cpp"
+      ],
+      "alt_candidates": []
+    },
+    {
+      "module_name": "MediaAssets",
+      "module_type": "Runtime",
+      "module_build_cs_path": "${UE_ENGINE_ROOT}\\Source\\Runtime\\MediaAssets\\MediaAssets.Build.cs",
+      "header_roots": [
+        "${UE_ENGINE_ROOT}\\Source\\Runtime\\MediaAssets\\Public"
+      ],
+      "estimated_header_count": 17,
+      "estimated_total_loc": 3576,
+      "in_use_by_plugin": [
+        "MediaHandler.cpp"
+      ],
+      "alt_candidates": []
+    },
+    {
+      "module_name": "TargetPlatform",
+      "module_type": "Developer",
+      "module_build_cs_path": "${UE_ENGINE_ROOT}\\Source\\Developer\\TargetPlatform\\TargetPlatform.Build.cs",
+      "header_roots": [
+        "${UE_ENGINE_ROOT}\\Source\\Developer\\TargetPlatform\\Public"
+      ],
+      "estimated_header_count": 21,
+      "estimated_total_loc": 4429,
+      "in_use_by_plugin": [
+        "PackagingHandler.cpp"
+      ],
+      "alt_candidates": []
+    },
+    {
+      "module_name": "ImageCore",
+      "module_type": "Runtime",
+      "module_build_cs_path": "${UE_ENGINE_ROOT}\\Source\\Runtime\\ImageCore\\ImageCore.Build.cs",
+      "header_roots": [
+        "${UE_ENGINE_ROOT}\\Source\\Runtime\\ImageCore\\Public"
+      ],
+      "estimated_header_count": 6,
+      "estimated_total_loc": 1884,
+      "in_use_by_plugin": [],
+      "alt_candidates": []
+    },
+    {
+      "module_name": "ImageWrapper",
+      "module_type": "Runtime",
+      "module_build_cs_path": "${UE_ENGINE_ROOT}\\Source\\Runtime\\ImageWrapper\\ImageWrapper.Build.cs",
+      "header_roots": [
+        "${UE_ENGINE_ROOT}\\Source\\Runtime\\ImageWrapper\\Public"
+      ],
+      "estimated_header_count": 7,
+      "estimated_total_loc": 959,
+      "in_use_by_plugin": [
+        "LandscapeHandler.cpp"
+      ],
+      "alt_candidates": []
+    },
+    {
+      "module_name": "WorldPartitionEditor",
+      "module_type": "Editor",
+      "module_build_cs_path": "${UE_ENGINE_ROOT}\\Source\\Editor\\WorldPartitionEditor\\WorldPartitionEditor.Build.cs",
+      "header_roots": [
+        "${UE_ENGINE_ROOT}\\Source\\Editor\\WorldPartitionEditor\\Public"
+      ],
+      "estimated_header_count": 26,
+      "estimated_total_loc": 1689,
+      "in_use_by_plugin": [],
+      "alt_candidates": []
+    },
+    {
+      "module_name": "DataLayerEditor",
+      "module_type": "Editor",
+      "module_build_cs_path": "${UE_ENGINE_ROOT}\\Source\\Editor\\DataLayerEditor\\DataLayerEditor.Build.cs",
+      "header_roots": [
+        "${UE_ENGINE_ROOT}\\Source\\Editor\\DataLayerEditor\\Public"
+      ],
+      "estimated_header_count": 8,
+      "estimated_total_loc": 1121,
+      "in_use_by_plugin": [
+        "WorldPartitionHandler.cpp"
+      ],
+      "alt_candidates": []
+    },
+    {
+      "module_name": "RHI",
+      "module_type": "Runtime",
+      "module_build_cs_path": "${UE_ENGINE_ROOT}\\Source\\Runtime\\RHI\\RHI.Build.cs",
+      "header_roots": [
+        "${UE_ENGINE_ROOT}\\Source\\Runtime\\RHI\\Public",
+        "${UE_ENGINE_ROOT}\\Source\\Runtime\\RHI\\Internal"
+      ],
+      "estimated_header_count": 56,
+      "estimated_total_loc": 34966,
+      "in_use_by_plugin": [],
+      "alt_candidates": []
+    },
+    {
+      "module_name": "RenderCore",
+      "module_type": "Runtime",
+      "module_build_cs_path": "${UE_ENGINE_ROOT}\\Source\\Runtime\\RenderCore\\RenderCore.Build.cs",
+      "header_roots": [
+        "${UE_ENGINE_ROOT}\\Source\\Runtime\\RenderCore\\Public",
+        "${UE_ENGINE_ROOT}\\Source\\Runtime\\RenderCore\\Internal"
+      ],
+      "estimated_header_count": 103,
+      "estimated_total_loc": 36647,
+      "in_use_by_plugin": [],
+      "alt_candidates": []
+    }
+  ]
+}

@@ -1,0 +1,6 @@
+# Built artifacts - regenerable from source
+.vectors/
+ue_kg/
+stack/.venv/
+stack/__pycache__/
+*.pyc

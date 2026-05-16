@@ -1,0 +1,289 @@
+recipe_schema_version: 1.0
+id: "build_gas_ability_with_cooldown_and_tags"
+title: "Build a GAS ability with cooldown, cost, and tags"
+goal: "Construct a complete UGameplayAbility - blueprint asset, ability tags, cooldown GE, cost GE - and grant it on a target ASC."
+description: |
+  Authors a production-shaped Gameplay Ability end-to-end. Creates the ability
+  blueprint, sets activation-owned / cancel-with / block-with tag containers,
+  authors a cooldown gameplay effect (Duration policy) and a cost gameplay
+  effect (Instant policy with an attribute modifier), wires the cooldown and
+  cost references into the ability, configures a target AbilitySystemComponent,
+  and grants the ability. Use this recipe when you need a fully wired ability
+  in one shot. For ability variations on an existing master ability, use a
+  duplicate-and-tweak flow instead. For attribute-set scaffolding, use a
+  separate `gas/create_attribute_set` recipe before running this one.
+
+domain_scope: [gas, gameplay_tag, blueprint, asset]
+tested_on_ue: ["5.7"]
+tested_on_plugin: ["0.2.6"]
+
+preconditions:
+  - "All gameplay tags referenced in $ability_tags exist in config (or are added via gameplay_tag/add_tag_to_config first)."
+  - "$cost_attribute_path resolves to a registered UAttributeSet attribute (e.g. /Game/GAS/AS_Player.Mana)."
+  - "$target_asc_actor_label resolves to an actor in the level that owns a UAbilitySystemComponent."
+  - "$target_ability_path package folder exists or can be created by the asset domain."
+
+inputs:
+  - name: "target_ability_path"
+    type: "asset_path"
+    required: true
+    description: "Package path for the new GameplayAbility blueprint asset."
+    example: "/Game/GAS/Abilities/GA_Fireball"
+  - name: "ability_class_name"
+    type: "string"
+    required: false
+    description: "Display name for the new ability class. Defaults to the asset stem."
+    example: "GA_Fireball"
+  - name: "activation_policy"
+    type: "string"
+    required: true
+    description: "instant | channeled | passive. Selects which variant fires."
+    example: "instant"
+  - name: "ability_tags"
+    type: "object"
+    required: true
+    description: |
+      Tag containers for the ability. Shape:
+      { activation_owned: [tags], cancel_with: [tags], block_with: [tags],
+        activation_required: [tags], activation_blocked: [tags] }.
+    example:
+      activation_owned: ["Ability.Offensive.Fire", "Ability.Cooldown.Fireball"]
+      cancel_with: ["State.Stunned", "State.Silenced"]
+      block_with: ["Ability.Cooldown.Fireball"]
+      activation_required: []
+      activation_blocked: ["State.Silenced"]
+  - name: "cooldown_seconds"
+    type: "float"
+    required: true
+    description: "Cooldown duration in seconds. Drives the cooldown GE."
+    example: 8.0
+  - name: "cooldown_ge_path"
+    type: "asset_path"
+    required: true
+    description: "Package path for the generated cooldown gameplay effect."
+    example: "/Game/GAS/Effects/GE_Cooldown_Fireball"
+  - name: "cost_attribute_path"
+    type: "string"
+    required: true
+    description: "Attribute reference (AttributeSet.AttributeName) the cost GE will modify."
+    example: "AS_Player.Mana"
+  - name: "cost_amount"
+    type: "float"
+    required: true
+    description: "Magnitude removed from $cost_attribute_path on activation. Recipe applies as -abs(cost_amount)."
+    example: 35.0
+  - name: "cost_ge_path"
+    type: "asset_path"
+    required: true
+    description: "Package path for the generated cost gameplay effect."
+    example: "/Game/GAS/Effects/GE_Cost_Fireball_Mana"
+  - name: "target_asc_actor_label"
+    type: "string"
+    required: true
+    description: "Actor label whose ASC will be configured + granted the ability."
+    example: "BP_PlayerCharacter_C_0"
+
+outputs:
+  - name: "created_ability_path"
+    type: "asset_path"
+    description: "Final compiled ability blueprint path."
+  - name: "cooldown_effect_path"
+    type: "asset_path"
+    description: "Compiled cooldown GE asset path."
+  - name: "cost_effect_path"
+    type: "asset_path"
+    description: "Compiled cost GE asset path."
+  - name: "granted_on_actor"
+    type: "string"
+    description: "Actor label whose ASC received the granted ability."
+
+action_dependencies:
+  - gameplay_tag/add_tag_to_config
+  - gas/create_gameplay_ability
+  - gas/set_ability_tags
+  - gas/create_gameplay_effect
+  - gas/add_ge_modifier
+  - gas/set_ge_duration
+  - gas/add_ability_cost
+  - gas/set_ability_cooldown
+  - gas/configure_asc
+  - gas/add_ability_to_asc
+  - gas/add_granted_ability
+  - blueprint/compile_blueprint
+
+steps:
+  - id: ensure_ability_owned_tags
+    # Idempotent registration: adds any tag missing from the config INI.
+    # Engine action skips entries that already exist.
+    action: "gameplay_tag/add_tag_to_config"
+    inputs:
+      tags: "$ability_tags.activation_owned"
+    on_error: "continue"
+
+  - id: ensure_ability_cancel_tags
+    action: "gameplay_tag/add_tag_to_config"
+    inputs:
+      tags: "$ability_tags.cancel_with"
+    on_error: "continue"
+
+  - id: ensure_ability_block_tags
+    action: "gameplay_tag/add_tag_to_config"
+    inputs:
+      tags: "$ability_tags.block_with"
+    on_error: "continue"
+
+  - id: create_ability_blueprint
+    action: "gas/create_gameplay_ability"
+    inputs:
+      asset_path: "$target_ability_path"
+      class_name: "$ability_class_name"
+      instancing_policy: |
+        switch($activation_policy):
+          case 'passive':    return 'NonInstanced'
+          case 'channeled':  return 'InstancedPerActor'
+          default:           return 'InstancedPerExecution'
+      net_execution_policy: "LocalPredicted"
+    captures: "ability_asset"
+    on_error: "abort"
+
+  - id: assign_ability_tag_containers
+    action: "gas/set_ability_tags"
+    inputs:
+      ability_path: "$ability_asset.path"
+      activation_owned: "$ability_tags.activation_owned"
+      cancel_with: "$ability_tags.cancel_with"
+      block_with: "$ability_tags.block_with"
+      activation_required: "$ability_tags.activation_required"
+      activation_blocked: "$ability_tags.activation_blocked"
+    on_error: "abort"
+
+  - id: create_cooldown_effect
+    action: "gas/create_gameplay_effect"
+    inputs:
+      asset_path: "$cooldown_ge_path"
+      duration_policy: "HasDuration"
+      replication_mode: "Full"
+    captures: "cooldown_ge"
+    on_error: "abort"
+
+  - id: set_cooldown_duration
+    action: "gas/set_ge_duration"
+    inputs:
+      effect_path: "$cooldown_ge.path"
+      duration_seconds: "$cooldown_seconds"
+    on_error: "abort"
+
+  - id: tag_cooldown_effect
+    # The cooldown GE must grant the ability's cooldown tag while active so
+    # `block_with` matching prevents re-activation.
+    action: "gas/set_ge_tags"
+    inputs:
+      effect_path: "$cooldown_ge.path"
+      granted_tags: "$ability_tags.block_with"
+    on_error: "abort"
+
+  - id: bind_cooldown_to_ability
+    action: "gas/set_ability_cooldown"
+    inputs:
+      ability_path: "$ability_asset.path"
+      cooldown_effect_path: "$cooldown_ge.path"
+    on_error: "abort"
+
+  - id: create_cost_effect
+    action: "gas/create_gameplay_effect"
+    inputs:
+      asset_path: "$cost_ge_path"
+      duration_policy: "Instant"
+      replication_mode: "Full"
+    captures: "cost_ge"
+    on_error: "abort"
+
+  - id: add_cost_modifier
+    action: "gas/add_ge_modifier"
+    inputs:
+      effect_path: "$cost_ge.path"
+      attribute: "$cost_attribute_path"
+      operation: "Add"
+      # Cost subtracts; runtime negates abs($cost_amount) before dispatch.
+      magnitude: "-1 * abs($cost_amount)"
+      magnitude_calculation: "ScalableFloat"
+    on_error: "abort"
+
+  - id: bind_cost_to_ability
+    action: "gas/add_ability_cost"
+    inputs:
+      ability_path: "$ability_asset.path"
+      cost_effect_path: "$cost_ge.path"
+    on_error: "abort"
+
+  - id: compile_ability_bp
+    action: "blueprint/compile_blueprint"
+    inputs:
+      asset_path: "$ability_asset.path"
+    on_error: "abort"
+
+  - id: configure_target_asc
+    action: "gas/configure_asc"
+    inputs:
+      actor_label: "$target_asc_actor_label"
+      replication_mode: "Mixed"
+      auto_register_default_attribute_sets: true
+    captures: "asc_info"
+    on_error: "abort"
+
+  - id: grant_ability_on_asc
+    action: "gas/add_ability_to_asc"
+    inputs:
+      actor_label: "$target_asc_actor_label"
+      ability_path: "$ability_asset.path"
+      level: 1
+      input_id: -1
+    captures: "granted_handle"
+    on_error: "abort"
+
+decision_points:
+  - at: create_ability_blueprint
+    condition: "$activation_policy == 'passive'"
+    if_true:
+      behavior: "Skip cost binding (passives don't pay activation cost) and apply cooldown only at first auto-activation."
+      goto: bind_cooldown_to_ability
+    if_false:
+      behavior: "Standard active ability: bind both cooldown and cost."
+
+failure_modes:
+  - trigger: "ASC not present on $target_asc_actor_label"
+    symptom: "configure_asc returns 4002 'no UAbilitySystemComponent on actor'."
+    fix: "Add the component first via actor/add_component_to_blueprint or use a character class that already includes one. Re-run from configure_target_asc."
+  - trigger: "Tag container set but ability not granted"
+    symptom: "Ability appears in /Game but never activates; no entry in active abilities list."
+    fix: "Confirm grant_ability_on_asc completed with a valid handle. If $input_id is -1 the ability needs explicit Try-Activate-Ability-By-Class calls (no input binding)."
+  - trigger: "Cooldown effect missing duration policy"
+    symptom: "Ability fires repeatedly with no gating; block_with tag never present on owner."
+    fix: "Set $duration_policy = HasDuration on the cooldown GE and rerun set_cooldown_duration. Instant duration will not block re-activation."
+  - trigger: "Cost magnitude positive instead of negative"
+    symptom: "Casting the ability adds resource instead of subtracting."
+    fix: "Recipe negates abs($cost_amount) before dispatch. If you bypass the recipe, manually pass a negative magnitude to add_ge_modifier."
+  - trigger: "Activation tag missing from config"
+    symptom: "set_ability_tags rejects with 'unknown tag' for any container entry."
+    fix: "Run gameplay_tag/add_tag_to_config first (recipe does this automatically). Restart editor or run gameplay_tag/validate_tags if cached state is stale."
+
+variants:
+  - name: "instant_ability"
+    differs_by: "$activation_policy == 'instant'. InstancedPerExecution. Standard fire-and-forget abilities (Fireball, Smite)."
+  - name: "channeled_ability"
+    differs_by: "$activation_policy == 'channeled'. InstancedPerActor. Cooldown applied on channel end rather than channel start; recipe binds cooldown via post-activation effect instead of cost block."
+  - name: "passive_aura"
+    differs_by: "$activation_policy == 'passive'. NonInstanced. Cost binding skipped; cooldown serves as periodic re-trigger interval rather than activation gate."
+
+notes: |
+  All actions referenced exist in _inventory.json under domains gas, gameplay_tag,
+  blueprint, asset (plugin 0.2.6). The cooldown-effect granted-tag pattern uses
+  gas/set_ge_tags rather than a dedicated cooldown_tag input on
+  gas/set_ability_cooldown - the engine's UGameplayAbility::CommitAbilityCooldown
+  already calls ApplyGameplayEffectToTarget with the cooldown GE, which grants
+  the GE's `granted_tags` for the duration. The block_with tag on the ability
+  must be the same tag the cooldown GE grants.
+  The instancing_policy switch chooses sensible defaults; for a one-off override
+  pass an explicit string and the runtime forwards it to gas/create_gameplay_ability.
+  No pending_plugin_support flags - every step in this recipe runs end-to-end on
+  plugin 0.2.6 without workaround.
