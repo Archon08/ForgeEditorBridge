@@ -104,6 +104,8 @@ For BLOCKED steps, dispatch a `python_agent` snippet that drives the equivalent 
 
 ## Optional Cognitive Stack
 
+![Forge semantic search tier](Docs/assets/forge-semantic-search-tier.png)
+
 The cognitive stack is for discovery and maintenance. It is not a runtime dependency.
 
 Shipped:
@@ -141,8 +143,6 @@ cd Docs\stack
 > **Rebuilding indexes inside a clone leaks absolute paths.** The graph index (`Docs/_bridge_index.json`), the vector store (`Docs/.vectors/`), and the UE KG (`Docs/ue_kg/<version>/`) all record per-file absolute paths for the machine that built them. If you regenerate any tier from your local clone, **do not re-commit the rebuilt files**. The shipped versions already cover the plugin's own surface; rebuild only when you are extending or testing locally. The UE KG manifest (`Docs/stack/ue_kg_manifest.json`) ships path-templatized using `${UE_ENGINE_ROOT}`; the engine root is resolved from the `UE_ENGINE_ROOT` environment variable at load time, with a Windows default fallback.
 
 ## Semantic Search (Optional Tier 3)
-
-![Forge semantic search tier](Docs/assets/forge-semantic-search-tier.png)
 
 The shipped stack lets an LLM operator look things up **by name** (handler dispatch, action inventory, recipe id). The optional vector tier adds **lookup by meaning** - useful when the operator phrases a task by intent rather than by API name.
 
