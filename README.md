@@ -6,7 +6,7 @@
 ![Plugin Type](https://img.shields.io/badge/plugin-editor--only-blue)
 ![Bridge](https://img.shields.io/badge/bridge-localhost%20HTTP-green)
 ![Stack](https://img.shields.io/badge/cognitive%20stack-optional-purple)
-![License](https://img.shields.io/badge/license-source--available-lightgrey)
+![License](https://img.shields.io/badge/license-Apache--2.0-blue)
 
 ForgeEditorBridge is an editor-only Unreal Engine plugin that gives local AI tools a structured way to inspect and operate the Unreal Editor over HTTP. It exposes editor actions through domain handlers, writes context captures to disk, and ships with an optional documentation stack so humans and LLMs can quickly discover what the bridge can do.
 
@@ -358,6 +358,8 @@ Common error codes:
 
 ## License
 
-See `LICENSE`.
+ForgeEditorBridge is licensed under the [Apache License 2.0](LICENSE). You may use, modify, and redistribute it under those terms, including in commercial and proprietary projects, subject to the license's attribution and patent-grant requirements.
 
-The current license is proprietary/source-available by default. Replace it intentionally before publishing if this project should be released under an open-source license.
+The Apache-2.0 grant applies to the released versions as published. Archon08, as the copyright holder, reserves the right to release future versions under different terms. Inbound contributions are accepted under the terms described in `CONTRIBUTING.md`.
+
+Unreal Engine, Epic Games trademarks, and third-party dependencies remain subject to their own licenses; this license does not grant rights to those.
