@@ -77,6 +77,38 @@ Then inspect schemas:
 
 If no domain is supplied to `system.describe`, the bridge returns schemas for all domains that provide them.
 
+Useful system actions to run first in a live editor session:
+
+```json
+{ "domain": "system", "action": "ping", "params": {} }
+```
+
+```json
+{ "domain": "system", "action": "health_check", "params": {} }
+```
+
+```json
+{ "domain": "system", "action": "capabilities", "params": {} }
+```
+
+```json
+{ "domain": "system", "action": "describe", "params": { "domain": "blueprint" } }
+```
+
+System action reference:
+
+| Action | Purpose |
+|---|---|
+| `ping` | Verify the server is alive |
+| `capabilities` | List registered domains and actions |
+| `describe` | Return action schemas |
+| `describe_all` | Return all available schemas |
+| `health_check` | Check server, output directory, captures, and runtime state |
+| `get_editor_state` | Read level, PIE (Play In Editor), selection, dirty package state |
+| `export_all_captures` | Write context captures to disk |
+| `save_all` | Save dirty maps and assets |
+| `undo` / `redo` | Use editor transaction history |
+
 ## Send Commands
 
 Every command has:
@@ -233,4 +265,4 @@ Some packages failed to save:
 - Run `system.undo` after a transactional edit.
 - Run `system.export_all_captures`.
 - Verify `Docs/_bridge_map.md` matches the current handler set.
-- Confirm `VersionName` in `.uplugin` matches `Docs/_inventory.json`, `Docs/_bridge_index.json`, capture JSON outputs, and startup logs (see README "Version Bump Checklist").
+- Confirm `VersionName` in `.uplugin` matches `Docs/_inventory.json`, `Docs/_bridge_index.json`, capture JSON outputs, and startup logs (see `Docs/MAINTAINERS.md` for the full version-bump checklist).

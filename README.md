@@ -58,75 +58,9 @@ ForgeEditorBridge/
 
 If you want to install without touching a compiler, you can fork this repo, run the compile once on your machine, and commit the `Binaries/` folder to a private fork. But for normal use, plan on installing Visual Studio with the **Game development with C++** workload before the first editor launch.
 
-## Quick Start
+## Get Started
 
-1. Copy the folder that contains `ForgeEditorBridge.uplugin` (this repo's root) into your Unreal project, renaming it to `ForgeEditorBridge` if it isn't already:
-
-```text
-<YourProject>/Plugins/ForgeEditorBridge/
-  ForgeEditorBridge.uplugin
-  Source/
-  Docs/
-```
-
-2. Open the project in Unreal Editor.
-
-3. Enable **Forge Editor Bridge** in the Plugins panel.
-
-4. Restart the editor.
-
-5. Check settings:
-
-```text
-Project Settings > Plugins > Forge Editor Bridge
-```
-
-Defaults:
-
-- Port: `8765`
-- Context directory: `Forge/ue-context`
-- Auto-start: enabled
-
-6. Start the editor and read:
-
-```text
-{ProjectDir}/Forge/ue-context/bridge-status.json
-```
-
-That file contains the live port, auth token, start time, and available domains.
-
-## First Call
-
-PowerShell example (run this from your Unreal project root - the directory that holds the `.uproject` file):
-
-```powershell
-$status = Get-Content "$PWD\Forge\ue-context\bridge-status.json" | ConvertFrom-Json
-$headers = @{ "X-Bridge-Token" = $status.auth_token }
-$body = @{
-  domain = "system"
-  action = "ping"
-  params = @{}
-} | ConvertTo-Json
-
-Invoke-RestMethod `
-  -Method Post `
-  -Uri "http://127.0.0.1:$($status.port)/command" `
-  -Headers $headers `
-  -ContentType "application/json" `
-  -Body $body
-```
-
-Expected result:
-
-```json
-{
-  "ok": true,
-  "message": "pong",
-  "domain": "system",
-  "action": "ping",
-  "error_code": 0
-}
-```
+Install steps, default settings, verification, and a copy-pasteable first-call example are in [`Docs/OPERATING_GUIDE.md`](Docs/OPERATING_GUIDE.md). LLM-driven workflows are covered in [`Docs/LLM_OPERATOR_GUIDE.md`](Docs/LLM_OPERATOR_GUIDE.md).
 
 ## HTTP Contract
 
@@ -161,40 +95,6 @@ Batch shape:
   { "domain": "system", "action": "health_check", "params": {} }
 ]
 ```
-
-## Start Here As A User
-
-Run these first in a live editor session:
-
-```json
-{ "domain": "system", "action": "ping", "params": {} }
-```
-
-```json
-{ "domain": "system", "action": "health_check", "params": {} }
-```
-
-```json
-{ "domain": "system", "action": "capabilities", "params": {} }
-```
-
-```json
-{ "domain": "system", "action": "describe", "params": { "domain": "blueprint" } }
-```
-
-Useful system actions:
-
-| Action | Purpose |
-|---|---|
-| `ping` | Verify the server is alive |
-| `capabilities` | List registered domains and actions |
-| `describe` | Return action schemas |
-| `describe_all` | Return all available schemas |
-| `health_check` | Check server, output directory, captures, and runtime state |
-| `get_editor_state` | Read level, PIE (Play In Editor), selection, dirty package state |
-| `export_all_captures` | Write context captures to disk |
-| `save_all` | Save dirty maps and assets |
-| `undo` / `redo` | Use editor transaction history |
 
 ## Recipes: Chained Workflows
 
