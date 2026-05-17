@@ -62,40 +62,6 @@ If you want to install without touching a compiler, you can fork this repo, run 
 
 Install steps, default settings, verification, and a copy-pasteable first-call example are in [`Docs/OPERATING_GUIDE.md`](Docs/OPERATING_GUIDE.md). LLM-driven workflows are covered in [`Docs/LLM_OPERATOR_GUIDE.md`](Docs/LLM_OPERATOR_GUIDE.md).
 
-## HTTP Contract
-
-The bridge exposes two endpoints:
-
-| Endpoint | Body | Use |
-|---|---|---|
-| `POST /command` | one command object | Single action |
-| `POST /batch` | JSON array of command objects | Grouped operations |
-
-Every request must:
-
-- originate from localhost
-- include `X-Bridge-Token`
-- send JSON
-
-Command shape:
-
-```json
-{
-  "domain": "system",
-  "action": "capabilities",
-  "params": {}
-}
-```
-
-Batch shape:
-
-```json
-[
-  { "domain": "system", "action": "get_editor_state", "params": {} },
-  { "domain": "system", "action": "health_check", "params": {} }
-]
-```
-
 ## Recipes: Chained Workflows
 
 A recipe is a YAML playbook under `Docs/recipes/` that turns a compound editor task - the kind that would otherwise take five-to-twenty `POST /command` calls in a specific order - into a single curated sequence. Each step names a canonical `domain/action` plus its inputs and the captured outputs that feed the next step. **The plugin itself does not parse recipes**; an LLM operator (or any scripted runner) reads the YAML, dispatches each step against `/command` or `/batch`, and threads captured values forward. Every step is a real plugin call - nothing is invented prose.
@@ -138,6 +104,8 @@ For BLOCKED steps, dispatch a `python_agent` snippet that drives the equivalent 
 
 ## Optional Cognitive Stack
 
+![Forge semantic search tier](Docs/assets/forge-semantic-search-tier.png)
+
 The cognitive stack is for discovery and maintenance. It is not a runtime dependency.
 
 Shipped:
@@ -175,8 +143,6 @@ cd Docs\stack
 > **Rebuilding indexes inside a clone leaks absolute paths.** The graph index (`Docs/_bridge_index.json`), the vector store (`Docs/.vectors/`), and the UE KG (`Docs/ue_kg/<version>/`) all record per-file absolute paths for the machine that built them. If you regenerate any tier from your local clone, **do not re-commit the rebuilt files**. The shipped versions already cover the plugin's own surface; rebuild only when you are extending or testing locally. The UE KG manifest (`Docs/stack/ue_kg_manifest.json`) ships path-templatized using `${UE_ENGINE_ROOT}`; the engine root is resolved from the `UE_ENGINE_ROOT` environment variable at load time, with a Windows default fallback.
 
 ## Semantic Search (Optional Tier 3)
-
-![Forge semantic search tier](Docs/assets/forge-semantic-search-tier.png)
 
 The shipped stack lets an LLM operator look things up **by name** (handler dispatch, action inventory, recipe id). The optional vector tier adds **lookup by meaning** - useful when the operator phrases a task by intent rather than by API name.
 
