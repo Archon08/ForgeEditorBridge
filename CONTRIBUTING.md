@@ -38,6 +38,12 @@ Public-facing behavior should be documented in:
 - `Docs/LLM_OPERATOR_GUIDE.md` for LLM operation.
 - `Docs/_bridge_map.md` and `Docs/_inventory.json` for domain/action discovery.
 
+## Contribution License
+
+ForgeEditorBridge is published under the Apache License 2.0 (see `LICENSE`). By submitting a contribution (pull request, patch, or any other change) to this repository, you represent that you have the right to license the contribution and you grant Archon08 a perpetual, worldwide, non-exclusive, royalty-free, irrevocable license to use, reproduce, modify, distribute, sublicense, and relicense your contribution as part of this project, under the Apache License 2.0 **and under any other license terms that Archon08 may choose for future versions of the project**, including proprietary terms. You retain copyright in your contribution; this is a license grant, not an assignment.
+
+If you cannot agree to these terms, please do not submit contributions.
+
 ## Verification
 
 Before proposing a release change:

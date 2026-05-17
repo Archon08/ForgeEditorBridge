@@ -6,19 +6,13 @@
 ![Plugin Type](https://img.shields.io/badge/plugin-editor--only-blue)
 ![Bridge](https://img.shields.io/badge/bridge-localhost%20HTTP-green)
 ![Stack](https://img.shields.io/badge/cognitive%20stack-optional-purple)
-![License](https://img.shields.io/badge/license-source--available-lightgrey)
-
-![Forge Editor Bridge banner](Docs/assets/forge-editor-bridge-banner.png)
+![License](https://img.shields.io/badge/license-Apache--2.0-blue)
 
 ForgeEditorBridge is an editor-only Unreal Engine plugin that gives local AI tools a structured way to inspect and operate the Unreal Editor over HTTP. It exposes editor actions through domain handlers, writes context captures to disk, and ships with an optional documentation stack so humans and LLMs can quickly discover what the bridge can do.
 
 The important bit: **you do not need to build graph data, vector indexes, or a UE knowledge graph to use the plugin.** Install the plugin, start Unreal Editor, read the session token, and call the localhost bridge.
 
-## Visual Tour
-
-| Local editor bridge | Optional semantic search |
-|---|---|
-| ![Forge Editor Bridge card](Docs/assets/forge-editor-bridge-card.png) | ![Forge semantic search tier](Docs/assets/forge-semantic-search-tier.png) |
+![Forge Editor Bridge banner](Docs/assets/forge-editor-bridge-banner.png)
 
 ## Highlights
 
@@ -29,6 +23,8 @@ The important bit: **you do not need to build graph data, vector indexes, or a U
 - Read-side context captures for project state, assets, Blueprints, materials, input, networking, packaging, and other editor surfaces.
 - Safety-oriented defaults: localhost-only access, per-session token, quarantine intercept for destructive action names, and editor transaction support.
 - Optional LLM/human cognitive stack with maps, recipes, graph lookup, vector search, and UE API indexing.
+
+![Forge Editor Bridge card](Docs/assets/forge-editor-bridge-card.png)
 
 ## Repository Layout
 
@@ -62,75 +58,9 @@ ForgeEditorBridge/
 
 If you want to install without touching a compiler, you can fork this repo, run the compile once on your machine, and commit the `Binaries/` folder to a private fork. But for normal use, plan on installing Visual Studio with the **Game development with C++** workload before the first editor launch.
 
-## Quick Start
+## Get Started
 
-1. Copy the folder that contains `ForgeEditorBridge.uplugin` (this repo's root) into your Unreal project, renaming it to `ForgeEditorBridge` if it isn't already:
-
-```text
-<YourProject>/Plugins/ForgeEditorBridge/
-  ForgeEditorBridge.uplugin
-  Source/
-  Docs/
-```
-
-2. Open the project in Unreal Editor.
-
-3. Enable **Forge Editor Bridge** in the Plugins panel.
-
-4. Restart the editor.
-
-5. Check settings:
-
-```text
-Project Settings > Plugins > Forge Editor Bridge
-```
-
-Defaults:
-
-- Port: `8765`
-- Context directory: `Forge/ue-context`
-- Auto-start: enabled
-
-6. Start the editor and read:
-
-```text
-{ProjectDir}/Forge/ue-context/bridge-status.json
-```
-
-That file contains the live port, auth token, start time, and available domains.
-
-## First Call
-
-PowerShell example (run this from your Unreal project root - the directory that holds the `.uproject` file):
-
-```powershell
-$status = Get-Content "$PWD\Forge\ue-context\bridge-status.json" | ConvertFrom-Json
-$headers = @{ "X-Bridge-Token" = $status.auth_token }
-$body = @{
-  domain = "system"
-  action = "ping"
-  params = @{}
-} | ConvertTo-Json
-
-Invoke-RestMethod `
-  -Method Post `
-  -Uri "http://127.0.0.1:$($status.port)/command" `
-  -Headers $headers `
-  -ContentType "application/json" `
-  -Body $body
-```
-
-Expected result:
-
-```json
-{
-  "ok": true,
-  "message": "pong",
-  "domain": "system",
-  "action": "ping",
-  "error_code": 0
-}
-```
+Install steps, default settings, verification, and a copy-pasteable first-call example are in [`Docs/OPERATING_GUIDE.md`](Docs/OPERATING_GUIDE.md). LLM-driven workflows are covered in [`Docs/LLM_OPERATOR_GUIDE.md`](Docs/LLM_OPERATOR_GUIDE.md).
 
 ## HTTP Contract
 
@@ -165,60 +95,6 @@ Batch shape:
   { "domain": "system", "action": "health_check", "params": {} }
 ]
 ```
-
-## Start Here As A User
-
-Run these first in a live editor session:
-
-```json
-{ "domain": "system", "action": "ping", "params": {} }
-```
-
-```json
-{ "domain": "system", "action": "health_check", "params": {} }
-```
-
-```json
-{ "domain": "system", "action": "capabilities", "params": {} }
-```
-
-```json
-{ "domain": "system", "action": "describe", "params": { "domain": "blueprint" } }
-```
-
-Useful system actions:
-
-| Action | Purpose |
-|---|---|
-| `ping` | Verify the server is alive |
-| `capabilities` | List registered domains and actions |
-| `describe` | Return action schemas |
-| `describe_all` | Return all available schemas |
-| `health_check` | Check server, output directory, captures, and runtime state |
-| `get_editor_state` | Read level, PIE (Play In Editor), selection, dirty package state |
-| `export_all_captures` | Write context captures to disk |
-| `save_all` | Save dirty maps and assets |
-| `undo` / `redo` | Use editor transaction history |
-
-## Start Here As An LLM
-
-Read:
-
-1. `Docs/LLM_OPERATOR_GUIDE.md`
-2. `Docs/_bridge_map.md`
-3. `Docs/_inventory.json` only when action-level detail is needed
-4. the relevant `Docs/recipes/*.yml` for compound tasks
-5. the relevant handler source only for exact parameter behavior
-
-Default operating loop:
-
-1. Call `system.ping`.
-2. Call `system.health_check`.
-3. Call `system.get_editor_state`.
-4. Choose a domain from `system.capabilities` or `Docs/_bridge_map.md`.
-5. Call `system.describe` before unfamiliar writes.
-6. Execute the smallest useful command or batch.
-7. Save only when asked or when the workflow requires persistence.
 
 ## Recipes: Chained Workflows
 
@@ -300,7 +176,7 @@ cd Docs\stack
 
 ## Semantic Search (Optional Tier 3)
 
-<!-- TODO: drop the diagram from the other AI here. e.g.: ![Semantic search flow](Docs/images/semantic-search.png) -->
+![Forge semantic search tier](Docs/assets/forge-semantic-search-tier.png)
 
 The shipped stack lets an LLM operator look things up **by name** (handler dispatch, action inventory, recipe id). The optional vector tier adds **lookup by meaning** - useful when the operator phrases a task by intent rather than by API name.
 
@@ -380,50 +256,10 @@ Common error codes:
 | `3004` | PIE (Play In Editor) required |
 | `5000` | Domain not registered |
 
-## Personalization: Action Aliases
-
-Every action entry in `Docs/_inventory.json` carries an `aliases` field (currently empty by default). This is the personalization hook for naming.
-
-If an LLM consumer keeps calling an action by a phrasing that does not match the canonical name - for example calling `actor/create` when the canonical name is `actor/spawn` - that is a signal an alias would help. You can list the alternate name in the inventory:
-
-```json
-{
-  "name": "spawn_actor",
-  "dispatch_line": 195,
-  "aliases": ["create_actor"]
-}
-```
-
-Today, aliases affect search and discovery only (`bridge-stack search` and the `_inventory.json` lookup an LLM consults). The HTTP dispatcher still routes by canonical name only - dispatcher-side alias acceptance is on the roadmap. Adding an alias today still pays off: future search hits on the alternate phrasing will surface the canonical name, so the LLM finds the right action on first try.
-
-If you are an LLM operator and the user corrects your action naming, ask the user whether to record the alias in `_inventory.json` for next time. See `Docs/LLM_OPERATOR_GUIDE.md` for the full flow.
-
-## Version Bump Checklist
-
-The canonical plugin version lives in `ForgeEditorBridge.uplugin` under `VersionName`. On a version bump, update every file that carries a version string so the plugin, runtime metadata, docs, and capture outputs stay aligned. Current canonical value: `0.2.6`.
-
-Files to update (in this order):
-
-1. `ForgeEditorBridge.uplugin` - `VersionName` field
-2. `Docs/_inventory.json` - `plugin_version` field
-3. `Docs/_bridge_index.json` - `plugin_version` field
-4. `Docs/_bridge_map.md` - YAML frontmatter `plugin_version`
-5. `Docs/_stack_status.md` - `## Plugin` section
-6. All 10 `Docs/recipes/*.yml` - `tested_on_plugin` field
-7. `Source/ForgeEditorBridge/Private/ForgeEditorBridge.cpp` - module startup log
-8. `Source/ForgeEditorBridge/Private/ForgeAISubsystem.cpp` - bridge-started log
-9. `Source/ForgeEditorBridge/Private/Server/BridgeHttpServer.cpp` - status JSON `version` field
-10. All 9 `Source/ForgeEditorBridge/Private/Capture/*.cpp` - `plugin_version` JSON output fields
-11. Handler header docblocks that carry inline `v<x.y.z> / UE 5.7` tags:
-    - `Source/ForgeEditorBridge/Public/Handlers/EQSHandler.h`
-    - `Source/ForgeEditorBridge/Public/Handlers/RenderingHandler.h`
-    - `Source/ForgeEditorBridge/Public/Handlers/StateTreeHandler.h`
-    - `Source/ForgeEditorBridge/Public/Handlers/StructHandler.h`
-
-After bumping, run `python Docs/stack/bridge-stack verify` to confirm the docs tier is consistent. A quick residue grep also catches stale strings: `Grep "<previous-version>" Source Docs` should return no hits.
-
 ## License
 
-See `LICENSE`.
+ForgeEditorBridge is licensed under the [Apache License 2.0](LICENSE). You may use, modify, and redistribute it under those terms, including in commercial and proprietary projects, subject to the license's attribution and patent-grant requirements.
 
-The current license is proprietary/source-available by default. Replace it intentionally before publishing if this project should be released under an open-source license.
+The Apache-2.0 grant applies to the released versions as published. Archon08, as the copyright holder, reserves the right to release future versions under different terms. Inbound contributions are accepted under the terms described in `CONTRIBUTING.md`.
+
+Unreal Engine, Epic Games trademarks, and third-party dependencies remain subject to their own licenses; this license does not grant rights to those.

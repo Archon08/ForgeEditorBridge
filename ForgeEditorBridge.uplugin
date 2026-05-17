@@ -5,7 +5,7 @@
 	"FriendlyName": "Forge Editor Bridge",
 	"Description": "Unified AI bridge for Unreal Editor. Provides HTTP command server (write) and context capture (read) for AI-driven editor automation.",
 	"Category": "Editor",
-	"CreatedBy": "",
+	"CreatedBy": "Archon08",
 	"CanContainContent": false,
 	"IsBetaVersion": false,
 	"IsExperimentalVersion": false,
@@ -119,4 +119,4 @@
 			"Enabled": true
 		}
 	]
-}
+}

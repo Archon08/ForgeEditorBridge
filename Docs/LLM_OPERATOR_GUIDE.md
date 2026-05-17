@@ -168,7 +168,7 @@ The recipe schema does not define a `verify:` field. Verification is your discip
 
 ### Aliases vs recipe step `action:` names
 
-Recipe `steps[].action` values must use canonical names (e.g. `actor/spawn_actor`, not `actor/create_actor`). The HTTP dispatcher routes by canonical name only - the `aliases` field in `_inventory.json` exists for search and operator-correction (see Personalization: Action Aliases in the README), not for dispatch. When you update an alias because the operator corrected your naming, do not also rewrite recipe step references; recipes remain canonical.
+Recipe `steps[].action` values must use canonical names (e.g. `actor/spawn_actor`, not `actor/create_actor`). The HTTP dispatcher routes by canonical name only - the `aliases` field in `_inventory.json` exists for search and operator-correction (see Action Naming And Aliases below), not for dispatch. When you update an alias because the operator corrected your naming, do not also rewrite recipe step references; recipes remain canonical.
 
 ### Known Recipe Stubs (Niagara)
 
