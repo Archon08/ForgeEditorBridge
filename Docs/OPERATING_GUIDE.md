@@ -109,6 +109,21 @@ System action reference:
 | `save_all` | Save dirty maps and assets |
 | `undo` / `redo` | Use editor transaction history |
 
+## HTTP Contract
+
+The bridge exposes two endpoints:
+
+| Endpoint | Body | Use |
+|---|---|---|
+| `POST /command` | one command object | Single action |
+| `POST /batch` | JSON array of command objects | Grouped operations |
+
+Every request must:
+
+- originate from localhost
+- include `X-Bridge-Token`
+- send JSON
+
 ## Send Commands
 
 Every command has:
