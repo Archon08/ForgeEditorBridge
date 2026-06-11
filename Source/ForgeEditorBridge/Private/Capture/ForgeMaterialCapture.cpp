@@ -195,21 +195,23 @@ TSharedPtr<FJsonObject> UForgeMaterialCapture::ExportUMaterial(UMaterial* Mat)
     }
 
     // Usage flags — which mesh/particle/system types this material is flagged for
+    // UE 5.8: direct bUsedWith* member access is deprecated ("Always use the
+    // GetUsageByFlag() accessor.")
     TSharedRef<FJsonObject> UsageFlags = MakeShared<FJsonObject>();
-    UsageFlags->SetBoolField(TEXT("skeletal_mesh"),              !!Mat->bUsedWithSkeletalMesh);
-    UsageFlags->SetBoolField(TEXT("static_lighting"),            !!Mat->bUsedWithStaticLighting);
-    UsageFlags->SetBoolField(TEXT("morph_targets"),              !!Mat->bUsedWithMorphTargets);
-    UsageFlags->SetBoolField(TEXT("spline_meshes"),              !!Mat->bUsedWithSplineMeshes);
-    UsageFlags->SetBoolField(TEXT("instanced_static_meshes"),    !!Mat->bUsedWithInstancedStaticMeshes);
-    UsageFlags->SetBoolField(TEXT("geometry_collections"),       !!Mat->bUsedWithGeometryCollections);
-    UsageFlags->SetBoolField(TEXT("particle_sprites"),           !!Mat->bUsedWithParticleSprites);
-    UsageFlags->SetBoolField(TEXT("beam_trails"),                !!Mat->bUsedWithBeamTrails);
-    UsageFlags->SetBoolField(TEXT("mesh_particles"),             !!Mat->bUsedWithMeshParticles);
-    UsageFlags->SetBoolField(TEXT("niagara_sprites"),            !!Mat->bUsedWithNiagaraSprites);
-    UsageFlags->SetBoolField(TEXT("niagara_ribbons"),            !!Mat->bUsedWithNiagaraRibbons);
-    UsageFlags->SetBoolField(TEXT("niagara_mesh_particles"),     !!Mat->bUsedWithNiagaraMeshParticles);
-    UsageFlags->SetBoolField(TEXT("hair_strands"),               !!Mat->bUsedWithHairStrands);
-    UsageFlags->SetBoolField(TEXT("water"),                      !!Mat->bUsedWithWater);
+    UsageFlags->SetBoolField(TEXT("skeletal_mesh"),              Mat->GetUsageByFlag(MATUSAGE_SkeletalMesh));
+    UsageFlags->SetBoolField(TEXT("static_lighting"),            Mat->GetUsageByFlag(MATUSAGE_StaticLighting));
+    UsageFlags->SetBoolField(TEXT("morph_targets"),              Mat->GetUsageByFlag(MATUSAGE_MorphTargets));
+    UsageFlags->SetBoolField(TEXT("spline_meshes"),              Mat->GetUsageByFlag(MATUSAGE_SplineMesh));
+    UsageFlags->SetBoolField(TEXT("instanced_static_meshes"),    Mat->GetUsageByFlag(MATUSAGE_InstancedStaticMeshes));
+    UsageFlags->SetBoolField(TEXT("geometry_collections"),       Mat->GetUsageByFlag(MATUSAGE_GeometryCollections));
+    UsageFlags->SetBoolField(TEXT("particle_sprites"),           Mat->GetUsageByFlag(MATUSAGE_ParticleSprites));
+    UsageFlags->SetBoolField(TEXT("beam_trails"),                Mat->GetUsageByFlag(MATUSAGE_BeamTrails));
+    UsageFlags->SetBoolField(TEXT("mesh_particles"),             Mat->GetUsageByFlag(MATUSAGE_MeshParticles));
+    UsageFlags->SetBoolField(TEXT("niagara_sprites"),            Mat->GetUsageByFlag(MATUSAGE_NiagaraSprites));
+    UsageFlags->SetBoolField(TEXT("niagara_ribbons"),            Mat->GetUsageByFlag(MATUSAGE_NiagaraRibbons));
+    UsageFlags->SetBoolField(TEXT("niagara_mesh_particles"),     Mat->GetUsageByFlag(MATUSAGE_NiagaraMeshParticles));
+    UsageFlags->SetBoolField(TEXT("hair_strands"),               Mat->GetUsageByFlag(MATUSAGE_HairStrands));
+    UsageFlags->SetBoolField(TEXT("water"),                      Mat->GetUsageByFlag(MATUSAGE_Water));
     Props->SetObjectField(TEXT("usage_flags"), UsageFlags);
 
     Root->SetObjectField(TEXT("properties"), Props);
