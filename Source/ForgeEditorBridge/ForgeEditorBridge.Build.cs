@@ -57,7 +57,7 @@ public class ForgeEditorBridge : ModuleRules
 
 			// ---- Live Coding ----
 			"LiveCoding",
-			"HotReload",
+			// "HotReload" removed for UE 5.8 — legacy OnHotReload() fallback dropped (Live Coding is the trigger)
 
 			// ---- Message Log ----
 			"MessageLog",

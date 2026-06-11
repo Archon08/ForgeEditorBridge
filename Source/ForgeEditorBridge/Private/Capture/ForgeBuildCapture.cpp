@@ -8,7 +8,6 @@
 #include "Editor.h"                       // GEditor + FEditorDelegates (transitive)
 #include "Engine/Blueprint.h"             // UBlueprint, EBlueprintStatus
 
-#include "Misc/HotReloadInterface.h"      // IHotReloadInterface, OnHotReload()
 #include "ILiveCodingModule.h"            // ILiveCodingModule, ELiveCodingResult
 #include "Modules/ModuleManager.h"
 
@@ -181,16 +180,8 @@ void UForgeBuildCapture::Initialize(const FString& InOutputDir)
     LogInterceptor = MakeUnique<FForgeLogInterceptor>(OutputDir);
     LogInterceptor->StartCapturing();
 
-    // -- Hot Reload (legacy, fires on non-Live Coding hot reloads) --
-    // OnHotReload() is deprecated in UE5.7 but still functional; suppress until migrated
-    PRAGMA_DISABLE_DEPRECATION_WARNINGS
-    if (IHotReloadInterface* HotReload =
-            FModuleManager::GetModulePtr<IHotReloadInterface>("HotReload"))
-    {
-        HotReloadDelegateHandle = HotReload->OnHotReload().AddUObject(
-            this, &UForgeBuildCapture::OnHotReloadFinished);
-    }
-    PRAGMA_ENABLE_DEPRECATION_WARNINGS
+    // UE 5.8: legacy IHotReloadInterface::OnHotReload() fallback removed —
+    // Live Coding (below) is the compile-event source.
 
     // -- Live Coding (UE5 default compile system - primary trigger) --
     if (FModuleManager::Get().IsModuleLoaded(TEXT("LiveCoding")))
@@ -218,15 +209,6 @@ void UForgeBuildCapture::Deinitialize()
         LogInterceptor.Reset();
     }
 
-    PRAGMA_DISABLE_DEPRECATION_WARNINGS
-    if (IHotReloadInterface* HotReload =
-            FModuleManager::GetModulePtr<IHotReloadInterface>("HotReload"))
-    {
-        HotReload->OnHotReload().Remove(HotReloadDelegateHandle);
-    }
-    PRAGMA_ENABLE_DEPRECATION_WARNINGS
-    HotReloadDelegateHandle.Reset();
-
     if (FModuleManager::Get().IsModuleLoaded(TEXT("LiveCoding")))
     {
         ILiveCodingModule& LC =
@@ -240,24 +222,6 @@ void UForgeBuildCapture::Deinitialize()
         GEditor->OnBlueprintCompiled().Remove(BlueprintCompiledDelegateHandle);
     }
     BlueprintCompiledDelegateHandle.Reset();
-}
-
-void UForgeBuildCapture::OnHotReloadFinished(bool bWasTriggeredAutomatically)
-{
-    if (!LogInterceptor) return;
-
-    const bool bSuccess = (LogInterceptor->GetErrorCount() == 0);
-    LogInterceptor->FlushToDisk(TEXT("HotReload"));
-
-    TSharedPtr<FJsonObject> Root = MakeShared<FJsonObject>();
-    Root->SetStringField(TEXT("timestamp"), FForgeContextWriter::NowISO8601());
-    Root->SetStringField(TEXT("trigger"), TEXT("HotReload"));
-    Root->SetStringField(TEXT("result"), bSuccess ? TEXT("Success") : TEXT("Failed"));
-    Root->SetBoolField(TEXT("was_automatic"), bWasTriggeredAutomatically);
-
-    FForgeContextWriter::WriteJSON(OutputDir / TEXT("build"), TEXT("hot-reload.json"),
-                                    Root.ToSharedRef());
-    WriteIndexFile();
 }
 
 void UForgeBuildCapture::OnLiveCodingPatchComplete()

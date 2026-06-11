@@ -61,16 +61,12 @@ private:
     FString OutputDir;
     TUniquePtr<FForgeLogInterceptor> LogInterceptor;
 
-    // IHotReloadInterface::OnHotReload() - void(bool)
-    FDelegateHandle HotReloadDelegateHandle;
-
     // ILiveCodingModule::GetOnPatchCompleteDelegate() - void() - UE 5.7 verified name
     FDelegateHandle LiveCodingDelegateHandle;
 
     // GEditor->OnBlueprintCompiled() - void()
     FDelegateHandle BlueprintCompiledDelegateHandle;
 
-    void OnHotReloadFinished(bool bWasTriggeredAutomatically);
     void OnLiveCodingPatchComplete();   // void() - FOnPatchCompleteDelegate has no params
     void OnAnyBlueprintCompiled();
 
