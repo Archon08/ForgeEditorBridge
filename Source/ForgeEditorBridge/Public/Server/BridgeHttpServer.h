@@ -14,7 +14,11 @@ public:
 	FBridgeHttpServer(UForgeAISubsystem* InSubsystem);
 	~FBridgeHttpServer();
 
-	void Start(const FString& OutputDir, int32 Port = 8765);
+	/**
+	 * @param ConfiguredToken  If non-empty, used as the fixed auth token; otherwise a
+	 *                          random per-session GUID is generated.
+	 */
+	void Start(const FString& OutputDir, int32 Port = 8765, const FString& ConfiguredToken = FString());
 	void Stop();
 
 	const FString& GetAuthToken() const { return AuthToken; }

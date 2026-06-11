@@ -111,7 +111,16 @@ bool UForgeAnimationCapture::ExportAnimationData()
 		return false;
 	}
 
-	UWorld* World = GEditor->GetEditorWorldContext().World();
+	// GEditor->GetEditorWorldContext() calls check(0) when no editor context exists.
+	// Use safe GEngine world iteration instead (same fix as ForgeHeightmapCapture).
+	UWorld* World = nullptr;
+	if (GEngine)
+	{
+		for (const FWorldContext& Ctx : GEngine->GetWorldContexts())
+		{
+			if (Ctx.WorldType == EWorldType::Editor) { World = Ctx.World(); break; }
+		}
+	}
 	if (!World)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("ForgeAnimation: No editor world"));

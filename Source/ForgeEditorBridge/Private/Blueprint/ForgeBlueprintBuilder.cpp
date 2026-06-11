@@ -111,9 +111,12 @@ UWidgetBlueprint* UForgeBlueprintBuilder::CreateWidgetBlueprint(
     FString AssetName;
     FString PackageName = PackagePath;
     if (PackageName.EndsWith(TEXT("/"))) { PackageName = PackageName.LeftChop(1); }
-    int32 SlashIdx;
-    PackageName.FindLastChar(TEXT('/'), SlashIdx);
-    AssetName = PackageName.RightChop(SlashIdx + 1);
+    int32 SlashIdx = INDEX_NONE;
+    // When the path has no '/', the whole string is the asset name; an unchecked
+    // FindLastChar would leave SlashIdx uninitialized and corrupt RightChop.
+    AssetName = PackageName.FindLastChar(TEXT('/'), SlashIdx)
+        ? PackageName.RightChop(SlashIdx + 1)
+        : PackageName;
 
     UPackage* Package = GetOrCreatePackage(PackagePath);
     if (!Package)
@@ -409,9 +412,12 @@ UBlueprint* UForgeBlueprintBuilder::CreateActorBlueprint(const FString& PackageP
     FString AssetName;
     FString PackageName = PackagePath;
     if (PackageName.EndsWith(TEXT("/"))) { PackageName = PackageName.LeftChop(1); }
-    int32 SlashIdx;
-    PackageName.FindLastChar(TEXT('/'), SlashIdx);
-    AssetName = PackageName.RightChop(SlashIdx + 1);
+    int32 SlashIdx = INDEX_NONE;
+    // When the path has no '/', the whole string is the asset name; an unchecked
+    // FindLastChar would leave SlashIdx uninitialized and corrupt RightChop.
+    AssetName = PackageName.FindLastChar(TEXT('/'), SlashIdx)
+        ? PackageName.RightChop(SlashIdx + 1)
+        : PackageName;
 
     UPackage* Package = GetOrCreatePackage(PackagePath);
     if (!Package)

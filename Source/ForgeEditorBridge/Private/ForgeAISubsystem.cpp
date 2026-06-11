@@ -253,7 +253,7 @@ void UForgeAISubsystem::StartBridge()
 
 	// ---- Start HTTP server ----
 	const UForgeAISettings* Settings = GetDefault<UForgeAISettings>();
-	HttpServer->Start(OutputDirectory, Settings->HttpPort);
+	HttpServer->Start(OutputDirectory, Settings->HttpPort, Settings->AuthToken);
 
 	bServerRunning = true;
 	UE_LOG(LogTemp, Log, TEXT("ForgeEditorBridge: Bridge started on port %d (v0.2.6) — %d domains."),

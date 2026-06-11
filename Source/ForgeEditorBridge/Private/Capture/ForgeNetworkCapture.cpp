@@ -89,7 +89,16 @@ bool UForgeNetworkCapture::ExportNetworkAudit()
 		return false;
 	}
 
-	UWorld* EditorWorld = GEditor->GetEditorWorldContext().World();
+	// GEditor->GetEditorWorldContext() calls check(0) when no editor context exists.
+	// Use safe GEngine world iteration instead (same fix as ForgeHeightmapCapture).
+	UWorld* EditorWorld = nullptr;
+	if (GEngine)
+	{
+		for (const FWorldContext& Ctx : GEngine->GetWorldContexts())
+		{
+			if (Ctx.WorldType == EWorldType::Editor) { EditorWorld = Ctx.World(); break; }
+		}
+	}
 
 	TSharedRef<FJsonObject> Root = MakeShared<FJsonObject>();
 	Root->SetStringField(TEXT("generated"),  FForgeContextWriter::NowISO8601());

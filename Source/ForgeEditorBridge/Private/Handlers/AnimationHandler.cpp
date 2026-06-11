@@ -418,6 +418,7 @@ FBridgeResult UAnimationHandler::HandleCommand(const FString& Action, TSharedPtr
             for (const auto& V : *KeysPtr)
             {
                 auto KObj = V->AsObject();
+                if (!KObj.IsValid()) continue;
                 FFrameNumber Frame = (KObj->GetNumberField(TEXT("time")) * TickRes).RoundToFrame();
                 Channel.AddCubicKey(Frame, (float)KObj->GetNumberField(TEXT("value")));
                 UpdateRange(Frame);
@@ -438,7 +439,10 @@ FBridgeResult UAnimationHandler::HandleCommand(const FString& Action, TSharedPtr
             auto* ColorSec = Cast<UMovieSceneColorSection>(Sec);
             for (const auto& V : *KeysPtr)
             {
-                auto KObj = V->AsObject(); auto VObj = KObj->GetObjectField(TEXT("value"));
+                auto KObj = V->AsObject();
+                const TSharedPtr<FJsonObject>* VObjField = nullptr;
+                if (!KObj.IsValid() || !KObj->TryGetObjectField(TEXT("value"), VObjField) || !VObjField) continue;
+                const TSharedPtr<FJsonObject>& VObj = *VObjField;
                 FFrameNumber Frame = (KObj->GetNumberField(TEXT("time")) * TickRes).RoundToFrame();
                 ColorSec->GetRedChannel()  .AddLinearKey(Frame, (float)VObj->GetNumberField(TEXT("r")));
                 ColorSec->GetGreenChannel().AddLinearKey(Frame, (float)VObj->GetNumberField(TEXT("g")));
@@ -467,8 +471,10 @@ FBridgeResult UAnimationHandler::HandleCommand(const FString& Action, TSharedPtr
                 for (const auto& V : *KeysPtr)
                 {
                     auto KObj = V->AsObject();
+                    const TSharedPtr<FJsonObject>* VObjField = nullptr;
+                    if (!KObj.IsValid() || !KObj->TryGetObjectField(TEXT("value"), VObjField) || !VObjField) continue;
+                    const TSharedPtr<FJsonObject>& VObj = *VObjField;
                     FFrameNumber Frame = (KObj->GetNumberField(TEXT("time")) * TickRes).RoundToFrame();
-                    auto VObj = KObj->GetObjectField(TEXT("value"));
                     float AxisVal = (float)VObj->GetNumberField(*Axis.ToLower());
                     Channel.AddCubicKey(Frame, AxisVal);
                     UpdateRange(Frame);
