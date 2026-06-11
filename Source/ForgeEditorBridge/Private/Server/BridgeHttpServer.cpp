@@ -56,11 +56,15 @@ FBridgeHttpServer::~FBridgeHttpServer()
 	Stop();
 }
 
-void FBridgeHttpServer::Start(const FString& OutputDir, int32 Port)
+void FBridgeHttpServer::Start(const FString& OutputDir, int32 Port, const FString& ConfiguredToken)
 {
 	OutputDirectory = OutputDir;
 	ServerPort = Port;
-	AuthToken = FGuid::NewGuid().ToString(EGuidFormats::DigitsLower);
+	// Honor a fixed token from settings (UForgeAISettings::AuthToken); fall back to a
+	// random per-session GUID when left blank.
+	AuthToken = ConfiguredToken.IsEmpty()
+		? FGuid::NewGuid().ToString(EGuidFormats::DigitsLower)
+		: ConfiguredToken;
 
 	TSharedPtr<FJsonObject> Status = MakeShared<FJsonObject>();
 	Status->SetBoolField(TEXT("active"), true);
@@ -142,7 +146,13 @@ bool FBridgeHttpServer::HandleRequest(const FHttpServerRequest& Request, const F
 	{
 		FString Domain = JsonObject->GetStringField(TEXT("domain"));
 		FString Action = JsonObject->GetStringField(TEXT("action"));
-		TSharedPtr<FJsonObject> Params = JsonObject->GetObjectField(TEXT("params"));
+
+		// "params" is optional and may be missing or non-object. GetObjectField would
+		// return a null TSharedPtr that handlers dereference unchecked, so substitute an
+		// empty object — handlers report their own missing-field errors.
+		const TSharedPtr<FJsonObject>* ParamsField = nullptr;
+		TSharedPtr<FJsonObject> Params = (JsonObject->TryGetObjectField(TEXT("params"), ParamsField) && ParamsField)
+			? *ParamsField : MakeShared<FJsonObject>();
 
 		FBridgeResult Result = DispatchCommand(Domain, Action, Params);
 
@@ -223,7 +233,12 @@ TSharedPtr<FJsonObject> FBridgeHttpServer::ExecuteBatchCommands(const TArray<TSh
 		FString CmdDomain, CmdAction;
 		CmdObj->TryGetStringField(TEXT("domain"), CmdDomain);
 		CmdObj->TryGetStringField(TEXT("action"), CmdAction);
-		TSharedPtr<FJsonObject> CmdParams = CmdObj->GetObjectField(TEXT("params"));
+
+		// Optional "params": substitute an empty object when missing/non-object so
+		// handlers never dereference a null TSharedPtr (mirrors HandleRequest).
+		const TSharedPtr<FJsonObject>* CmdParamsField = nullptr;
+		TSharedPtr<FJsonObject> CmdParams = (CmdObj->TryGetObjectField(TEXT("params"), CmdParamsField) && CmdParamsField)
+			? *CmdParamsField : MakeShared<FJsonObject>();
 
 		FBridgeResult CmdResult = DispatchCommand(CmdDomain, CmdAction, CmdParams);
 		if (CmdResult.bSuccess) SuccessCount++;
