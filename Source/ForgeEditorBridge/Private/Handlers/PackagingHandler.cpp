@@ -439,6 +439,23 @@ FBridgeResult UPackagingHandler::Action_CookDLC(TSharedPtr<FJsonObject> Params)
 		return MakeError(TEXT("packaging"), TEXT("cook_dlc"), 1000, TEXT("'dlc_name' is required"));
 	Params->TryGetStringField(TEXT("platform"), Platform);
 
+	// These are interpolated into the RunUAT command line, which on Windows is a .bat
+	// dispatched through cmd.exe — so shell metacharacters and injected -flags must be
+	// rejected. DLC/plugin names and platform identifiers are plain alphanumerics.
+	auto IsSafeToken = [](const FString& S)
+	{
+		for (const TCHAR C : S)
+			if (!FChar::IsAlnum(C) && C != TEXT('_') && C != TEXT('-') && C != TEXT('+'))
+				return false;
+		return true;
+	};
+	if (!IsSafeToken(DLCName))
+		return MakeError(TEXT("packaging"), TEXT("cook_dlc"), 1001,
+			TEXT("'dlc_name' may only contain letters, digits, '_', '-', '+'"));
+	if (!IsSafeToken(Platform))
+		return MakeError(TEXT("packaging"), TEXT("cook_dlc"), 1002,
+			TEXT("'platform' may only contain letters, digits, '_', '-', '+'"));
+
 	const FString ProjectFile = FPaths::GetProjectFilePath();
 	const FString EngineRoot = FPaths::ConvertRelativePathToFull(FPaths::EngineDir());
 #if PLATFORM_WINDOWS

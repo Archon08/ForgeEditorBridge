@@ -86,7 +86,12 @@ FBridgeResult UTextureHandler::HandleCommand(const FString& Action, TSharedPtr<F
 		if (Imported.Num() == 0 || !Imported[0])
 			return MakeError(DOMAIN, Action, 3000, FString::Printf(TEXT("Failed to import: %s"), *SourceFile));
 
-		if (UTexture2D* Tex = Cast<UTexture2D>(Imported[0]))
+		UTexture2D* Tex = Cast<UTexture2D>(Imported[0]);
+		if (!Tex)
+			return MakeError(DOMAIN, Action, 3001, FString::Printf(
+				TEXT("Imported asset '%s' is not a UTexture2D (got %s) — sRGB/compression/LOD settings were not applied"),
+				*Imported[0]->GetPathName(), *Imported[0]->GetClass()->GetName()));
+
 		{
 			bool bSRGB = true;
 			Params->TryGetBoolField(TEXT("srgb"), bSRGB);

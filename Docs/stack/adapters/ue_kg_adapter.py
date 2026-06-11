@@ -1299,9 +1299,11 @@ class UEKGAdapter:
             return 0
         self._ensure_model()
         emb = self._open_embed()
+        # Keep the clear + repopulate in a single transaction: if encoding/insertion
+        # crashes partway, the DELETE rolls back and the previous embeddings survive
+        # instead of leaving ue_vec/ue_entities emptied or half-populated.
         emb.execute("DELETE FROM ue_vec")
         emb.execute("DELETE FROM ue_entities")
-        emb.commit()
         # Build embed-text for each class.
         texts: list[str] = []
         rows: list[tuple] = []
@@ -1343,8 +1345,8 @@ class UEKGAdapter:
                     (row[0], _floats_to_blob(vec)),
                 )
                 encoded += 1
-            emb.commit()
             if start % (batch * 20) == 0 and start > 0:
                 print(f"[ue_kg] embedded {start + len(chunk_texts)}/{n} classes", file=sys.stderr)
+        # Single commit makes the whole rebuild atomic (see DELETE comment above).
         emb.commit()
         return encoded
