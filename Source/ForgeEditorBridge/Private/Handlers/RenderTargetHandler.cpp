@@ -25,7 +25,7 @@ namespace
 
     UWorld* GetWorld_Editor()
     {
-        return GEditor ? GEditor->GetEditorWorldContext().World() : nullptr;
+        return UBridgeHandlerBase::GetSafeEditorWorld();
     }
 
     ETextureRenderTargetFormat ParseFormat(const FString& Name)

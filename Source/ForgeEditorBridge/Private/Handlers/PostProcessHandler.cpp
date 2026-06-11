@@ -112,7 +112,7 @@ FBridgeResult UPostProcessHandler::Action_CreatePPVolume(TSharedPtr<FJsonObject>
 	const FString Action = TEXT("create_pp_volume");
 
 #if WITH_EDITOR
-	UWorld* World = GEditor ? GEditor->GetEditorWorldContext().World() : nullptr;
+	UWorld* World = UBridgeHandlerBase::GetSafeEditorWorld();
 	if (!World)
 	{
 		return MakeError(DOMAIN, Action, 3000, TEXT("No editor world available"));
@@ -202,7 +202,7 @@ FBridgeResult UPostProcessHandler::Action_SetBloom(TSharedPtr<FJsonObject> Param
 	}
 
 #if WITH_EDITOR
-	UWorld* World = GEditor ? GEditor->GetEditorWorldContext().World() : nullptr;
+	UWorld* World = UBridgeHandlerBase::GetSafeEditorWorld();
 	if (!World)
 	{
 		return MakeError(DOMAIN, Action, 3000, TEXT("No editor world available"));
@@ -287,7 +287,7 @@ FBridgeResult UPostProcessHandler::Action_SetExposure(TSharedPtr<FJsonObject> Pa
 	}
 
 #if WITH_EDITOR
-	UWorld* World = GEditor ? GEditor->GetEditorWorldContext().World() : nullptr;
+	UWorld* World = UBridgeHandlerBase::GetSafeEditorWorld();
 	if (!World)
 	{
 		return MakeError(DOMAIN, Action, 3000, TEXT("No editor world available"));
@@ -373,7 +373,7 @@ FBridgeResult UPostProcessHandler::Action_SetColorGrading(TSharedPtr<FJsonObject
 	}
 
 #if WITH_EDITOR
-	UWorld* World = GEditor ? GEditor->GetEditorWorldContext().World() : nullptr;
+	UWorld* World = UBridgeHandlerBase::GetSafeEditorWorld();
 	if (!World)
 	{
 		return MakeError(DOMAIN, Action, 3000, TEXT("No editor world available"));
@@ -488,7 +488,7 @@ FBridgeResult UPostProcessHandler::Action_SetAmbientOcclusion(TSharedPtr<FJsonOb
 	}
 
 #if WITH_EDITOR
-	UWorld* World = GEditor ? GEditor->GetEditorWorldContext().World() : nullptr;
+	UWorld* World = UBridgeHandlerBase::GetSafeEditorWorld();
 	if (!World)
 	{
 		return MakeError(DOMAIN, Action, 3000, TEXT("No editor world available"));
@@ -644,7 +644,7 @@ FBridgeResult UPostProcessHandler::Action_SetPPProperty(TSharedPtr<FJsonObject> 
 	if (!Params->TryGetNumberField(TEXT("value"), Value))
 		return MakeError(DOMAIN, TEXT("set_pp_property"), 1000, TEXT("'value' (number) is required"));
 
-	APostProcessVolume* PP = FindPP(GEditor ? GEditor->GetEditorWorldContext().World() : nullptr, Label);
+	APostProcessVolume* PP = FindPP(UBridgeHandlerBase::GetSafeEditorWorld(), Label);
 	if (!PP) return MakeError(DOMAIN, TEXT("set_pp_property"), 2000, TEXT("PostProcessVolume not found"));
 	if (!SetPPFloat(PP, PropName, (float)Value))
 		return MakeError(DOMAIN, TEXT("set_pp_property"), 2001,
@@ -664,7 +664,7 @@ FBridgeResult UPostProcessHandler::Action_SetMotionBlur(TSharedPtr<FJsonObject> 
 	Params->TryGetNumberField(TEXT("amount"), Amount);
 	Params->TryGetNumberField(TEXT("max"), Max);
 	Params->TryGetNumberField(TEXT("target_fps"), TargetFPS);
-	APostProcessVolume* PP = FindPP(GEditor ? GEditor->GetEditorWorldContext().World() : nullptr, Label);
+	APostProcessVolume* PP = FindPP(UBridgeHandlerBase::GetSafeEditorWorld(), Label);
 	if (!PP) return MakeError(DOMAIN, TEXT("set_motion_blur"), 2000, TEXT("PP not found"));
 	SetPPFloat(PP, TEXT("MotionBlurAmount"), (float)Amount);
 	SetPPFloat(PP, TEXT("MotionBlurMax"), (float)Max);
@@ -683,7 +683,7 @@ FBridgeResult UPostProcessHandler::Action_SetChromaticAberration(TSharedPtr<FJso
 		return MakeError(DOMAIN, TEXT("set_chromatic_aberration"), 1000, TEXT("'actor_label' is required"));
 	Params->TryGetNumberField(TEXT("intensity"), Intensity);
 	Params->TryGetNumberField(TEXT("start_offset"), StartOffset);
-	APostProcessVolume* PP = FindPP(GEditor ? GEditor->GetEditorWorldContext().World() : nullptr, Label);
+	APostProcessVolume* PP = FindPP(UBridgeHandlerBase::GetSafeEditorWorld(), Label);
 	if (!PP) return MakeError(DOMAIN, TEXT("set_chromatic_aberration"), 2000, TEXT("PP not found"));
 	SetPPFloat(PP, TEXT("SceneFringeIntensity"), (float)Intensity);
 	SetPPFloat(PP, TEXT("ChromaticAberrationStartOffset"), (float)StartOffset);
@@ -700,7 +700,7 @@ FBridgeResult UPostProcessHandler::Action_SetVignette(TSharedPtr<FJsonObject> Pa
 	if (Label.IsEmpty())
 		return MakeError(DOMAIN, TEXT("set_vignette"), 1000, TEXT("'actor_label' is required"));
 	Params->TryGetNumberField(TEXT("intensity"), Intensity);
-	APostProcessVolume* PP = FindPP(GEditor ? GEditor->GetEditorWorldContext().World() : nullptr, Label);
+	APostProcessVolume* PP = FindPP(UBridgeHandlerBase::GetSafeEditorWorld(), Label);
 	if (!PP) return MakeError(DOMAIN, TEXT("set_vignette"), 2000, TEXT("PP not found"));
 	SetPPFloat(PP, TEXT("VignetteIntensity"), (float)Intensity);
 	return MakeSuccess(DOMAIN, TEXT("set_vignette"),
@@ -720,7 +720,7 @@ FBridgeResult UPostProcessHandler::Action_SetLumen(TSharedPtr<FJsonObject> Param
 	Params->TryGetNumberField(TEXT("final_gather_quality"), FinalGatherQuality);
 	Params->TryGetNumberField(TEXT("reflection_quality"), ReflectionQuality);
 	Params->TryGetNumberField(TEXT("max_trace_distance"), MaxTraceDistance);
-	APostProcessVolume* PP = FindPP(GEditor ? GEditor->GetEditorWorldContext().World() : nullptr, Label);
+	APostProcessVolume* PP = FindPP(UBridgeHandlerBase::GetSafeEditorWorld(), Label);
 	if (!PP) return MakeError(DOMAIN, TEXT("set_lumen"), 2000, TEXT("PP not found"));
 	SetPPFloat(PP, TEXT("LumenFinalGatherQuality"), (float)FinalGatherQuality);
 	SetPPFloat(PP, TEXT("LumenReflectionQuality"), (float)ReflectionQuality);

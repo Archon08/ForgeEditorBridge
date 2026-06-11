@@ -24,7 +24,7 @@ namespace
     void ExecuteConsoleCommand(const FString& Cmd)
     {
         if (Cmd.IsEmpty() || !GEngine) return;
-        if (UWorld* World = GEditor ? GEditor->GetEditorWorldContext().World() : GEngine->GetWorldContexts().Num() ? GEngine->GetWorldContexts()[0].World() : nullptr)
+        if (UWorld* World = GEditor ? UBridgeHandlerBase::GetSafeEditorWorld() : GEngine->GetWorldContexts().Num() ? GEngine->GetWorldContexts()[0].World() : nullptr)
         {
             GEngine->Exec(World, *Cmd);
         }

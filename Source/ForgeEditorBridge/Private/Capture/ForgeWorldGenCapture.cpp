@@ -165,7 +165,16 @@ bool UForgeWorldGenCapture::ExportWorldGenState()
         return false;
     }
 
-    UWorld* World = GEditor->GetEditorWorldContext().World();
+    // GetEditorWorldContext() check(0)-asserts when no editor context exists —
+    // use safe GEngine world iteration (same fix as ForgeHeightmapCapture).
+    UWorld* World = nullptr;
+    if (GEngine)
+    {
+        for (const FWorldContext& Ctx : GEngine->GetWorldContexts())
+        {
+            if (Ctx.WorldType == EWorldType::Editor) { World = Ctx.World(); break; }
+        }
+    }
     if (!World)
     {
         UE_LOG(LogTemp, Warning, TEXT("ForgeWorldGen: No editor world found"));

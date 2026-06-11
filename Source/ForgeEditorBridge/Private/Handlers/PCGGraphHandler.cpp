@@ -964,7 +964,7 @@ FBridgeResult UPCGGraphHandler::Action_SetSeed(TSharedPtr<FJsonObject> Params)
 	if (!Params->TryGetNumberField(TEXT("seed"), SeedNum))
 		return MakeError(PCG_DOMAIN, Action, 1000, TEXT("'seed' (integer) is required"));
 
-	UWorld* World = GEditor ? GEditor->GetEditorWorldContext().World() : nullptr;
+	UWorld* World = UBridgeHandlerBase::GetSafeEditorWorld();
 	if (!World)
 		return MakeError(PCG_DOMAIN, Action, 3000, TEXT("No editor world available"));
 
@@ -1019,7 +1019,7 @@ FBridgeResult UPCGGraphHandler::Action_Cleanup(TSharedPtr<FJsonObject> Params)
 	if (!Params->TryGetStringField(TEXT("actor_path"), ActorPath) || ActorPath.IsEmpty())
 		return MakeError(PCG_DOMAIN, Action, 1000, TEXT("'actor_path' is required"));
 
-	UWorld* World = GEditor ? GEditor->GetEditorWorldContext().World() : nullptr;
+	UWorld* World = UBridgeHandlerBase::GetSafeEditorWorld();
 	if (!World)
 		return MakeError(PCG_DOMAIN, Action, 3000, TEXT("No editor world available"));
 
@@ -1065,7 +1065,7 @@ FBridgeResult UPCGGraphHandler::Action_Regenerate(TSharedPtr<FJsonObject> Params
 	if (!Params->TryGetStringField(TEXT("actor_path"), ActorPath) || ActorPath.IsEmpty())
 		return MakeError(PCG_DOMAIN, Action, 1000, TEXT("'actor_path' is required"));
 
-	UWorld* World = GEditor ? GEditor->GetEditorWorldContext().World() : nullptr;
+	UWorld* World = UBridgeHandlerBase::GetSafeEditorWorld();
 	if (!World)
 		return MakeError(PCG_DOMAIN, Action, 3000, TEXT("No editor world available"));
 
@@ -1490,7 +1490,7 @@ FBridgeResult UPCGGraphHandler::Action_ExecuteLocal(TSharedPtr<FJsonObject> Para
 	FString ActorName;
 	Params->TryGetStringField(TEXT("actor_name"), ActorName);
 
-	UWorld* World = GEditor ? GEditor->GetEditorWorldContext().World() : nullptr;
+	UWorld* World = UBridgeHandlerBase::GetSafeEditorWorld();
 	if (!World)
 		return MakeError(PCG_DOMAIN, TEXT("execute_local"), 2001, TEXT("No editor world available"));
 

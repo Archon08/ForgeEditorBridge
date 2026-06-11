@@ -248,7 +248,7 @@ FBridgeResult UPIEHandler::Action_PilotActor(TSharedPtr<FJsonObject> Params)
             TEXT("'actor_label' or 'actor_path' is required"));
     }
 
-    UWorld* World = GEditor->GetEditorWorldContext().World();
+    UWorld* World = UBridgeHandlerBase::GetSafeEditorWorld();
     AActor* Target = FindActorByLabelOrPath(World, Selector);
     if (!Target)
     {

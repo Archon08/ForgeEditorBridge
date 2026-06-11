@@ -34,7 +34,7 @@ bool UPythonHandler::IsPythonPluginLoaded() const
 void UPythonHandler::ExecuteViaPy(const FString& Command)
 {
 #if WITH_EDITOR
-	UWorld* World = GEditor ? GEditor->GetEditorWorldContext().World() : nullptr;
+	UWorld* World = UBridgeHandlerBase::GetSafeEditorWorld();
 #else
 	UWorld* World = nullptr;
 #endif
@@ -76,7 +76,7 @@ FBridgeResult UPythonHandler::HandleCommand(const FString& Action, TSharedPtr<FJ
 
 		// py command with quoted path for file execution
 #if WITH_EDITOR
-		UWorld* World = GEditor ? GEditor->GetEditorWorldContext().World() : nullptr;
+		UWorld* World = UBridgeHandlerBase::GetSafeEditorWorld();
 #else
 		UWorld* World = nullptr;
 #endif

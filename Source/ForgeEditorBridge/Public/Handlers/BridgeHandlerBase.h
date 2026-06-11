@@ -70,4 +70,13 @@ protected:
 	 */
 	static class UWorld* GuardPIE(const FString& Domain, const FString& Action,
 		FBridgeResult& OutResult);
+
+public:
+	/**
+	 * Safe replacement for GEditor->GetEditorWorldContext().World(): that call
+	 * check(0)-asserts when no editor world context exists (early startup,
+	 * shutdown, commandlets). Iterates GEngine->GetWorldContexts() and returns
+	 * the editor world, or nullptr when none exists.
+	 */
+	static class UWorld* GetSafeEditorWorld();
 };

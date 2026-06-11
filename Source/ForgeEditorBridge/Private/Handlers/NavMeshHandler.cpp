@@ -77,7 +77,7 @@ FBridgeResult UNavMeshHandler::Action_SetAgentParams(TSharedPtr<FJsonObject> Par
 	Params->TryGetNumberField(TEXT("max_step_height"), MaxStepHeight);
 	Params->TryGetNumberField(TEXT("max_slope"),       MaxSlope);
 
-	UWorld* World = GEditor ? GEditor->GetEditorWorldContext().World() : nullptr;
+	UWorld* World = UBridgeHandlerBase::GetSafeEditorWorld();
 	if (!World)
 	{
 		Result.Message = TEXT("set_agent_params: no editor world available");
@@ -146,7 +146,7 @@ FBridgeResult UNavMeshHandler::Action_CreateNavVolume(TSharedPtr<FJsonObject> Pa
 	Params->TryGetNumberField(TEXT("extent_y"), ExtentY);
 	Params->TryGetNumberField(TEXT("extent_z"), ExtentZ);
 
-	UWorld* World = GEditor ? GEditor->GetEditorWorldContext().World() : nullptr;
+	UWorld* World = UBridgeHandlerBase::GetSafeEditorWorld();
 	if (!World)
 	{
 		Result.Message = TEXT("create_nav_volume: no editor world available");
@@ -212,7 +212,7 @@ FBridgeResult UNavMeshHandler::Action_RebuildNav(TSharedPtr<FJsonObject> Params)
 {
 	const FString Action = TEXT("rebuild_nav");
 
-	UWorld* World = GEditor ? GEditor->GetEditorWorldContext().World() : nullptr;
+	UWorld* World = UBridgeHandlerBase::GetSafeEditorWorld();
 	if (!World)
 		return MakeError(TEXT("navmesh"), Action, 2000, TEXT("rebuild_nav: no editor world available"));
 
@@ -275,7 +275,7 @@ FBridgeResult UNavMeshHandler::Action_QueryPath(TSharedPtr<FJsonObject> Params)
 	Params->TryGetNumberField(TEXT("agent_radius"), AgentRadius);
 
 	// PIE guard — NavMesh runtime state is unavailable in editor world.
-	UWorld* World = GEditor ? GEditor->GetEditorWorldContext().World() : nullptr;
+	UWorld* World = UBridgeHandlerBase::GetSafeEditorWorld();
 	if (!World || !World->IsPlayInEditor())
 		return MakeError(TEXT("navmesh"), Action, 3004,
 			TEXT("query_path requires PIE — NavMesh runtime state is unavailable in editor world."),
@@ -365,7 +365,7 @@ FBridgeResult UNavMeshHandler::Action_AddNavLink(TSharedPtr<FJsonObject> Params)
 {
 	const FString Action = TEXT("add_nav_link");
 
-	UWorld* World = GEditor ? GEditor->GetEditorWorldContext().World() : nullptr;
+	UWorld* World = UBridgeHandlerBase::GetSafeEditorWorld();
 	if (!World)
 		return MakeError(TEXT("navmesh"), Action, 2000, TEXT("No editor world available"));
 
@@ -463,7 +463,7 @@ FBridgeResult UNavMeshHandler::Action_SetJumpConfig(TSharedPtr<FJsonObject> Para
 {
 	const FString Action = TEXT("set_jump_config");
 
-	UWorld* World = GEditor ? GEditor->GetEditorWorldContext().World() : nullptr;
+	UWorld* World = UBridgeHandlerBase::GetSafeEditorWorld();
 	if (!World)
 		return MakeError(TEXT("navmesh"), Action, 2000, TEXT("No editor world available"));
 
@@ -565,7 +565,7 @@ FBridgeResult UNavMeshHandler::Action_GetReachableArea(TSharedPtr<FJsonObject> P
 	Params->TryGetNumberField(TEXT("agent_radius"), AgentRadius);
 
 	// PIE guard — NavMesh runtime queries are unsafe against the editor world.
-	UWorld* World = GEditor ? GEditor->GetEditorWorldContext().World() : nullptr;
+	UWorld* World = UBridgeHandlerBase::GetSafeEditorWorld();
 	if (!World || !World->IsPlayInEditor())
 		return MakeError(TEXT("navmesh"), Action, 3004,
 			TEXT("get_reachable_area requires PIE — NavMesh runtime state is unavailable in editor world."),

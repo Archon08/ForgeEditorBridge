@@ -19,7 +19,7 @@ namespace
     bool RunCmd(const FString& Cmd)
     {
         if (!GEngine) return false;
-        UWorld* W = GEditor ? GEditor->GetEditorWorldContext().World() : nullptr;
+        UWorld* W = UBridgeHandlerBase::GetSafeEditorWorld();
         return GEngine->Exec(W, *Cmd);
     }
 }

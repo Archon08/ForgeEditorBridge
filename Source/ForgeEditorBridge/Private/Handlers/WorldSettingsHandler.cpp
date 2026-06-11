@@ -21,7 +21,7 @@ static const FString DOMAIN = TEXT("world_settings");
 static AWorldSettings* GetWS()
 {
 #if WITH_EDITOR
-	UWorld* World = GEditor ? GEditor->GetEditorWorldContext().World() : nullptr;
+	UWorld* World = UBridgeHandlerBase::GetSafeEditorWorld();
 	return World ? World->GetWorldSettings() : nullptr;
 #else
 	return nullptr;

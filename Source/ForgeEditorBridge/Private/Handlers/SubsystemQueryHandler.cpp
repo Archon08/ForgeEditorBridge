@@ -57,7 +57,7 @@ FBridgeResult USubsystemQueryHandler::HandleCommand(const FString& Action, TShar
 			return MakeError(DOMAIN, Action, 3000, TEXT("GEditor is not available"), TEXT("Ensure the editor is running"));
 		}
 
-		UWorld* World = GEditor->GetEditorWorldContext().World();
+		UWorld* World = UBridgeHandlerBase::GetSafeEditorWorld();
 		if (!World)
 		{
 			return MakeError(DOMAIN, Action, 3000, TEXT("No editor world context available"), TEXT("Open a level in the editor"));

@@ -76,7 +76,7 @@ static UClass* ResolveClass(const FString& ClassName)
 static UWorld* GetEditorWorld()
 {
     if (!GEditor) return nullptr;
-    return GEditor->GetEditorWorldContext().World();
+    return UBridgeHandlerBase::GetSafeEditorWorld();
 }
 
 /** Serialize a single actor to a lightweight JSON object. */

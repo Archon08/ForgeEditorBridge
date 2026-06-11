@@ -85,7 +85,7 @@ FBridgeResult UCameraHandler::Action_CreateCineCam(TSharedPtr<FJsonObject> Param
 	const FString Action = TEXT("create_cinecam");
 
 #if WITH_EDITOR
-	UWorld* World = GEditor ? GEditor->GetEditorWorldContext().World() : nullptr;
+	UWorld* World = UBridgeHandlerBase::GetSafeEditorWorld();
 	if (!World)
 	{
 		return MakeError(DOMAIN, Action, 3000, TEXT("No editor world available"));
@@ -172,7 +172,7 @@ FBridgeResult UCameraHandler::Action_SetFilmback(TSharedPtr<FJsonObject> Params)
 	}
 
 #if WITH_EDITOR
-	UWorld* World = GEditor ? GEditor->GetEditorWorldContext().World() : nullptr;
+	UWorld* World = UBridgeHandlerBase::GetSafeEditorWorld();
 	if (!World)
 	{
 		return MakeError(DOMAIN, Action, 3000, TEXT("No editor world available"));
@@ -267,7 +267,7 @@ FBridgeResult UCameraHandler::Action_SetFocus(TSharedPtr<FJsonObject> Params)
 	}
 
 #if WITH_EDITOR
-	UWorld* World = GEditor ? GEditor->GetEditorWorldContext().World() : nullptr;
+	UWorld* World = UBridgeHandlerBase::GetSafeEditorWorld();
 	if (!World)
 	{
 		return MakeError(DOMAIN, Action, 3000, TEXT("No editor world available"));
@@ -359,7 +359,7 @@ FBridgeResult UCameraHandler::Action_SetLookAt(TSharedPtr<FJsonObject> Params)
 	(*TargetObj)->TryGetNumberField(TEXT("z"), TZ);
 
 #if WITH_EDITOR
-	UWorld* World = GEditor ? GEditor->GetEditorWorldContext().World() : nullptr;
+	UWorld* World = UBridgeHandlerBase::GetSafeEditorWorld();
 	if (!World)
 	{
 		return MakeError(DOMAIN, Action, 3000, TEXT("No editor world available"));
@@ -429,7 +429,7 @@ FBridgeResult UCameraHandler::Action_CreateCameraRig(TSharedPtr<FJsonObject> Par
 	(*LocationObj)->TryGetNumberField(TEXT("z"), Z);
 
 #if WITH_EDITOR
-	UWorld* World = GEditor ? GEditor->GetEditorWorldContext().World() : nullptr;
+	UWorld* World = UBridgeHandlerBase::GetSafeEditorWorld();
 	if (!World)
 	{
 		return MakeError(DOMAIN, Action, 3000, TEXT("No editor world available"));
@@ -562,7 +562,7 @@ FBridgeResult UCameraHandler::Action_GetCameraInfo(TSharedPtr<FJsonObject> Param
 		return MakeError(DOMAIN, Action, 1000, TEXT("'label' is required"));
 	}
 
-	UWorld* World = GEditor ? GEditor->GetEditorWorldContext().World() : nullptr;
+	UWorld* World = UBridgeHandlerBase::GetSafeEditorWorld();
 	if (!World)
 	{
 		return MakeError(DOMAIN, Action, 3000, TEXT("No editor world available"));
@@ -634,7 +634,7 @@ FBridgeResult UCameraHandler::Action_ListCameras(TSharedPtr<FJsonObject> Params)
 	const FString Action = TEXT("list_cameras");
 
 #if WITH_EDITOR
-	UWorld* World = GEditor ? GEditor->GetEditorWorldContext().World() : nullptr;
+	UWorld* World = UBridgeHandlerBase::GetSafeEditorWorld();
 	if (!World)
 	{
 		return MakeError(DOMAIN, Action, 3000, TEXT("No editor world available"));

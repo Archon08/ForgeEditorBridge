@@ -538,7 +538,7 @@ FBridgeResult FBridgeHttpServer::HandleSystemCommand(const FString& Action, TSha
 
 		if (GEditor)
 		{
-			UWorld* World = GEditor->GetEditorWorldContext().World();
+			UWorld* World = UBridgeHandlerBase::GetSafeEditorWorld();
 			Data->SetStringField(TEXT("current_level"), World ? World->GetPathName() : TEXT("none"));
 			Data->SetBoolField(TEXT("pie_running"), GEditor->IsPlayingSessionInEditor());
 			Data->SetNumberField(TEXT("selected_actors"), (double)GEditor->GetSelectedActorCount());

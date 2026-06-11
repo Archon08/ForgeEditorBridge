@@ -288,9 +288,15 @@ bool UForgeCollisionCapture::ExportCollisionProfiles()
 	int32 ScannedActors        = 0;
 	static constexpr int32 MaxActorScan = 1000;
 
-	if (GEditor)
+	if (GEditor && GEngine)
 	{
-		UWorld* World = GEditor->GetEditorWorldContext().World();
+		// GetEditorWorldContext() check(0)-asserts when no editor context exists —
+		// use safe GEngine world iteration (same fix as ForgeHeightmapCapture).
+		UWorld* World = nullptr;
+		for (const FWorldContext& Ctx : GEngine->GetWorldContexts())
+		{
+			if (Ctx.WorldType == EWorldType::Editor) { World = Ctx.World(); break; }
+		}
 		if (World)
 		{
 			for (TActorIterator<AActor> It(World); It && ScannedActors < MaxActorScan; ++It)

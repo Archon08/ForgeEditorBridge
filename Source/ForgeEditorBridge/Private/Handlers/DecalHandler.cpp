@@ -17,7 +17,7 @@ namespace
 {
     UWorld* GetEditorWorld()
     {
-        return GEditor ? GEditor->GetEditorWorldContext().World() : nullptr;
+        return UBridgeHandlerBase::GetSafeEditorWorld();
     }
 
     ADecalActor* FindDecalByLabel(UWorld* World, const FString& Label)

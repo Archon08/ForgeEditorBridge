@@ -45,7 +45,7 @@ AActor* UCollisionHandler::FindActorByLabel(UWorld* World, const FString& Label)
 static UWorld* GetEditorWorld()
 {
 #if WITH_EDITOR
-	return GEditor ? GEditor->GetEditorWorldContext().World() : nullptr;
+	return UBridgeHandlerBase::GetSafeEditorWorld();
 #else
 	return nullptr;
 #endif

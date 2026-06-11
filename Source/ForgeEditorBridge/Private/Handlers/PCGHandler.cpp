@@ -54,7 +54,7 @@ FBridgeResult UPCGHandler::ExecuteGraph(TSharedPtr<FJsonObject> Params)
 		return Result;
 	}
 
-	UWorld* World = GEditor->GetEditorWorldContext().World();
+	UWorld* World = UBridgeHandlerBase::GetSafeEditorWorld();
 	if (!World)
 	{
 		Result.Message = TEXT("No editor world available");
@@ -135,7 +135,7 @@ FBridgeResult UPCGHandler::SetPCGParameter(TSharedPtr<FJsonObject> Params)
 		return Result;
 	}
 
-	UWorld* World = GEditor->GetEditorWorldContext().World();
+	UWorld* World = UBridgeHandlerBase::GetSafeEditorWorld();
 	if (!World)
 	{
 		Result.Message = TEXT("No editor world available");

@@ -221,7 +221,7 @@ FBridgeResult ULandscapeHandler::Action_CreateLandscape(TSharedPtr<FJsonObject> 
 	}
 
 	// ---- Spawn landscape actor ----------------------------------------------
-	UWorld* World = GEditor ? GEditor->GetEditorWorldContext().World() : nullptr;
+	UWorld* World = UBridgeHandlerBase::GetSafeEditorWorld();
 	if (!World)
 		return MakeError(TEXT("landscape"), Action, 3000, TEXT("No editor world available"));
 
@@ -994,7 +994,7 @@ FBridgeResult ULandscapeHandler::Action_AddSpline(TSharedPtr<FJsonObject> Params
 
 ALandscape* ULandscapeHandler::FindLandscape(const FString& LandscapeName, FBridgeResult& Result)
 {
-	UWorld* World = GEditor ? GEditor->GetEditorWorldContext().World() : nullptr;
+	UWorld* World = UBridgeHandlerBase::GetSafeEditorWorld();
 	if (!World)
 	{
 		Result.Message = TEXT("FindLandscape: no editor world available");

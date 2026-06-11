@@ -73,7 +73,7 @@ FBridgeResult UConsoleHandler::Action_ExecuteCommand(TSharedPtr<FJsonObject> Par
 	UWorld* World = nullptr;
 	if (GEditor)
 	{
-		World = GEditor->GetEditorWorldContext().World();
+		World = UBridgeHandlerBase::GetSafeEditorWorld();
 	}
 	if (!World && GEngine)
 	{
@@ -271,7 +271,7 @@ FBridgeResult UConsoleHandler::Action_ExecuteCommandWithCapture(TSharedPtr<FJson
 	}
 
 	UWorld* World = nullptr;
-	if (GEditor) World = GEditor->GetEditorWorldContext().World();
+	if (GEditor) World = UBridgeHandlerBase::GetSafeEditorWorld();
 	if (!World && GEngine) World = GEngine->GetWorld();
 
 	if (!GEngine)

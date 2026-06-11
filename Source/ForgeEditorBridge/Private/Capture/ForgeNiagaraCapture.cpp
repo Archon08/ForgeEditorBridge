@@ -318,8 +318,11 @@ int32 UForgeNiagaraCapture::ExportAllNiagaraSystems()
 bool UForgeNiagaraCapture::CaptureNiagaraPoolState()
 {
     // Prefer the PIE world; fall back to the editor world for the manager lookup.
+    // (GetEditorWorldContext() check(0)-asserts when no editor context exists, so
+    // resolve the editor world from the same context iteration instead.)
     UWorld* World = nullptr;
-    if (GEditor)
+    UWorld* EditorWorld = nullptr;
+    if (GEditor && GEngine)
     {
         for (const FWorldContext& Ctx : GEngine->GetWorldContexts())
         {
@@ -328,10 +331,14 @@ bool UForgeNiagaraCapture::CaptureNiagaraPoolState()
                 World = Ctx.World();
                 break;
             }
+            if (Ctx.WorldType == EWorldType::Editor && !EditorWorld)
+            {
+                EditorWorld = Ctx.World();
+            }
         }
         if (!World)
         {
-            World = GEditor->GetEditorWorldContext().World();
+            World = EditorWorld;
         }
     }
 

@@ -187,7 +187,7 @@ FBridgeResult UTestingHandler::Action_CreateFunctionalTest(TSharedPtr<FJsonObjec
 		(*LocObj)->TryGetNumberField(TEXT("z"), Z);
 	}
 
-	UWorld* World = GEditor ? GEditor->GetEditorWorldContext().World() : nullptr;
+	UWorld* World = UBridgeHandlerBase::GetSafeEditorWorld();
 	if (!World)
 		return MakeError(DOMAIN, TEXT("create_functional_test"), 3000, TEXT("No editor world available"));
 
@@ -227,7 +227,7 @@ FBridgeResult UTestingHandler::Action_RunMapCheck(TSharedPtr<FJsonObject> Params
 	if (!GUnrealEd)
 		return MakeError(DOMAIN, TEXT("run_map_check"), 3000, TEXT("GUnrealEd not available"));
 
-	UWorld* World = GEditor ? GEditor->GetEditorWorldContext().World() : nullptr;
+	UWorld* World = UBridgeHandlerBase::GetSafeEditorWorld();
 	if (!World)
 		return MakeError(DOMAIN, TEXT("run_map_check"), 3000, TEXT("No editor world available"));
 

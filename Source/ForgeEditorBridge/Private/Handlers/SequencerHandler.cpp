@@ -496,7 +496,7 @@ FBridgeResult USequencerHandler::Action_AddCameraCut(TSharedPtr<FJsonObject> Par
 		return MakeError(SEQ_DOMAIN, Action, 2000, TEXT("LevelSequence has no MovieScene"));
 
 	// Find the camera actor in the world
-	UWorld* World = GEditor ? GEditor->GetEditorWorldContext().World() : nullptr;
+	UWorld* World = UBridgeHandlerBase::GetSafeEditorWorld();
 	if (!World)
 		return MakeError(SEQ_DOMAIN, Action, 3000, TEXT("No editor world available"));
 
@@ -571,7 +571,7 @@ FBridgeResult USequencerHandler::Action_AddPossessable(TSharedPtr<FJsonObject> P
 	if (!MovieScene)
 		return MakeError(SEQ_DOMAIN, Action, 2000, TEXT("LevelSequence has no MovieScene"));
 
-	UWorld* World = GEditor ? GEditor->GetEditorWorldContext().World() : nullptr;
+	UWorld* World = UBridgeHandlerBase::GetSafeEditorWorld();
 	if (!World)
 		return MakeError(SEQ_DOMAIN, Action, 3000, TEXT("No editor world available"));
 
@@ -1114,7 +1114,7 @@ FBridgeResult USequencerHandler::Action_AddActorTrack(TSharedPtr<FJsonObject> Pa
 
 #if WITH_EDITOR
 	// Find the actor in the editor world
-	UWorld* World = GEditor ? GEditor->GetEditorWorldContext().World() : nullptr;
+	UWorld* World = UBridgeHandlerBase::GetSafeEditorWorld();
 	AActor* FoundActor = nullptr;
 	if (World)
 	{

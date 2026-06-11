@@ -127,7 +127,16 @@ bool UForgeInputCapture::ExportInputAudit()
 		return false;
 	}
 
-	UWorld* EditorWorld = GEditor->GetEditorWorldContext().World();
+	// GetEditorWorldContext() check(0)-asserts when no editor context exists —
+	// use safe GEngine world iteration (same fix as ForgeHeightmapCapture).
+	UWorld* EditorWorld = nullptr;
+	if (GEngine)
+	{
+		for (const FWorldContext& Ctx : GEngine->GetWorldContexts())
+		{
+			if (Ctx.WorldType == EWorldType::Editor) { EditorWorld = Ctx.World(); break; }
+		}
+	}
 
 	TSharedRef<FJsonObject> Root = MakeShared<FJsonObject>();
 	Root->SetStringField(TEXT("generated"),  FForgeContextWriter::NowISO8601());

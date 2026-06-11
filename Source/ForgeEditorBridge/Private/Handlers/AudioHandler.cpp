@@ -223,7 +223,7 @@ FBridgeResult UAudioHandler::Action_AddMSNode(TSharedPtr<FJsonObject> Params)
 		*AssetPath, *NodeClass);
 
 	FString PyCmd = FString::Printf(TEXT("py %s"), *PyScript);
-	GEngine->Exec(GEditor ? GEditor->GetEditorWorldContext().World() : nullptr, *PyCmd);
+	GEngine->Exec(UBridgeHandlerBase::GetSafeEditorWorld(), *PyCmd);
 
 	Result.bSuccess = true;
 	Result.AffectedPath = AssetPath;
@@ -290,7 +290,7 @@ FBridgeResult UAudioHandler::Action_ConnectMS(TSharedPtr<FJsonObject> Params)
 		*AssetPath, *SrcNode, *SrcPin, *DstNode, *DstPin);
 
 	FString PyCmd = FString::Printf(TEXT("py %s"), *PyScript);
-	GEngine->Exec(GEditor ? GEditor->GetEditorWorldContext().World() : nullptr, *PyCmd);
+	GEngine->Exec(UBridgeHandlerBase::GetSafeEditorWorld(), *PyCmd);
 
 	Result.bSuccess = true;
 	Result.AffectedPath = AssetPath;
@@ -458,7 +458,7 @@ FBridgeResult UAudioHandler::Action_CreateSoundMix(TSharedPtr<FJsonObject> Param
 FBridgeResult UAudioHandler::Action_PlaceAudioVolume(TSharedPtr<FJsonObject> Params)
 {
 #if WITH_EDITOR
-	UWorld* World = GEditor ? GEditor->GetEditorWorldContext().World() : nullptr;
+	UWorld* World = UBridgeHandlerBase::GetSafeEditorWorld();
 	if (!World)
 		return MakeError(TEXT("audio"), TEXT("place_audio_volume"), 3000, TEXT("No editor world available"));
 
@@ -796,7 +796,7 @@ FBridgeResult UAudioHandler::Action_SetReverb(TSharedPtr<FJsonObject> Params)
 	}
 
 #if WITH_EDITOR
-	UWorld* World = GEditor ? GEditor->GetEditorWorldContext().World() : nullptr;
+	UWorld* World = UBridgeHandlerBase::GetSafeEditorWorld();
 	if (!World) return MakeError(TEXT("audio"), TEXT("set_reverb"), 3000, TEXT("No editor world"));
 
 	AAudioVolume* AudioVol = nullptr;
@@ -912,7 +912,7 @@ static void AudioExecPython(const FString& Script)
 	if (GEngine)
 	{
 		FString Cmd = FString::Printf(TEXT("py %s"), *Script);
-		GEngine->Exec(GEditor ? GEditor->GetEditorWorldContext().World() : nullptr, *Cmd);
+		GEngine->Exec(UBridgeHandlerBase::GetSafeEditorWorld(), *Cmd);
 	}
 #endif
 }

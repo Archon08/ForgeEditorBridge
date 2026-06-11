@@ -34,7 +34,7 @@ static const FString DOMAIN = TEXT("water");
 static UWorld* GetEditorWorld()
 {
 #if WITH_EDITOR
-	return GEditor ? GEditor->GetEditorWorldContext().World() : nullptr;
+	return UBridgeHandlerBase::GetSafeEditorWorld();
 #else
 	return nullptr;
 #endif

@@ -626,7 +626,7 @@ static void NiagaraExecPython(const FString& Script)
 	if (GEngine)
 	{
 		FString PyCmd = FString::Printf(TEXT("py %s"), *Script);
-		GEngine->Exec(GEditor ? GEditor->GetEditorWorldContext().World() : nullptr, *PyCmd);
+		GEngine->Exec(UBridgeHandlerBase::GetSafeEditorWorld(), *PyCmd);
 	}
 #endif
 }

@@ -1,6 +1,7 @@
 #include "Handlers/BridgeHandlerBase.h"
 #include "ScopedTransaction.h"
 #include "Editor.h"
+#include "Engine/Engine.h"          // GEngine, FWorldContext
 #include "Engine/World.h"
 #include "Engine/EngineTypes.h"
 
@@ -61,6 +62,17 @@ FBridgeResult UBridgeHandlerBase::MakeUnknownAction(const FString& Domain, const
 	return MakeError(Domain, Action, 1001,
 		FString::Printf(TEXT("Unknown %s action '%s'"), *Domain, *Action),
 		FString::Printf(TEXT("Valid: %s"), *ValidActionsCsv));
+}
+
+UWorld* UBridgeHandlerBase::GetSafeEditorWorld()
+{
+	if (!GEngine) return nullptr;
+	for (const FWorldContext& Ctx : GEngine->GetWorldContexts())
+	{
+		if (Ctx.WorldType == EWorldType::Editor)
+			return Ctx.World();
+	}
+	return nullptr;
 }
 
 UWorld* UBridgeHandlerBase::GuardPIE(const FString& Domain, const FString& Action,

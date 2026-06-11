@@ -486,7 +486,7 @@ FBridgeResult UPhysicsAssetHandler::Action_AutoGenerateBodies(TSharedPtr<FJsonOb
 		*AssetPath, *MeshPath);
 
 	FString PyCmd = FString::Printf(TEXT("py %s"), *PyScript);
-	GEngine->Exec(GEditor ? GEditor->GetEditorWorldContext().World() : nullptr, *PyCmd);
+	GEngine->Exec(UBridgeHandlerBase::GetSafeEditorWorld(), *PyCmd);
 
 	return MakeSuccess(TEXT("physics_asset"), TEXT("auto_generate_bodies"),
 		FString::Printf(TEXT("auto_generate_bodies dispatched: '%s' from mesh '%s' (min_bone_size=%.1f). "

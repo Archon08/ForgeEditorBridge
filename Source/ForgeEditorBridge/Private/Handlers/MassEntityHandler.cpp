@@ -42,7 +42,7 @@ static const FString DOMAIN = TEXT("mass_entity");
 static UWorld* GetEditorWorld()
 {
 #if WITH_EDITOR
-	return GEditor ? GEditor->GetEditorWorldContext().World() : nullptr;
+	return UBridgeHandlerBase::GetSafeEditorWorld();
 #else
 	return nullptr;
 #endif

@@ -68,7 +68,7 @@ FBridgeResult UFoliageHandler::Action_AddType(TSharedPtr<FJsonObject> Params)
 		return Result;
 	}
 
-	UWorld* World = GEditor ? GEditor->GetEditorWorldContext().World() : nullptr;
+	UWorld* World = UBridgeHandlerBase::GetSafeEditorWorld();
 	if (!World)
 	{
 		Result.Message = TEXT("add_type: no editor world available");
@@ -139,7 +139,7 @@ FBridgeResult UFoliageHandler::Action_PaintFoliage(TSharedPtr<FJsonObject> Param
 	Params->TryGetNumberField(TEXT("roll"),  Roll);
 	Params->TryGetNumberField(TEXT("scale"), Scale);
 
-	UWorld* World = GEditor ? GEditor->GetEditorWorldContext().World() : nullptr;
+	UWorld* World = UBridgeHandlerBase::GetSafeEditorWorld();
 	if (!World)
 	{
 		Result.Message = TEXT("paint_foliage: no editor world available");
@@ -219,7 +219,7 @@ FBridgeResult UFoliageHandler::Action_ClearType(TSharedPtr<FJsonObject> Params)
 		return Result;
 	}
 
-	UWorld* World = GEditor ? GEditor->GetEditorWorldContext().World() : nullptr;
+	UWorld* World = UBridgeHandlerBase::GetSafeEditorWorld();
 	if (!World)
 	{
 		Result.Message = TEXT("clear_type: no editor world available");
@@ -282,7 +282,7 @@ FBridgeResult UFoliageHandler::Action_ListTypes(TSharedPtr<FJsonObject> Params)
 {
 	FBridgeResult Result = CreateResult(TEXT("foliage"), TEXT("list_types"));
 
-	UWorld* World = GEditor ? GEditor->GetEditorWorldContext().World() : nullptr;
+	UWorld* World = UBridgeHandlerBase::GetSafeEditorWorld();
 	if (!World)
 	{
 		Result.Message = TEXT("list_types: no editor world available");
@@ -352,7 +352,7 @@ FBridgeResult UFoliageHandler::Action_GetInstanceCount(TSharedPtr<FJsonObject> P
 		return Result;
 	}
 
-	UWorld* World = GEditor ? GEditor->GetEditorWorldContext().World() : nullptr;
+	UWorld* World = UBridgeHandlerBase::GetSafeEditorWorld();
 	if (!World)
 	{
 		Result.Message = TEXT("get_instance_count: no editor world available");
@@ -410,7 +410,7 @@ FBridgeResult UFoliageHandler::Action_RemoveType(TSharedPtr<FJsonObject> Params)
 		return Result;
 	}
 
-	UWorld* World = GEditor ? GEditor->GetEditorWorldContext().World() : nullptr;
+	UWorld* World = UBridgeHandlerBase::GetSafeEditorWorld();
 	if (!World) { Result.Message = TEXT("No editor world"); Result.ErrorCode = 3000; return Result; }
 
 	UFoliageType* FoliageType = LoadObject<UFoliageType>(nullptr, *FoliageTypePath);

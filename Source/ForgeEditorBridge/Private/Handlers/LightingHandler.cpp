@@ -103,7 +103,7 @@ FBridgeResult ULightingHandler::Action_CreateLight(TSharedPtr<FJsonObject> Param
 	Params->TryGetNumberField(TEXT("roll"),       Roll);
 	Params->TryGetNumberField(TEXT("intensity"),  Intensity);
 
-	UWorld* World = GEditor ? GEditor->GetEditorWorldContext().World() : nullptr;
+	UWorld* World = UBridgeHandlerBase::GetSafeEditorWorld();
 	if (!World)
 	{
 		Result.Message = TEXT("create_light: no editor world available");
@@ -178,7 +178,7 @@ FBridgeResult ULightingHandler::Action_SetLightIntensity(TSharedPtr<FJsonObject>
 		return Result;
 	}
 
-	UWorld* World = GEditor ? GEditor->GetEditorWorldContext().World() : nullptr;
+	UWorld* World = UBridgeHandlerBase::GetSafeEditorWorld();
 	if (!World)
 	{
 		Result.Message = TEXT("set_light_intensity: no editor world available");
@@ -236,7 +236,7 @@ FBridgeResult ULightingHandler::Action_CreateCamera(TSharedPtr<FJsonObject> Para
 	Params->TryGetNumberField(TEXT("focal_length"), FocalLength);
 	Params->TryGetNumberField(TEXT("aperture"),     Aperture);
 
-	UWorld* World = GEditor ? GEditor->GetEditorWorldContext().World() : nullptr;
+	UWorld* World = UBridgeHandlerBase::GetSafeEditorWorld();
 	if (!World)
 	{
 		Result.Message = TEXT("create_camera: no editor world available");
@@ -324,7 +324,7 @@ FBridgeResult ULightingHandler::Action_SetLightColor(TSharedPtr<FJsonObject> Par
 	Params->TryGetBoolField(TEXT("srgb"), bSRGB);
 
 #if WITH_EDITOR
-	UWorld* World = GEditor ? GEditor->GetEditorWorldContext().World() : nullptr;
+	UWorld* World = UBridgeHandlerBase::GetSafeEditorWorld();
 	if (!World)
 	{
 		return MakeError(DOMAIN, Action, 3000, TEXT("No editor world available"));
@@ -381,7 +381,7 @@ FBridgeResult ULightingHandler::Action_SetLightAttenuation(TSharedPtr<FJsonObjec
 	}
 
 #if WITH_EDITOR
-	UWorld* World = GEditor ? GEditor->GetEditorWorldContext().World() : nullptr;
+	UWorld* World = UBridgeHandlerBase::GetSafeEditorWorld();
 	if (!World)
 	{
 		return MakeError(DOMAIN, Action, 3000, TEXT("No editor world available"));
@@ -430,7 +430,7 @@ FBridgeResult ULightingHandler::Action_CreateSkyLight(TSharedPtr<FJsonObject> Pa
 	const FString Action = TEXT("create_sky_light");
 
 #if WITH_EDITOR
-	UWorld* World = GEditor ? GEditor->GetEditorWorldContext().World() : nullptr;
+	UWorld* World = UBridgeHandlerBase::GetSafeEditorWorld();
 	if (!World)
 	{
 		return MakeError(DOMAIN, Action, 3000, TEXT("No editor world available"));
@@ -519,7 +519,7 @@ FBridgeResult ULightingHandler::Action_SetVolumetricFog(TSharedPtr<FJsonObject> 
 	}
 
 #if WITH_EDITOR
-	UWorld* World = GEditor ? GEditor->GetEditorWorldContext().World() : nullptr;
+	UWorld* World = UBridgeHandlerBase::GetSafeEditorWorld();
 	if (!World)
 	{
 		return MakeError(DOMAIN, Action, 3000, TEXT("No editor world available"));
@@ -595,7 +595,7 @@ FBridgeResult ULightingHandler::Action_BakeLighting(TSharedPtr<FJsonObject> Para
 		return MakeError(DOMAIN, Action, 3000, TEXT("GEditor not available"));
 	}
 
-	UWorld* World = GEditor->GetEditorWorldContext().World();
+	UWorld* World = UBridgeHandlerBase::GetSafeEditorWorld();
 	if (!World)
 	{
 		return MakeError(DOMAIN, Action, 3000, TEXT("No editor world available"));
@@ -753,7 +753,7 @@ FBridgeResult ULightingHandler::Action_DeleteLight(TSharedPtr<FJsonObject> Param
 		return MakeError(DOMAIN, Action, 1000, TEXT("'label' is required"));
 	}
 
-	UWorld* World = GEditor ? GEditor->GetEditorWorldContext().World() : nullptr;
+	UWorld* World = UBridgeHandlerBase::GetSafeEditorWorld();
 	if (!World)
 	{
 		return MakeError(DOMAIN, Action, 3000, TEXT("No editor world available"));
@@ -802,7 +802,7 @@ FBridgeResult ULightingHandler::Action_ListLights(TSharedPtr<FJsonObject> Params
 {
 	const FString Action = TEXT("list_lights");
 
-	UWorld* World = GEditor ? GEditor->GetEditorWorldContext().World() : nullptr;
+	UWorld* World = UBridgeHandlerBase::GetSafeEditorWorld();
 	if (!World)
 	{
 		return MakeError(DOMAIN, Action, 3000, TEXT("No editor world available"));

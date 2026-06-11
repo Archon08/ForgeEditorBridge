@@ -26,7 +26,7 @@ namespace
 
     UWorld* GetEditorWorld()
     {
-        return GEditor ? GEditor->GetEditorWorldContext().World() : nullptr;
+        return UBridgeHandlerBase::GetSafeEditorWorld();
     }
 
     AActor* FindActorByLabel(UWorld* World, const FString& Label)

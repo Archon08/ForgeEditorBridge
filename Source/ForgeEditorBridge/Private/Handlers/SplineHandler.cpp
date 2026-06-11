@@ -76,7 +76,7 @@ FVector USplineHandler::ParseVector(const TSharedPtr<FJsonObject>& Obj, const FS
 AActor* USplineHandler::FindActorByLabel(const FString& ActorLabel, FString& OutError)
 {
 #if WITH_EDITOR
-	UWorld* World = GEditor ? GEditor->GetEditorWorldContext().World() : nullptr;
+	UWorld* World = UBridgeHandlerBase::GetSafeEditorWorld();
 	if (!World)
 	{
 		OutError = TEXT("No editor world available");
@@ -161,7 +161,7 @@ FBridgeResult USplineHandler::Action_CreateSplineActor(TSharedPtr<FJsonObject> P
 		return MakeError(SPLINE_DOMAIN, Action, 1000, TEXT("Missing required param: 'actor_name'"));
 	}
 
-	UWorld* World = GEditor ? GEditor->GetEditorWorldContext().World() : nullptr;
+	UWorld* World = UBridgeHandlerBase::GetSafeEditorWorld();
 	if (!World)
 	{
 		return MakeError(SPLINE_DOMAIN, Action, 3000, TEXT("No editor world available"));

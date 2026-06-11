@@ -143,7 +143,7 @@ FBridgeResult UChaosHandler::Action_SpawnField(TSharedPtr<FJsonObject> Params)
 	Params->TryGetNumberField(TEXT("radius"), Radius);
 
 	// Get the editor world
-	UWorld* World = GEditor ? GEditor->GetEditorWorldContext().World() : nullptr;
+	UWorld* World = UBridgeHandlerBase::GetSafeEditorWorld();
 	if (!World)
 	{
 		Result.Message = TEXT("spawn_field: no editor world available");
@@ -311,7 +311,7 @@ FBridgeResult UChaosHandler::Action_SetPhysicsField(TSharedPtr<FJsonObject> Para
 {
 	const FString Action = TEXT("set_physics_field");
 
-	UWorld* World = GEditor ? GEditor->GetEditorWorldContext().World() : nullptr;
+	UWorld* World = UBridgeHandlerBase::GetSafeEditorWorld();
 	if (!World)
 		return MakeError(TEXT("chaos"), Action, 2000, TEXT("No editor world available"));
 

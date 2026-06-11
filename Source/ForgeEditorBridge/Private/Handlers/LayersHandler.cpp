@@ -112,7 +112,7 @@ FBridgeResult ULayersBridgeHandler::Action_AddActorToLayer(TSharedPtr<FJsonObjec
         return MakeError(DOMAIN, TEXT("add_actor_to_layer"), 1000, TEXT("'layer_name' is required"));
 
     ULayersSubsystem* LS = GetLayersSubsystem();
-    UWorld* World = GEditor ? GEditor->GetEditorWorldContext().World() : nullptr;
+    UWorld* World = UBridgeHandlerBase::GetSafeEditorWorld();
     if (!LS || !World) return MakeError(DOMAIN, TEXT("add_actor_to_layer"), 3000, TEXT("Layers subsystem or world unavailable"));
 
     AActor* A = FindActorByLabelOrPath(World, Selector);
@@ -138,7 +138,7 @@ FBridgeResult ULayersBridgeHandler::Action_AddActorsToLayer(TSharedPtr<FJsonObje
             TEXT("'actor_labels' or 'actor_paths' (array) is required"));
 
     ULayersSubsystem* LS = GetLayersSubsystem();
-    UWorld* World = GEditor ? GEditor->GetEditorWorldContext().World() : nullptr;
+    UWorld* World = UBridgeHandlerBase::GetSafeEditorWorld();
     if (!LS || !World) return MakeError(DOMAIN, TEXT("add_actors_to_layer"), 3000, TEXT("Layers subsystem or world unavailable"));
 
     TArray<TWeakObjectPtr<AActor>> Actors;
@@ -165,7 +165,7 @@ FBridgeResult ULayersBridgeHandler::Action_RemoveActorFromLayer(TSharedPtr<FJson
         return MakeError(DOMAIN, TEXT("remove_actor_from_layer"), 1000, TEXT("'layer_name' is required"));
 
     ULayersSubsystem* LS = GetLayersSubsystem();
-    UWorld* World = GEditor ? GEditor->GetEditorWorldContext().World() : nullptr;
+    UWorld* World = UBridgeHandlerBase::GetSafeEditorWorld();
     if (!LS || !World) return MakeError(DOMAIN, TEXT("remove_actor_from_layer"), 3000, TEXT("Layers subsystem or world unavailable"));
 
     AActor* A = FindActorByLabelOrPath(World, Selector);
