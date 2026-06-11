@@ -145,7 +145,10 @@ transform/offset/delete/insert deltas are wired; attribute deltas still `@todo_p
 
 ## 5. Standing decisions
 
-- **Hard cut to 5.8** at GA (keep a `5.7-maintenance` tag) — revisit if users need straddling.
+- **Branch strategy: permanent version branches.** `ue5.7` is the **forever home** of the
+  UE 5.7 version — it is never migrated, only maintained (bug fixes may be cherry-picked to
+  it). All 5.8 migration and new-system work happens on **`ue5.8`**. No version-straddling
+  `#if ENGINE_MINOR_VERSION` guards — each branch stays clean for its engine.
 - **Optional plugins degrade gracefully** — report "unavailable", never fail to load.
 - Implement against the **`5.8` release branch**, not `ue5-main`; expect a touch-up pass at GA
   (all four new systems are experimental and may rename).
