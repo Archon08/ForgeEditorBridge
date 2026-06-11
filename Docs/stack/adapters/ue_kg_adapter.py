@@ -76,7 +76,7 @@ _MODEL_ID = "nomic-ai/nomic-embed-text-v2-moe"
 _MODEL_DIM = 768
 _MAX_HEADER_BYTES = 2 * 1024 * 1024  # 2 MB skip threshold
 
-_ENGINE_ROOT_DEFAULT = r"C:\Program Files\Epic Games\UE_5.7\Engine"
+_ENGINE_ROOT_DEFAULT = r"C:\Program Files\Epic Games\UE_5.8\Engine"
 _ENGINE_ROOT_PLACEHOLDER = "${UE_ENGINE_ROOT}"
 
 

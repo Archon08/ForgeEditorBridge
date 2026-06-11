@@ -3,7 +3,7 @@
 Build the UE module KG manifest for ForgeEditorBridge.
 
 Reads ForgeEditorBridge.Build.cs, resolves each module name to its .Build.cs
-under the UE 5.7 engine tree, then walks header roots to count headers and LOC.
+under the UE 5.8 engine tree, then walks header roots to count headers and LOC.
 Also scans the plugin's handlers for #include statements that resolve into each
 module's header roots, so we know which handlers actually lean on which module.
 
@@ -28,7 +28,7 @@ HANDLER_DIRS = [
     PLUGIN_MODULE_ROOT / "Public" / "Handlers",
 ]
 
-_ENGINE_ROOT_DEFAULT = r"C:\Program Files\Epic Games\UE_5.7\Engine"
+_ENGINE_ROOT_DEFAULT = r"C:\Program Files\Epic Games\UE_5.8\Engine"
 ENGINE_ROOT = Path(os.environ.get("UE_ENGINE_ROOT", _ENGINE_ROOT_DEFAULT))
 ENGINE_SOURCE = ENGINE_ROOT / "Source"
 ENGINE_PLUGINS = ENGINE_ROOT / "Plugins"
@@ -361,7 +361,7 @@ def main() -> int:
 
     manifest = {
         "manifest_schema_version": "1.0",
-        "ue_version": "5.7",
+        "ue_version": "5.8",
         "engine_root": ENGINE_ROOT_PLACEHOLDER + "\\",
         "generated_at": _dt.datetime.now(_dt.timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z"),
         "plugin_module": "ForgeEditorBridge",
