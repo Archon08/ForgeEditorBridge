@@ -1,210 +1,151 @@
 # UE 5.8 Migration & Control-Coverage Plan
 
-Status: **Planning** — prepared June 2026 against the UE 5.8 **Preview** (released
-mid-May 2026; final release expected mid-to-late 2026). The plugin currently
-targets **UE 5.7** (`VersionName 0.2.6`). This document is the work list for
-moving ForgeEditorBridge to 5.8 while extending "total editor control" to the
-new 5.8 systems.
+Status: **Recon complete — ready for compile pass.** Originally drafted against public
+preview coverage; now updated with **confirmed facts from the actual `EpicGames/UnrealEngine`
+`5.8` branch** (tag `5.8.0-preview-1`), delivered by an engine-access recon session. All
+former **[verify]** tags are resolved below. Plugin currently targets **UE 5.7**
+(`VersionName 0.2.6`).
 
-> ⚠️ 5.8 is in Preview. Exact module names, class names, and deprecation lists
-> below are drawn from public preview coverage and the `ue5-main` branch and
-> **must be re-verified against the actual 5.8 release branch headers** before
-> implementation (see Phase 0). Items not yet confirmed against source are
-> tagged **[verify]**.
+**Companion data (authoritative, from engine source):**
+- [`UE5.8_Migration_Handoff.md`](./UE5.8_Migration_Handoff.md) — execution playbook for the migration agent
+- [`UE5.8_Migration_Recon.md`](./UE5.8_Migration_Recon.md) — new-system class/module names
+- [`UE5.8_Deprecations.txt`](./UE5.8_Deprecations.txt) — 844 `UE_DEPRECATED(5.8, …)` markers
+- [`UE5.8_Plugin_Engine_Includes.txt`](./UE5.8_Plugin_Engine_Includes.txt) — 696 plugin includes; 239 verified present in 5.8
 
----
-
-## 0. Getting the 5.8 source & a build baseline
-
-The engine is **not** vendored in this repo; the plugin builds against an
-installed engine. To develop and test against 5.8:
-
-- **GitHub source (private):** `EpicGames/UnrealEngine` — requires linking your
-  Epic Games and GitHub accounts to gain access.
-  - `ue5-main` — bleeding edge, **already bumped to 5.8**; may not compile.
-  - `5.8` release branch — created when 5.8 ships; the target we build against.
-  - `release` — currently 5.7; will roll to 5.8 at GA.
-- **Launcher build:** install "Unreal Engine 5.8 Preview" via the Epic Games
-  Launcher for a binary engine to smoke-test the plugin without compiling the
-  engine.
-
-**Phase 0 tasks**
-- [ ] Install/checkout UE 5.8 Preview (Launcher binary + `5.8` source branch).
-- [ ] Add a `5.8` engine entry to local build tooling (`Docs/stack/` manifest
-      `ue_version` is hardcoded `"5.7"` in `build_manifest.py:364` — bump to
-      `"5.8"` and regenerate the KG manifest).
-- [ ] Do a clean compile of the plugin against 5.8 and **capture the full
-      warning/error log** — that log is the authoritative input to Phase 1–2.
-      Everything below is the *expected* delta; the compile log is *truth*.
+> Still preview: names can shift before GA. The one thing recon could not produce is a real
+> **compiler log** (no engine build was available) — that remains Phase 0's job.
 
 ---
 
-## 1. Compile / build migration (blocking)
+## 0. Build baseline (the remaining blocker)
 
-The plugin is editor-only with a wide dependency surface
-(`ForgeEditorBridge.Build.cs` lists ~120 modules). Most 5.7→5.8 breakage shows
-up as (a) module relocations and (b) deprecated-API warnings.
+- [ ] Put the plugin under a 5.8 engine (source build of branch `5.8` or Launcher 5.8 Preview),
+      regenerate, build the editor target, **capture the full log**.
+- [ ] Triage **hard errors first** (removals/renames — leave no marker, fail the build), then
+      warnings (the 844-marker list names every replacement).
+- [ ] Bump `Docs/stack/build_manifest.py` `ue_version` `"5.7"`→`"5.8"`; regenerate KG manifest
+      against the 5.8 header tree.
 
-### 1a. Module dependency audit
-Re-validate every entry in `Build.cs` against 5.8 — 5.7 already moved several
-modules (the file is full of `// 5.7:` relocation notes), and 5.8 continues
-that pattern. Highest-risk entries to re-check **[verify]**:
+## 1. Compile migration — what is now KNOWN
 
-- [ ] `Chooser` internal include path (`Chooser/Internal/Chooser.h`) — internal
-      headers move often.
-- [ ] `ControlRigDeveloper` / `ControlRigEditor` (Control Rig is actively
-      refactored every release; `ControlRigBlueprintLegacy.h` may move/rename).
-- [ ] `PlacementHandler` deps (`EditorFramework`, `TypedElementFramework`,
-      `TypedElementRuntime`) — TypedElement APIs still churning.
-- [ ] `MetasoundFrontend` / `MetasoundEditor` — MetaSound API surface changes.
-- [ ] PCG modules (`PCG`, `PCGEditor`) — large 5.8 PCG changes (see §2.4).
-- [ ] Packaging deps (`DeveloperToolSettings`, `TargetPlatform`) — settings
-      classes relocate between `DeveloperToolSettings` / `EngineSettings`.
-- [ ] Concert module set (`Concert`, `ConcertClient`, `ConcertSyncClient`,
-      `ConcertTransport`) — multi-user stack reorganizes periodically.
+### 1a. Confirmed touch-points (plugin code ↔ 5.8 source, verified)
+- **GAS** — `GASHandler.cpp:820-1117`, `ForgeGASCapture.cpp:300-443`: pragma-suppressed
+  `StackingType` / `Modifiers` **still compile** (still 5.7-deprecated, not removed);
+  `GetInstancingPolicy()` is **no longer deprecated** in 5.8 (pragma now unnecessary).
+  - [ ] Optional cleanup: migrate to `GetStackingType()`/`SetStackingType()`, drop pragmas.
+- **Control Rig** — `ControlRigHandler.cpp`: `ControlRigBlueprintLegacy.h`,
+  `UControlRigBlueprint`, `UControlRigBlueprintFactory` **all survive** in 5.8. The 5.8
+  deprecations in that header are on methods we don't call.
+  - [ ] Re-verify the `GetRigVMClient` C2385 ambiguity workaround (`:645`) on 5.8.
+- **Hot Reload** — `ForgeBuildCapture.cpp:185-227`: `IHotReloadInterface::OnHotReload()` is the
+  **top removal risk** (deprecated since 5.7; may be gone in 5.8 — outside recon's checkout).
+  - [ ] If removed: drop the fallback; Live Coding path already wired at `:265`.
+- **Material usage flags** — `ForgeMaterialCapture.cpp:199-212` reads 14 `bUsedWith*` members
+  directly; `Material.h` carries a 5.8 marker *"Always use the GetUsageByFlag() accessor."*
+  **(New finding — not in recon §5.)**
+  - [ ] Migrate to `GetUsageByFlag(MATUSAGE_*)` during the compile pass.
 
-### 1b. Known/likely deprecations to clear **[verify against compile log]**
-Reported deprecated in 5.8 (removed in 5.9) — fix now so the 5.9 jump is clean:
+### 1b. Warning watchlist (plugin-include ∩ 5.8-marker headers = 45 headers)
+Cross-reference generated from the two data files. Top intersections the plugin includes:
+`Sound/SoundWave.h` (37 markers), `UObject/UnrealType.h` (35 — FProperty ctor signature
+changes; relevant to ReflectionHandler), `Materials/Material.h` (29), `PCGComponent.h` (10),
+`PCGGraph.h` (9), `UnrealClient.h` (6 — `FViewportFrame`→`FSceneViewport`),
+`Components/SkeletalMeshComponent.h` (4 — cloth-collision API → `CollisionSources`),
+`Engine/World.h` (3 — `ChangeFeatureLevel`→`ShaderPlatformChanged`),
+`Internationalization/StringTableCore.h` (2 — `ExportStrings`/`ImportStrings` →
+`…ToCSVFile`/`…FromCSVFile`; check `StringTableHandler`/`LocalizationHandler`),
+`ControlRigBlueprintLegacy.h` (2), `LandscapeProxy.h` (2), `LandscapeComponent.h` (1 —
+`GetGrassTypes`→`GetNamedGrassTypes`). Grep of plugin source found **no current calls** to the
+renamed symbols beyond §1a — these headers are watchlist, not work.
 
-- [ ] `UCharacterMovementComponent::SetMovementMode` →
-      `SetMovementModeWithCustomMode`. Check `MoverHandler`,
-      `ForgeNetworkCapture`, any movement-mode code.
-- [ ] `FText::FromStringTable` legacy overload → the `FStringTable&` overload.
-      Check `StringTableHandler`, `LocalizationHandler`,
-      `ForgeLocalizationCapture`.
-- [ ] GAS legacy attribute-set initialization helpers deprecated → check
-      `GASHandler`, `ForgeGASCapture`.
-- [ ] Sweep for any `UE_DEPRECATED` hits across all handlers/captures and treat
-      warnings-as-errors locally during the migration pass.
+### 1c. Unverified surface (where compile errors will come from)
+- [ ] **457 of 696 includes** live in modules outside recon's sparse checkout (`UnrealEd`,
+      `Niagara`, `LevelSequence`, `MovieRenderPipeline*`, `Concert*`, `GeometryScripting*`,
+      `TakeRecorder`, `Chooser`, `PoseSearch`, `Water`, `StateTree`, `SmartObjects`,
+      `GameFeatures`, …). Verify at compile, or expand the sparse checkout
+      (`git sparse-checkout add Engine/Source/Editor Engine/Source/Developer Engine/Plugins`).
+- [ ] **Packaging settings gap**: `UProjectPackagingSettings` (`Engine/Source/Developer`) had no
+      recon coverage — re-verify `DeveloperToolSettings` module + struct on 5.8.
+- [ ] Re-validate every `UE 5.7:` / `VERIFIED` boundary comment in plugin source against 5.8.
 
-### 1c. Version metadata
-- [ ] Bump `ForgeEditorBridge.uplugin` `VersionName` (e.g. `0.3.0`) and add an
-      explicit `"EngineVersion": "5.8.0"` once locked to GA (omit while on
-      Preview to keep the plugin loadable across 5.7/5.8 during transition).
-- [ ] Update the `"version"` string emitted in
-      `BridgeHttpServer::Start` (`bridge-status.json`, currently `"0.2.6"`) and
-      the startup log in `ForgeAISubsystem::StartBridge`.
-- [ ] Search-and-replace stale `// UE 5.7` / `5.7:` comments that no longer
-      describe reality after the audit.
-
----
-
-## 2. New 5.8 systems → new/extended handlers (control coverage)
-
-"Total control" means every new authorable system in 5.8 gets a bridge handler
-(write) and, where it carries inspectable state, a capture module (read). The
-major net-new surfaces in 5.8:
-
-### 2.1 Mesh Terrain  — **new handler** `MeshTerrainHandler`  **[verify]**
-New experimental 3D-mesh-based terrain system (caves/overhangs/overhangs that
-heightmap landscape can't represent). Distinct from the existing
-`LandscapeHandler` / `ForgeHeightmapCapture` (which stay for classic Landscape).
-- [ ] Identify the plugin/module + subsystem/actor classes in 5.8 source.
-- [ ] New `MeshTerrainHandler`: create/spawn mesh terrain, edit/sculpt ops,
-      query bounds & layers, convert/import mesh→terrain.
-- [ ] Add `Build.cs` deps for the new module(s).
-- [ ] Capture: extend or add a capture for mesh-terrain inventory + stats.
-- [ ] Register the new domain in `ForgeAISubsystem` handler map.
-
-### 2.2 MetaHuman Crowd — **new handler** `MetaHumanCrowdHandler`  **[verify]**
-New experimental plugin: LOD assembly pipeline (hero actor ↔ instanced skeletal
-mesh by camera distance), scales tens→thousands.
-- [ ] Identify the MetaHuman Crowd plugin module + authoring subsystem.
-- [ ] New handler: spawn/configure crowd, set density/LOD policy, assign source
-      MetaHumans, bake/assemble.
-- [ ] Gate behind plugin-present check (MetaHuman is an optional plugin; do
-      **not** add a hard `Build.cs` dependency — resolve classes by soft path
-      like `ForgeAnimationCapture` does for `IKRig.IKRigComponent`).
-
-### 2.3 Lumen Radiance Cache & Substrate NPR — **extend** existing handlers
-New medium-quality GI mode + experimental stylised Substrate shading.
-- [ ] `LightingHandler` / `PostProcessHandler`: expose the new Lumen GI mode
-      toggle + scalability/console vars (radiance cache on/off, quality).
-- [ ] `MaterialHandler`: support the Substrate NPR shading model path
-      (set shading model / blendable GBuffer mode on Substrate materials).
-- [ ] Capture: add Lumen GI mode + Substrate mode to
-      `ForgePerformanceCapture` / lighting context so the agent can read current
-      render settings.
-
-### 2.4 PCG editable procedural output — **extend** `PCGHandler` / `PCGGraphHandler`
-5.8 lets artists make manual edits on generated PCG output while keeping the
-graph link (no more one-way bake).
-- [ ] Add actions for the persisted-edit workflow: apply manual edit, list
-      overrides, clear/reset overrides, re-run keeping edits.
-- [ ] Re-verify PCG API surface (large 5.8 changes) — likely renames in
-      `PCG`/`PCGEditor`. Reconcile with §1a.
-
-### 2.5 Procedural Vegetation Editor (PVE) — **new/extended handler**  **[verify]**
-Significantly enhanced in 5.8: author biologically-accurate, Nanite-ready
-vegetation in-editor; import meshes from external tools.
-- [ ] Decide: extend `FoliageHandler` vs. new `ProceduralVegetationHandler`
-      (lean new handler — PVE is its own authoring graph/asset, not classic
-      foliage instances).
-- [ ] Actions: create PVE asset, set species/growth params, import source mesh,
-      bake to Nanite, scatter to level.
+### 1d. Version metadata
+- [ ] `uplugin` `VersionName` → `0.3.0`; consider `"EngineVersion": "5.8.0"` at GA (not before).
+- [ ] Update `"version"` in `BridgeHttpServer::Start` (`bridge-status.json`) + startup log.
 
 ---
 
-## 3. Capture-module review (read side)
+## 2. New 5.8 systems → handlers (names now CONFIRMED from source)
 
-Cross-check every capture in `Private/Capture/` against 5.8 reflection/API:
-- [ ] `ForgeHeightmapCapture` — confirm classic Landscape still present and add
-      a sibling note pointing at Mesh Terrain (§2.1).
-- [ ] `ForgePerformanceCapture` — add Lumen GI mode / Substrate / Nanite-vegetation
-      counters.
-- [ ] `ForgeNiagaraCapture`, `ForgeMaterialCapture` — Substrate field changes.
-- [ ] Re-run a full capture against a 5.8 project and diff the JSON for missing
-      or renamed fields.
+All four systems are **Experimental, off by default** → every new handler must
+plugin-present-check and degrade gracefully (soft class resolution, no hard `Build.cs` dep on
+experimental plugins — same pattern as `ForgeAnimationCapture`'s soft `IKRig.IKRigComponent`).
 
----
+### 2.1 Mesh Terrain → new `MeshTerrainHandler`
+Plugins **`MeshTerrainMode`** (editor mode `UMeshTerrainMode`, id `EM_MeshTerrainMode`) +
+**`MeshPartition`** (runtime: actor `AMeshPartition` (NotPlaceable), `UMeshPartitionComponent`,
+data asset `UMeshPartitionDefinition`; tool builders `UConvertToolBuilder`/`USplitToolBuilder`/
+`UMergeToolBuilder`/`UStitchToolBuilder`/`UExpandToolBuilder`, ns `UE::MeshPartition`).
+**Sits alongside Landscape — does not replace it** (keep `LandscapeHandler` as-is).
+- [ ] Actions: create-from-rectangle / import-heightmap, sculpt ops (Height Sculpt/Smooth/
+      Flatten, Slope Erode), edit ops (Convert/Split/Merge/Stitch/Expand), add/list modifiers
+      (Mesh/Texture/Spline/Brush/Noise/Boolean/Remesh), query partitions+bounds.
 
-## 4. Tooling / KG stack (`Docs/stack/`)
+### 2.2 MetaHuman Crowd → new `MetaHumanCrowdHandler`
+Plugin **`MetaHumanCrowd`**. No standalone crowd asset — it extends MetaHuman Collections:
+`UMetaHumanCollection` + pipeline `UMetaHumanCrowdPipeline` / editor
+`UMetaHumanCrowdEditorPipeline`; data asset `UMetaHumanCrowdAnimationConfig`; runtime via Mass
+trait `UMetaHumanMassCrowdVisualizationTrait` (+ `UMetaHumanMassRepresentationSubsystem`).
+- [ ] Actions: assign crowd pipeline to a collection, set wardrobe slots
+      (`HeadSlotName`/`BodySlotName`/`OutfitsSlotName`/…), set LOD/build options, assign anim
+      config, trigger Build, wire a Mass spawner entity config with the visualization trait.
+- [ ] Heavy optional-dep surface (Mass, MetaHumanCharacter/Palette, Mover, Chaos cloth) —
+      strictly soft-resolved.
 
-- [ ] `build_manifest.py`: bump `ue_version` `"5.7"`→`"5.8"` and regenerate.
-- [ ] Re-index engine headers from the 5.8 source tree (new modules: Mesh
-      Terrain, MetaHuman Crowd) so the knowledge graph covers new symbols.
-- [ ] Validate header-root resolution against the 5.8 engine layout.
+### 2.3 Procedural Vegetation → new `ProceduralVegetationHandler`
+Plugin **`ProceduralVegetationEditor`**. Asset **`UProceduralVegetation`** wrapping
+`UProceduralVegetationGraph : UPCGGraph`; factory `UProceduralVegetationFactory`; editor
+`FPVEditor : FPCGEditor`; export via `UPVExportSettings` /
+`EPVExportMeshType{StaticMesh,SkeletalMesh}`, `bCreateNaniteFoliage`.
+Independent of legacy `UProceduralFoliageSpawner` (keep `FoliageHandler` as-is).
+- [ ] Actions: create asset, edit its PCG graph (reuse `PCGGraphHandler` machinery — it IS a
+      PCG graph), export to static/skeletal mesh (Nanite foliage opt), place exported mesh.
 
----
-
-## 5. Verification checklist (definition of done)
-
-- [ ] Clean compile against UE 5.8 with **zero** deprecation warnings.
-- [ ] Plugin loads in the 5.8 editor; `bridge-status.json` reports `5.8` + new
-      version string; all existing domains register.
-- [ ] Each new handler (§2) exercised end-to-end via `/command` against a 5.8
-      project; results land in bridge results.
-- [ ] Full context capture runs clean against a 5.8 project; JSON diff reviewed.
-- [ ] KG manifest regenerated for 5.8; semantic search returns new symbols.
-- [ ] Regression: existing 5.7-era domains still function on 5.8.
-
----
-
-## 6. Risks & open questions
-
-- **Preview churn:** experimental modules (Mesh Terrain, MetaHuman Crowd,
-  Substrate NPR) will rename classes/modules before GA. Implement against the
-  `5.8` release branch, not `ue5-main`, and expect a second pass at GA.
-- **Optional-plugin coupling:** MetaHuman Crowd and some systems are optional
-  plugins — prefer soft class resolution over hard `Build.cs` deps to keep the
-  bridge loadable when a plugin is absent (degrade gracefully, report
-  "unavailable" rather than fail to load).
-- **5.9 horizon:** APIs deprecated in 5.8 are removed in 5.9 — clearing them now
-  (§1b) is cheap insurance.
-- **Engine-version pinning:** decide whether to support 5.7 **and** 5.8 from one
-  branch (version-guarded `#if ENGINE_MINOR_VERSION`) or cut a hard 5.8 branch.
-  Recommendation: hard-cut to 5.8 once GA lands; keep a `5.7-maintenance` tag.
+### 2.4 PCG editable output → extend `PCGHandler` / `PCGGraphHandler`
+Module `PCG`: deltas stored on `UPCGComponent` (`FPCGSourceDataContainer SourceDataContainer`),
+keyed `FPCGDeltaKey` → `FPCGDeltaCollection` (`Add`/`Add_GetRef`/`ForEachDelta`/`Find`/
+`Remove`/`Empty`); apply at exec `PCG::DataOverride::ApplyDataOverrides(...)`; per-node opt-in
+`UPCGSettings::IsMarkedForManualEditing()/SetMarkedForManualEditing()`. Point
+transform/offset/delete/insert deltas are wired; attribute deltas still `@todo_pcg`.
+- [ ] Actions: mark/unmark node for manual editing, apply point transform/offset/delete/insert
+      delta, list deltas (`ForEachDelta`), clear deltas, regenerate-preserving-edits.
+- [ ] Mutation is `WITH_EDITOR`-only — fine (plugin is editor-only).
 
 ---
 
-## Appendix: sources
+## 3. Capture-module review
 
-- Epic — "Unreal Engine 5.8 Preview" announcement (forums.unrealengine.com)
-- Epic — Introduction to Mesh Terrain (dev.epicgames.com community knowledge base)
-- 80.lv — "Unreal Engine 5.8 Preview Has Arrived" / Mesh Terrain coverage
-- Digital Production — "Unreal Engine 5.8 Preview rolls in" (2026-05-14)
-- gamegpu — "Main branch updated to Unreal Engine 5.8" (GitHub branch status)
-- Epic — UE5 GitHub branch guidance (`ue5-main` vs release branches)
+- [ ] New: mesh-partition inventory (actors, definitions, modifier stacks) — pair with §2.1.
+- [ ] `ForgePCGCapture`: surface per-component delta counts (`SourceDataContainer`).
+- [ ] `ForgeMaterialCapture`: §1a flag migration; add Substrate fields if present in 5.8.
+- [ ] `ForgePerformanceCapture`: Lumen GI mode (radiance cache) + Nanite-foliage counters.
+- [ ] Crash-hardening follow-up (not 5.8-specific): 5 more unsafe
+      `GEditor->GetEditorWorldContext().World()` sites found — `BridgeHttpServer.cpp:541`,
+      `ForgeNiagaraCapture.cpp:334`, `ForgeCollisionCapture.cpp:293`,
+      `ForgeInputCapture.cpp:130`, `ForgeWorldGenCapture.cpp:168` — same fix as PR #3.
 
-> Re-confirm all **[verify]** items against the 5.8 release-branch headers
-> during Phase 0 before committing implementation work.
+## 4. Verification checklist (definition of done)
+
+- [ ] Clean compile on 5.8, zero deprecation warnings (or each remaining one ticketed).
+- [ ] Plugin loads on 5.8; all existing domains register; `bridge-status.json` updated.
+- [ ] New handlers (§2) exercised end-to-end via `/command` on a 5.8 project **with and
+      without** the experimental plugins enabled (graceful-degrade path tested).
+- [ ] Full context capture on a 5.8 project; JSON diff reviewed.
+- [ ] KG manifest regenerated for 5.8; new symbols searchable.
+- [ ] Regression pass over 5.7-era domains.
+
+## 5. Standing decisions
+
+- **Hard cut to 5.8** at GA (keep a `5.7-maintenance` tag) — revisit if users need straddling.
+- **Optional plugins degrade gracefully** — report "unavailable", never fail to load.
+- Implement against the **`5.8` release branch**, not `ue5-main`; expect a touch-up pass at GA
+  (all four new systems are experimental and may rename).
