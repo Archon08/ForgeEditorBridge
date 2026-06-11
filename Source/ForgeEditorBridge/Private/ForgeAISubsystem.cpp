@@ -1,4 +1,5 @@
 #include "ForgeAISubsystem.h"
+#include "ForgeBridgeVersion.h"
 #include "ForgeAISettings.h"
 
 // ---- Infrastructure includes ----
@@ -256,8 +257,8 @@ void UForgeAISubsystem::StartBridge()
 	HttpServer->Start(OutputDirectory, Settings->HttpPort, Settings->AuthToken);
 
 	bServerRunning = true;
-	UE_LOG(LogTemp, Log, TEXT("ForgeEditorBridge: Bridge started on port %d (v0.2.6) — %d domains."),
-		Settings->HttpPort, HandlerMap.Num());
+	UE_LOG(LogTemp, Log, TEXT("ForgeEditorBridge: Bridge started on port %d (v%s) — %d domains."),
+		Settings->HttpPort, FORGE_BRIDGE_VERSION, HandlerMap.Num());
 }
 
 // ---------------------------------------------------------------------------

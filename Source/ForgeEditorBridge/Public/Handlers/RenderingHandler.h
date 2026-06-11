@@ -3,7 +3,7 @@
 #include "RenderingHandler.generated.h"
 
 /**
- * RenderingHandler — domain "rendering"  (v0.2.6 / UE 5.7)
+ * RenderingHandler — domain "rendering"  (v0.3.0-dev / UE 5.8)
  *
  * Actions:
  *   set_nanite          → asset_path (StaticMesh package path), enabled (bool)

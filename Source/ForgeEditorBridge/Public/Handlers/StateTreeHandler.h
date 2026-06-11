@@ -3,7 +3,7 @@
 #include "StateTreeHandler.generated.h"
 
 /**
- * StateTreeHandler — domain "state_tree"  (v0.2.6 / UE 5.7)
+ * StateTreeHandler — domain "state_tree"  (v0.3.0-dev / UE 5.8)
  *
  * Creates and authors UStateTree assets (Production Ready in UE 5.7).
  * Used for both AI and non-AI logic via the State Tree system.

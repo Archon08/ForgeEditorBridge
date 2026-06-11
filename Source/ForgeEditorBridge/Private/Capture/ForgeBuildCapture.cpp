@@ -1,4 +1,5 @@
 #include "Capture/ForgeBuildCapture.h"
+#include "ForgeBridgeVersion.h"
 #include "IO/ForgeContextWriter.h"
 
 #include "Dom/JsonObject.h"
@@ -266,7 +267,7 @@ void UForgeBuildCapture::WriteIndexFile()
 
     TSharedPtr<FJsonObject> Root = MakeShared<FJsonObject>();
     Root->SetStringField(TEXT("updated"), FForgeContextWriter::NowISO8601());
-    Root->SetStringField(TEXT("plugin_version"), TEXT("0.2.6"));
+    Root->SetStringField(TEXT("plugin_version"), FORGE_BRIDGE_VERSION);
     Root->SetObjectField(TEXT("captures_available"), Captures);
 
     FForgeContextWriter::WriteJSON(OutputDir, TEXT("index.json"), Root.ToSharedRef());

@@ -1,4 +1,5 @@
 #include "Server/BridgeHttpServer.h"
+#include "ForgeBridgeVersion.h"
 #include "ForgeAISubsystem.h"
 #include "IO/BridgeResultWriter.h"
 #include "Handlers/QuarantineHandler.h"
@@ -71,7 +72,7 @@ void FBridgeHttpServer::Start(const FString& OutputDir, int32 Port, const FStrin
 	Status->SetNumberField(TEXT("port"), (double)Port);
 	Status->SetStringField(TEXT("auth_token"), AuthToken);
 	Status->SetStringField(TEXT("started_at"), FDateTime::UtcNow().ToIso8601());
-	Status->SetStringField(TEXT("version"), TEXT("0.2.6"));
+	Status->SetStringField(TEXT("version"), FORGE_BRIDGE_VERSION);
 
 	// Build domain list dynamically from registered handlers
 	TArray<TSharedPtr<FJsonValue>> Domains;

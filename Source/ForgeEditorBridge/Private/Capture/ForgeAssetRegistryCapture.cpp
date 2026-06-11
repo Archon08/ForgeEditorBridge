@@ -1,4 +1,5 @@
 #include "Capture/ForgeAssetRegistryCapture.h"
+#include "ForgeBridgeVersion.h"
 #include "IO/ForgeContextWriter.h"
 
 #include "AssetRegistry/AssetRegistryModule.h"
@@ -224,7 +225,7 @@ void UForgeAssetRegistryCapture::UpdateIndexFile(int32 TotalAssets)
 
     Root->SetObjectField(TEXT("captures_available"), Captures);
     Root->SetStringField(TEXT("updated"),        Timestamp);
-    Root->SetStringField(TEXT("plugin_version"), TEXT("0.2.6"));
+    Root->SetStringField(TEXT("plugin_version"), FORGE_BRIDGE_VERSION);
 
     FForgeContextWriter::WriteJSON(OutputDir, TEXT("index.json"), Root.ToSharedRef());
 }

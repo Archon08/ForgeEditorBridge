@@ -1,4 +1,5 @@
 #include "Capture/ForgePCGCapture.h"
+#include "ForgeBridgeVersion.h"
 #include "IO/ForgeContextWriter.h"
 
 #include "PCGComponent.h"           // UPCGComponent, OnPCGGraphGeneratedDelegate
@@ -261,7 +262,7 @@ void UForgePCGCapture::UpdateIndexFile()
 
     TSharedPtr<FJsonObject> Root = MakeShared<FJsonObject>();
     Root->SetStringField(TEXT("updated"),        FForgeContextWriter::NowISO8601());
-    Root->SetStringField(TEXT("plugin_version"), TEXT("0.2.6"));
+    Root->SetStringField(TEXT("plugin_version"), FORGE_BRIDGE_VERSION);
     Root->SetObjectField(TEXT("captures_available"), Captures);
 
     FForgeContextWriter::WriteJSON(OutputDir, TEXT("index.json"), Root.ToSharedRef());

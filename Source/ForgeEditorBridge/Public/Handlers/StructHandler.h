@@ -6,7 +6,7 @@ struct FEdGraphPinType;
 class UUserDefinedStruct;
 
 /**
- * StructHandler — domain "struct"  (v0.2.6 / UE 5.7)
+ * StructHandler — domain "struct"  (v0.3.0-dev / UE 5.8)
  *
  * Creates and modifies UUserDefinedStruct assets (Blueprintable data structures).
  * NOTE: In UE 5.7, float fields must use PC_Real + PC_Double subcategory —

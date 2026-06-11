@@ -1,4 +1,5 @@
 #include "Capture/ForgeScreenshotCapture.h"
+#include "ForgeBridgeVersion.h"
 #include "IO/ForgeContextWriter.h"
 
 #include "UnrealClient.h"           // FScreenshotRequest, FOnScreenshotCaptured
@@ -164,7 +165,7 @@ void UForgeScreenshotCapture::UpdateIndexFile(const FString& Timestamp)
 
     Root->SetObjectField(TEXT("captures_available"), Captures);
     Root->SetStringField(TEXT("updated"),        Timestamp);
-    Root->SetStringField(TEXT("plugin_version"), TEXT("0.2.6"));
+    Root->SetStringField(TEXT("plugin_version"), FORGE_BRIDGE_VERSION);
 
     FForgeContextWriter::WriteJSON(OutputDir, TEXT("index.json"), Root.ToSharedRef());
 }

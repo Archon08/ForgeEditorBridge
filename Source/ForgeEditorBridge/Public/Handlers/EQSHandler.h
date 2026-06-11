@@ -3,7 +3,7 @@
 #include "EQSHandler.generated.h"
 
 /**
- * EQSHandler — domain "eqs"  (v0.2.6 / UE 5.7)
+ * EQSHandler — domain "eqs"  (v0.3.0-dev / UE 5.8)
  *
  * Creates and modifies Environment Query System assets through the Bridge.
  * NOTE: UEnvQueryGenerator_SimpleGrid is the correct UE 5.4+ class name
