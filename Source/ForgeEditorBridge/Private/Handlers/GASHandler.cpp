@@ -816,15 +816,13 @@ FBridgeResult UGASHandler::Action_SetGEStacking(TSharedPtr<FJsonObject> Params)
 	UGameplayEffect* CDO = LoadGEBlueprint(AssetPath, BP, Result);
 	if (!CDO) return Result;
 
-	// Set stacking type (UE 5.7: getter/setter not exported, use deprecated member directly)
-PRAGMA_DISABLE_DEPRECATION_WARNINGS
+	// Set stacking type (UE 5.8: SetStackingType/GetStackingType are exported — pragma no longer needed)
 	if (StackingTypeStr == TEXT("None"))
-		CDO->StackingType = EGameplayEffectStackingType::None;
+		CDO->SetStackingType(EGameplayEffectStackingType::None);
 	else if (StackingTypeStr == TEXT("AggregateBySource"))
-		CDO->StackingType = EGameplayEffectStackingType::AggregateBySource;
+		CDO->SetStackingType(EGameplayEffectStackingType::AggregateBySource);
 	else if (StackingTypeStr == TEXT("AggregateByTarget"))
-		CDO->StackingType = EGameplayEffectStackingType::AggregateByTarget;
-PRAGMA_ENABLE_DEPRECATION_WARNINGS
+		CDO->SetStackingType(EGameplayEffectStackingType::AggregateByTarget);
 	else
 		return MakeError(GAS_DOMAIN, Action, 1001,
 			FString::Printf(TEXT("Invalid stacking_type '%s'"), *StackingTypeStr),
@@ -926,9 +924,7 @@ FBridgeResult UGASHandler::Action_GetGEInfo(TSharedPtr<FJsonObject> Params)
 	// Stacking
 	TSharedPtr<FJsonObject> StackObj = MakeShared<FJsonObject>();
 	FString StackTypeStr;
-PRAGMA_DISABLE_DEPRECATION_WARNINGS
-	switch (CDO->StackingType)
-PRAGMA_ENABLE_DEPRECATION_WARNINGS
+	switch (CDO->GetStackingType())
 	{
 	case EGameplayEffectStackingType::None:              StackTypeStr = TEXT("None"); break;
 	case EGameplayEffectStackingType::AggregateBySource: StackTypeStr = TEXT("AggregateBySource"); break;
@@ -1114,9 +1110,7 @@ FBridgeResult UGASHandler::Action_ReadAudit(TSharedPtr<FJsonObject> Params)
 
 	// ---- Stacking ----------------------------------------------------------
 	FString StackTypeStr;
-PRAGMA_DISABLE_DEPRECATION_WARNINGS
-	switch (CDO->StackingType)
-PRAGMA_ENABLE_DEPRECATION_WARNINGS
+	switch (CDO->GetStackingType())
 	{
 	case EGameplayEffectStackingType::None:              StackTypeStr = TEXT("None"); break;
 	case EGameplayEffectStackingType::AggregateBySource: StackTypeStr = TEXT("AggregateBySource"); break;

@@ -297,10 +297,9 @@ TArray<TSharedPtr<FJsonValue>> UForgeGASCapture::AuditAbilities()
         }
 
         // --- NONINSTANCED_WITH_STATE ---
-        PRAGMA_DISABLE_DEPRECATION_WARNINGS
+        // UE 5.8: GetInstancingPolicy() is no longer deprecated — pragma removed
         const bool bIsNonInstanced =
             (CDO->GetInstancingPolicy() == EGameplayAbilityInstancingPolicy::NonInstanced);
-        PRAGMA_ENABLE_DEPRECATION_WARNINGS
         if (bIsNonInstanced && BP->NewVariables.Num() > 0)
         {
             Issues.Add(MakeShared<FJsonValueObject>(MakeIssue(
@@ -404,9 +403,7 @@ TArray<TSharedPtr<FJsonValue>> UForgeGASCapture::AuditGameplayEffects()
         // --- INFINITE_STACKING_GE ---
         // Stacking enabled with no limit means a loop that applies this GE will grow unbounded.
         // StackLimitCount == 0 means unlimited when StackingType != None.
-        PRAGMA_DISABLE_DEPRECATION_WARNINGS
-        const EGameplayEffectStackingType CachedStackType = GE->StackingType;
-        PRAGMA_ENABLE_DEPRECATION_WARNINGS
+        const EGameplayEffectStackingType CachedStackType = GE->GetStackingType();
         if (CachedStackType != EGameplayEffectStackingType::None && GE->StackLimitCount == 0)
         {
             const UEnum* StackEnum = StaticEnum<EGameplayEffectStackingType>();
