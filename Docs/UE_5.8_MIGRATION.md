@@ -23,8 +23,9 @@ former **[verify]** tags are resolved below. Plugin currently targets **UE 5.7**
       regenerate, build the editor target, **capture the full log**.
 - [ ] Triage **hard errors first** (removals/renames — leave no marker, fail the build), then
       warnings (the 844-marker list names every replacement).
-- [ ] Bump `Docs/stack/build_manifest.py` `ue_version` `"5.7"`→`"5.8"`; regenerate KG manifest
-      against the 5.8 header tree.
+- [x] Bump `Docs/stack/build_manifest.py` `ue_version` `"5.7"`→`"5.8"` (+ engine-root defaults
+      and `bridge-stack` fallbacks). Regenerating the manifest against the 5.8 header tree still
+      requires an engine checkout.
 
 ## 1. Compile migration — what is now KNOWN
 
@@ -32,18 +33,20 @@ former **[verify]** tags are resolved below. Plugin currently targets **UE 5.7**
 - **GAS** — `GASHandler.cpp:820-1117`, `ForgeGASCapture.cpp:300-443`: pragma-suppressed
   `StackingType` / `Modifiers` **still compile** (still 5.7-deprecated, not removed);
   `GetInstancingPolicy()` is **no longer deprecated** in 5.8 (pragma now unnecessary).
-  - [ ] Optional cleanup: migrate to `GetStackingType()`/`SetStackingType()`, drop pragmas.
+  - [x] **Done:** migrated to `GetStackingType()`/`SetStackingType()`, pragmas dropped
+        (incl. the obsolete `GetInstancingPolicy` pragma). `Modifiers` pragma intentionally kept.
 - **Control Rig** — `ControlRigHandler.cpp`: `ControlRigBlueprintLegacy.h`,
   `UControlRigBlueprint`, `UControlRigBlueprintFactory` **all survive** in 5.8. The 5.8
   deprecations in that header are on methods we don't call.
   - [ ] Re-verify the `GetRigVMClient` C2385 ambiguity workaround (`:645`) on 5.8.
 - **Hot Reload** — `ForgeBuildCapture.cpp:185-227`: `IHotReloadInterface::OnHotReload()` is the
   **top removal risk** (deprecated since 5.7; may be gone in 5.8 — outside recon's checkout).
-  - [ ] If removed: drop the fallback; Live Coding path already wired at `:265`.
+  - [x] **Done (preemptively):** fallback, handler, delegate handle, include, and the
+        `HotReload` module dependency all removed; Live Coding + Blueprint-compile delegates cover it.
 - **Material usage flags** — `ForgeMaterialCapture.cpp:199-212` reads 14 `bUsedWith*` members
   directly; `Material.h` carries a 5.8 marker *"Always use the GetUsageByFlag() accessor."*
   **(New finding — not in recon §5.)**
-  - [ ] Migrate to `GetUsageByFlag(MATUSAGE_*)` during the compile pass.
+  - [x] **Done:** all 14 flags read via `GetUsageByFlag(MATUSAGE_*)`.
 
 ### 1b. Warning watchlist (plugin-include ∩ 5.8-marker headers = 45 headers)
 Cross-reference generated from the two data files. Top intersections the plugin includes:
@@ -69,8 +72,10 @@ renamed symbols beyond §1a — these headers are watchlist, not work.
 - [ ] Re-validate every `UE 5.7:` / `VERIFIED` boundary comment in plugin source against 5.8.
 
 ### 1d. Version metadata
-- [ ] `uplugin` `VersionName` → `0.3.0`; consider `"EngineVersion": "5.8.0"` at GA (not before).
-- [ ] Update `"version"` in `BridgeHttpServer::Start` (`bridge-status.json`) + startup log.
+- [x] `uplugin` → `Version 3` / `VersionName 0.3.0-dev` (rename to `0.3.0` + add
+      `"EngineVersion": "5.8.0"` at GA, not before).
+- [x] All 12 version-string sites now derive from `ForgeBridgeVersion.h`
+      (`FORGE_BRIDGE_VERSION`) — single source of truth.
 
 ---
 
@@ -128,10 +133,11 @@ transform/offset/delete/insert deltas are wired; attribute deltas still `@todo_p
 - [ ] `ForgePCGCapture`: surface per-component delta counts (`SourceDataContainer`).
 - [ ] `ForgeMaterialCapture`: §1a flag migration; add Substrate fields if present in 5.8.
 - [ ] `ForgePerformanceCapture`: Lumen GI mode (radiance cache) + Nanite-foliage counters.
-- [ ] Crash-hardening follow-up (not 5.8-specific): 5 more unsafe
-      `GEditor->GetEditorWorldContext().World()` sites found — `BridgeHttpServer.cpp:541`,
-      `ForgeNiagaraCapture.cpp:334`, `ForgeCollisionCapture.cpp:293`,
-      `ForgeInputCapture.cpp:130`, `ForgeWorldGenCapture.cpp:168` — same fix as PR #3.
+- [x] Crash-hardening follow-up **done and broadened**: the audit found 100+ unsafe
+      `GetEditorWorldContext()` sites (the common `GEditor ? … : nullptr` guard does not
+      prevent the assert). Added `UBridgeHandlerBase::GetSafeEditorWorld()` and converted
+      every handler + the HTTP server; remaining capture modules use the established
+      inline iteration. Zero unsafe call sites remain.
 
 ## 4. Verification checklist (definition of done)
 
